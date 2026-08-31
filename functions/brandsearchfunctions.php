@@ -1,51 +1,44 @@
 <?php
+/**
+ * Brand queries.
+ *
+ * Previously six near-identical functions with hardcoded LIKE patterns. Now a
+ * single function driven by the registry in includes/helpers.php, so adding a
+ * house needs no new code here.
+ */
 require_once(__DIR__ . '/../config/dbcon.php');
+require_once(__DIR__ . '/../includes/helpers.php');
 
-
-function getDior() {
+/** Published products for one brand slug, dearest first. */
+function getBrandProducts($slug)
+{
     global $con;
-    $query = "SELECT * FROM perfumes 
-    WHERE status = 1 AND name LIKE '%dior%' 
-    ORDER BY name ASC;";
-    return $query_run = mysqli_query($con, $query);
+    $brand = brandBySlug($slug);
+    if (!$brand) {
+        return false;
+    }
+    $pattern = mysqli_real_escape_string($con, $brand['pattern']);
+    return mysqli_query($con,
+        "SELECT * FROM perfumes
+         WHERE status = 1 AND name LIKE '" . $pattern . "'
+         ORDER BY price DESC, name ASC");
 }
 
-function getChanel() {
+/** How many published products a brand has. Used for the homepage tiles. */
+function countBrandProducts($slug)
+{
     global $con;
-    $query = "SELECT * FROM perfumes 
-    WHERE status = 1 AND name LIKE '%chanel%' 
-    ORDER BY name ASC;";
-    return $query_run = mysqli_query($con, $query);
-}
-
-function getlattafa() {
-    global $con;
-    $query = "SELECT * FROM perfumes 
-    WHERE status = 1 AND name LIKE '%lattafa%' 
-    ORDER BY name ASC;";
-    return $query_run = mysqli_query($con, $query);
-}
-
-function getMancera() {
-    global $con;
-    $query = "SELECT * FROM perfumes 
-    WHERE status = 1 AND name LIKE '%Mancera%' 
-    ORDER BY name ASC;";
-    return $query_run = mysqli_query($con, $query);
-}
-
-function getTomFord() {
-    global $con;
-    $query = "SELECT * FROM perfumes 
-    WHERE status = 1 AND name LIKE '%Tom%Ford%' 
-    ORDER BY name ASC;";
-    return $query_run = mysqli_query($con, $query);
-}
-
-function getHugoBoss() {
-    global $con;
-    $query = "SELECT * FROM perfumes 
-    WHERE status = 1 AND name LIKE '%Hugo%Boss%'
-    ORDER BY name ASC;";
-    return $query_run = mysqli_query($con, $query);
+    $brand = brandBySlug($slug);
+    if (!$brand) {
+        return 0;
+    }
+    $pattern = mysqli_real_escape_string($con, $brand['pattern']);
+    $res = mysqli_query($con,
+        "SELECT COUNT(*) AS n FROM perfumes
+         WHERE status = 1 AND name LIKE '" . $pattern . "'");
+    if (!$res) {
+        return 0;
+    }
+    $row = mysqli_fetch_assoc($res);
+    return (int) $row['n'];
 }

@@ -124,6 +124,22 @@
             el.style.setProperty('--reveal-delay', Math.min(index, 8) * 60 + 'ms');
             io.observe(el);
         });
+
+        // Safety net. If anything is already on screen at load, or the observer
+        // never fires for it, reveal it rather than leaving content invisible.
+        // Hidden content is a far worse failure than a missed animation.
+        function rescue() {
+            targets.forEach(function (el) {
+                if (el.dataset.shown === 'true') return;
+                var r = el.getBoundingClientRect();
+                if (r.top < window.innerHeight && r.bottom > 0) {
+                    el.dataset.shown = 'true';
+                    io.unobserve(el);
+                }
+            });
+        }
+        window.requestAnimationFrame(rescue);
+        window.setTimeout(rescue, 1200);
     }
 
     /* ---------------------------------------------------------------------

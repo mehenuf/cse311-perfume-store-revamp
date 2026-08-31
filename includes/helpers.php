@@ -74,3 +74,119 @@ if (!function_exists('crumb')) {
         return $out . '</nav>';
     }
 }
+
+if (!function_exists('brandList')) {
+    /**
+     * The one place brands are defined.
+     *
+     * Every brand page, the nav, the homepage tiles and the brand queries all
+     * read from here, so adding a house means editing this array and nothing
+     * else. 'pattern' is the SQL LIKE used to match products by name, which is
+     * why product names must start with their house.
+     */
+    function brandList()
+    {
+        return [
+        'dior' => ['label' => 'Dior', 'pattern' => '%dior%',
+            'shot' => 'dior_sauvage.jpg',
+            'lede' => 'The house that gave us Sauvage, Fahrenheit and the iris of Dior Homme.'],
+        'chanel' => ['label' => 'Chanel', 'pattern' => '%chanel%',
+            'shot' => 'bleu_de_chanel.jpg',
+            'lede' => 'From No 5 to Bleu de Chanel, the reference point almost every other house is measured against.'],
+        'tomford' => ['label' => 'Tom Ford', 'pattern' => '%tom ford%',
+            'shot' => 'tomford_black_orchid.jpg',
+            'lede' => 'Loud, expensive and completely unapologetic. Black Orchid and Tuscan Leather lead the line.'],
+        'creed' => ['label' => 'Creed', 'pattern' => '%creed%',
+            'shot' => 'st_amber_gold_pair.jpg',
+            'lede' => 'The Anglo-French house behind Aventus. Expensive, imitated everywhere, still unmatched.'],
+        'mancera' => ['label' => 'Mancera', 'pattern' => '%mancera%',
+            'shot' => 'mancera_redtobacco.jpg',
+            'lede' => 'Paris niche with enormous performance. Red Tobacco and Cedrat Boise are the ones people stop you for.'],
+        'lattafa' => ['label' => 'Lattafa', 'pattern' => '%lattafa%',
+            'shot' => 'lattafa_khamrah.jpg',
+            'lede' => 'The Emirati house that changed what a budget bottle is allowed to smell like.'],
+        'hugoboss' => ['label' => 'Hugo Boss', 'pattern' => '%hugo boss%',
+            'shot' => 'hugoboss_bossbottled.jpg',
+            'lede' => 'The dependable office wardrobe. Bottled has been quietly working since 1998.'],
+        'rasasi' => ['label' => 'Rasasi', 'pattern' => '%rasasi%',
+            'shot' => 'rasasi_hawas.jpg',
+            'lede' => 'Dubai since 1979. Hawas made its name in the West; the back catalogue is deeper than most realise.'],
+        'rayhaan' => ['label' => 'Rayhaan', 'pattern' => '%rayhaan%',
+            'shot' => 'st_amber_bottles_bokeh.jpg',
+            'lede' => 'The sister label to Rasasi. Gulf opulence at a price that does not ask you to think about it.'],
+        'afnan' => ['label' => 'Afnan', 'pattern' => '%afnan%',
+            'shot' => 'st_amber_moody.jpg',
+            'lede' => 'The house behind 9PM. Sweet, loud and impossible to ignore on a night out.'],
+        'armaf' => ['label' => 'Armaf', 'pattern' => '%armaf%',
+            'shot' => 'armaf_cdnim.jpg',
+            'lede' => 'Club de Nuit built this house. Enormous performance for a fraction of its inspiration.'],
+        'versace' => ['label' => 'Versace', 'pattern' => '%versace%',
+            'shot' => 'st_turquoise_flacon.jpg',
+            'lede' => 'Eros and the Dylan line. Mediterranean, bright and built to be noticed.'],
+        'ysl' => ['label' => 'Yves Saint Laurent', 'pattern' => '%saint laurent%',
+            'shot' => 'st_noir_sparkle.jpg',
+            'lede' => 'Y, La Nuit and Black Opium. Parisian, sharp, and never quite polite.'],
+        'armani' => ['label' => 'Giorgio Armani', 'pattern' => '%armani%',
+            'shot' => 'st_minimal_white.jpg',
+            'lede' => 'Acqua di Gio defined the modern aquatic. Code took the same tailoring somewhere warmer.'],
+        'pacorabanne' => ['label' => 'Paco Rabanne', 'pattern' => '%paco rabanne%',
+            'shot' => 'st_amber_gold_pair.jpg',
+            'lede' => '1 Million and Invictus. Unsubtle by design, and very good at what they set out to do.'],
+        'prada' => ['label' => 'Prada', 'pattern' => '%prada%',
+            'shot' => 'st_black_monolith.jpg',
+            'lede' => 'Luna Rossa and L Homme. Restrained, architectural, and quietly expensive.'],
+        'kilian' => ['label' => 'Kilian', 'pattern' => '%kilian%',
+            'shot' => 'kilian_angels_share.jpg',
+            'lede' => 'The house of Kilian Hennessy. Gourmands made with the seriousness of a cognac cellar.'],
+        'givenchy' => ['label' => 'Givenchy', 'pattern' => '%givenchy%',
+            'shot' => 'givenchy_gentlemen.jpg',
+            'lede' => 'Gentleman, reworked for a generation that wears iris without apology.'],
+        'jpg' => ['label' => 'Jean Paul Gaultier', 'pattern' => '%jean paul gaultier%',
+            'shot' => 'jpg_le_bleu_le_parfum.jpg',
+            'lede' => 'The torso bottle. Vanilla, warmth and a complete lack of restraint.'],
+        'ferragamo' => ['label' => 'Salvatore Ferragamo', 'pattern' => '%ferragamo%',
+            'shot' => 'salvatore_ferregamo_ferregamo_black.jpg',
+            'lede' => 'Italian tailoring in fragrance form. Understated where its neighbours shout.'],
+        ];
+    }
+}
+
+if (!function_exists('brandBySlug')) {
+    /** One brand, or null when the slug is unknown. */
+    function brandBySlug($slug)
+    {
+        $all = brandList();
+        return isset($all[$slug]) ? $all[$slug] : null;
+    }
+}
+
+if (!function_exists('houseOf')) {
+    /**
+     * The house a product belongs to, matched against the registry.
+     * Falls back to the first word of the name.
+     */
+    function houseOf($productName)
+    {
+        $needle = ' ' . strtolower($productName) . ' ';
+        foreach (brandList() as $brand) {
+            $pattern = str_replace('%', '', strtolower($brand['pattern']));
+            if ($pattern !== '' && strpos($needle, $pattern) !== false) {
+                return $brand['label'];
+            }
+        }
+        $first = strtok($productName, ' ');
+        return $first !== false ? $first : $productName;
+    }
+}
+
+if (!function_exists('pendingMedia')) {
+    /** The designed stand-in for a product with no photograph yet. */
+    function pendingMedia($productName)
+    {
+        $house = houseOf($productName);
+        return '<div class="media-pending">'
+             . '<span class="media-pending__mark">' . e($house) . '</span>'
+             . '<span class="media-pending__note">Photography pending</span>'
+             . '</div>';
+    }
+}

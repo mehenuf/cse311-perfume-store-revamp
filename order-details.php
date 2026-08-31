@@ -75,8 +75,10 @@ echo crumb([
             ?>
                     <div class="cart-line" style="grid-template-columns:72px minmax(0,1fr) auto">
                         <div class="cart-line__media" style="width:72px">
-                            <img src="images/<?= e($item['image_path']) ?>"
-                                 alt="<?= e($item['name']) ?> bottle" loading="lazy" width="144" height="180">
+                            <?php if (trim($item['image_path']) !== '') { ?>
+                                <img src="images/<?= e($item['image_path']) ?>"
+                                     alt="<?= e($item['name']) ?> bottle" loading="lazy" width="144" height="180">
+                            <?php } else { ?><?= pendingMedia($item['name']) ?><?php } ?>
                         </div>
                         <div>
                             <span class="cart-line__name"><?= e($item['name']) ?></span>
@@ -84,7 +86,7 @@ echo crumb([
                                 <?= taka($item['price']) ?> x <?= (int) $item['perfume_qty'] ?>
                             </p>
                         </div>
-                        <div style="text-align:right;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap">
+                        <div style="text-align:right;font-family:'Jost', sans-serif;font-weight:600;white-space:nowrap">
                             <?= taka($item['price'] * $item['perfume_qty']) ?>
                         </div>
                     </div>
@@ -106,23 +108,23 @@ echo crumb([
 
             <div class="stack" style="font-size:var(--t-sm)">
                 <div>
-                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Recipient</div>
+                    <div style="color:var(--fg-faint);font-size:var(--t-xs)">Recipient</div>
                     <div><?= e($order['name']) ?></div>
                 </div>
                 <div>
-                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Contact</div>
+                    <div style="color:var(--fg-faint);font-size:var(--t-xs)">Contact</div>
                     <div><?= e($order['contacts']) ?></div>
                 </div>
                 <div>
-                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Email</div>
+                    <div style="color:var(--fg-faint);font-size:var(--t-xs)">Email</div>
                     <div style="word-break:break-word"><?= e($order['email']) ?></div>
                 </div>
                 <div>
-                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Address</div>
+                    <div style="color:var(--fg-faint);font-size:var(--t-xs)">Address</div>
                     <div><?= e($order['address']) ?><?= $order['zipcode'] ? ', ' . e($order['zipcode']) : '' ?></div>
                 </div>
                 <div>
-                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Payment</div>
+                    <div style="color:var(--fg-faint);font-size:var(--t-xs)">Payment</div>
                     <div><?= e($order['payment_mode']) ?></div>
                 </div>
             </div>

@@ -73,7 +73,7 @@ to *Delivered*.
 
 ### For shoppers
 
-- 🔍 Browse the full collection or filter by brand
+- 🔍 Browse 71 fragrances across 20 houses
 - 🌸 See top, heart and base notes for every fragrance
 - 🛒 Cart that remembers you between visits
 - 📦 Cash-on-delivery checkout
@@ -277,7 +277,8 @@ perfumestore/
 │
 ├── index.php               the homepage
 ├── perfumes.php            the full collection
-├── dior.php, chanel.php…   one page per brand
+├── brands/                 one page per house, 20 of them
+├── brands/                 one page per house, 20 of them
 ├── display-perfume.php     a single product
 ├── shoppingcart.php        the cart
 ├── checkout.php            place an order
@@ -352,7 +353,10 @@ accept a single real order.**
 ## 🙏 Credits
 
 Product photography and brand names belong to their respective fragrance houses and
-are used here for demonstration only. Icons by [Font Awesome](https://fontawesome.com/),
+are used here for demonstration only. A product only carries a photograph when that
+photograph actually shows it; the rest display a *Photography pending* tile until you
+upload a real shot from the admin panel. No listing is ever given another house's
+bottle. Icons by [Font Awesome](https://fontawesome.com/),
 type by [Google Fonts](https://fonts.google.com/).
 
 <div align="center">

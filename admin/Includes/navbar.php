@@ -1,13 +1,18 @@
-<nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur" navbar-scroll="true">
-    <div class="container-fluid py-1 px-3">
-        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
-            <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                <div class="input-group input-group-outline">
-                    <label class="form-label">Type here...</label>
-                    <input type="text" class="form-control">
-                </div>
-            </div>
+<?php
+/** Admin topbar. Expects $adminTitle and $adminUser from header.php. */
+?>
+<header class="topbar">
+    <button class="topbar__burger" type="button" data-rail-toggle
+            aria-label="Toggle navigation" aria-expanded="false">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+    </button>
 
-        </div>
+    <h1 class="topbar__title"><?= e($adminTitle) ?></h1>
+
+    <div class="topbar__actions">
+        <span class="topbar__who">Signed in as <?= e($adminUser) ?></span>
+        <a class="btn btn--quiet btn--sm" href="logout.php">
+            <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Sign out
+        </a>
     </div>
-</nav>
+</header>

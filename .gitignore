@@ -193,3 +193,30 @@ _vti_*/
 sessions/
 tmp/
 uploads/tmp/
+
+# ---------------------------------------------------------------
+#  Image sourcing scratch space
+#  Candidate downloads and contact sheets used while picking product
+#  photography. The chosen files live in images/ and ARE committed.
+# ---------------------------------------------------------------
+tools/preview/_cand/
+tools/preview/
+_cand/
+*.contact-sheet.html
+
+# ---------------------------------------------------------------
+#  Generated SQL and local database dumps
+#  database/mysql/*.sql and database/postgres/*.sql ARE committed;
+#  these patterns only catch exports you make from a live server.
+# ---------------------------------------------------------------
+database/**/dump*.sql
+database/**/export*.sql
+database/**/*.local.sql
+
+# ---------------------------------------------------------------
+#  PHP runtime leftovers on shared hosting
+# ---------------------------------------------------------------
+php_errorlog
+error_log
+.htaccess.bak
+sess_*

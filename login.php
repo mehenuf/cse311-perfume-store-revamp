@@ -15,7 +15,7 @@ include('includes/header.php');
     <div class="panel auth-card">
         <div class="panel__head">
             <h1 style="font-size:var(--t-h2)">Welcome back</h1>
-            <p style="color:var(--text-muted);font-size:var(--t-sm);margin-top:var(--s-2)">
+            <p style="color:var(--fg-muted);font-size:var(--t-sm);margin-top:var(--s-2)">
                 Log in to reach your cart and order history.
             </p>
         </div>
@@ -36,8 +36,8 @@ include('includes/header.php');
             <button class="btn btn--primary btn--lg btn--block" type="submit" name="login_btn">Log in</button>
         </form>
 
-        <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--text-muted);font-size:var(--t-sm)">
-            No account yet? <a href="register.php" style="color:var(--accent);font-weight:600">Create one</a>
+        <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--fg-muted);font-size:var(--t-sm)">
+            No account yet? <a href="register.php" style="color:var(--gold);font-weight:600">Create one</a>
         </p>
     </div>
 </div>

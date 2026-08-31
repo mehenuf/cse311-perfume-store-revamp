@@ -92,8 +92,10 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
                     <?php foreach ($lines as $line) { ?>
                         <div class="cart-line" style="grid-template-columns:56px minmax(0,1fr) auto">
                             <div class="cart-line__media" style="width:56px">
-                                <img src="images/<?= e($line['image_path']) ?>"
-                                     alt="<?= e($line['perfume_name']) ?> bottle" loading="lazy" width="112" height="140">
+                                <?php if (trim($line['image_path']) !== '') { ?>
+                                    <img src="images/<?= e($line['image_path']) ?>"
+                                         alt="<?= e($line['perfume_name']) ?> bottle" loading="lazy" width="112" height="140">
+                                <?php } else { ?><?= pendingMedia($line['perfume_name']) ?><?php } ?>
                             </div>
                             <div>
                                 <span class="cart-line__name" style="font-size:var(--t-sm)">
@@ -101,7 +103,7 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
                                 </span>
                                 <p class="cart-line__price">Quantity <?= (int) $line['perfume_quantity'] ?></p>
                             </div>
-                            <div style="text-align:right;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap">
+                            <div style="text-align:right;font-family:'Jost', sans-serif;font-weight:600;white-space:nowrap">
                                 <?= taka($line['price'] * $line['perfume_quantity']) ?>
                             </div>
                         </div>

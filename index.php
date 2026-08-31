@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('functions/functions.php');
+include('functions/brandsearchfunctions.php');
 
 $pageTitle       = '';
 $pageDescription = 'Designer and niche fragrance, curated and delivered across Bangladesh. '
@@ -12,7 +13,7 @@ $trending = getAllTrending('perfumes');
 $heroShots = mysqli_query($con,
     "SELECT name, image_path FROM perfumes
      WHERE status = 1 AND trending = 1
-     ORDER BY price DESC LIMIT 4");
+     ORDER BY price DESC LIMIT 3");
 
 $publishedCount = 0;
 if ($r = mysqli_query($con, "SELECT COUNT(*) AS n FROM perfumes WHERE status = 1")) {
@@ -20,15 +21,8 @@ if ($r = mysqli_query($con, "SELECT COUNT(*) AS n FROM perfumes WHERE status = 1
     $publishedCount = (int) $row['n'];
 }
 
-// One representative bottle per house, for the brand tiles.
-$houses = [
-    ['Dior',      'dior.php',     'dior_sauvage.jpg',        '%dior%'],
-    ['Chanel',    'chanel.php',   'bleu_de_chanel.jpg',      '%chanel%'],
-    ['Tom Ford',  'tomford.php',  'tomford_black_orchid.jpg','%tom%ford%'],
-    ['Mancera',   'mancera.php',  'mancera_redtobacco.jpg',  '%mancera%'],
-    ['Lattafa',   'lattafa.php',  'lattafa_khamrah.jpg',     '%lattafa%'],
-    ['Hugo Boss', 'hugoboss.php', 'hugoboss_bossbottled.jpg','%hugo%boss%'],
-];
+// Houses shown on the homepage, straight from the registry.
+$houses = array_slice(brandList(), 0, 6, true);
 
 include('includes/header.php');
 ?>
@@ -37,6 +31,7 @@ include('includes/header.php');
 <section class="shell hero">
     <div class="hero__copy">
         <h1 class="hero__title">The bottle people <em>remember</em> you by.</h1>
+        <div class="hero__rule" aria-hidden="true"></div>
         <p class="hero__sub">
             Designer and niche fragrance, sourced sealed and delivered anywhere in Bangladesh.
         </p>
@@ -48,11 +43,15 @@ include('includes/header.php');
 
     <div class="hero__art" aria-hidden="true">
         <?php
+        $plate = 0;
         if ($heroShots && mysqli_num_rows($heroShots) > 0) {
-            foreach ($heroShots as $shot) { ?>
-                <figure>
+            foreach ($heroShots as $shot) {
+                if (++$plate > 3) break;   // the plate holds three
+        ?>
+                <figure class="hero__plate">
                     <img src="images/<?= e($shot['image_path']) ?>" alt=""
-                         width="600" height="750" decoding="async">
+                         width="600" height="750" decoding="async"
+                         <?= $plate === 1 ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
                 </figure>
         <?php }
         }
@@ -99,23 +98,18 @@ include('includes/header.php');
 <section class="section shell" id="houses">
     <div class="section-head">
         <div>
-            <h2>Six houses worth knowing</h2>
+            <h2>Houses worth knowing</h2>
             <p>From the reference designer signatures to the niche bottles that outlast them.</p>
         </div>
     </div>
 
     <div class="brand-grid">
-        <?php foreach ($houses as $house) {
-            list($label, $link, $shot, $pattern) = $house;
-            $countRes = mysqli_query($con,
-                "SELECT COUNT(*) AS n FROM perfumes WHERE status = 1 AND name LIKE '" . $pattern . "'");
-            $countRow = $countRes ? mysqli_fetch_assoc($countRes) : ['n' => 0];
-        ?>
-            <a class="brand-tile" href="<?= e($link) ?>" data-reveal>
-                <img src="images/<?= e($shot) ?>" alt="" loading="lazy" decoding="async">
+        <?php foreach ($houses as $slug => $house) { ?>
+            <a class="brand-tile" href="brands/<?= $slug ?>.php" data-reveal="wipe">
+                <img src="images/<?= e($house['shot']) ?>" alt="" loading="lazy" decoding="async">
                 <span>
-                    <span class="brand-tile__name"><?= e($label) ?></span><br>
-                    <span class="brand-tile__count"><?= (int) $countRow['n'] ?> in stock</span>
+                    <span class="brand-tile__name"><?= e($house['label']) ?></span><br>
+                    <span class="brand-tile__count"><?= countBrandProducts($slug) ?> in stock</span>
                 </span>
             </a>
         <?php } ?>
@@ -125,11 +119,11 @@ include('includes/header.php');
 <!-- Editorial: the only image-and-text split on this page -->
 <section class="section section--sunken">
     <div class="shell editorial">
-        <div class="editorial__media" data-reveal>
+        <div class="editorial__media" data-reveal="settle">
             <img src="assets/images/coco_noir.jpg" alt="Fragrance bottles arranged on a dark surface"
                  loading="lazy" decoding="async" width="900" height="720">
         </div>
-        <div class="editorial__body" data-reveal>
+        <div class="editorial__body" data-reveal="settle">
             <h2 style="font-size:var(--t-h2)">Fragrance is the one thing you wear that nobody sees.</h2>
             <p>
                 We stock what we would actually wear. Every bottle arrives sealed, is checked against
@@ -146,7 +140,7 @@ include('includes/header.php');
                     <div class="stat__l">Bottles in stock</div>
                 </div>
                 <div>
-                    <div class="stat__n">6</div>
+                    <div class="stat__n"><?= count(brandList()) ?></div>
                     <div class="stat__l">Houses carried</div>
                 </div>
                 <div>

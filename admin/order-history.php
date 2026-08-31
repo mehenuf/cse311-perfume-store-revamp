@@ -1,181 +1,153 @@
 <?php
 include('../middleware/adminmiddleware.php');
+$pageTitle = 'Order';
 include('Includes/header.php');
 include('../functions/myfunctions.php');
 
-
-
+$order = null;
 if (isset($_GET['trackid'])) {
-    $tracking_no = $_GET['trackid'];
-    //echo $tracking_no;
-    $validation = validateTrackID($tracking_no);
-    if (mysqli_num_rows($validation) <= 0) {
-?>
-        <h4>Something is wrong.</h4>
-    <?php
-        die();
+    $tracking   = mysqli_real_escape_string($con, $_GET['trackid']);
+    $validation = validateTrackID($tracking);
+    if ($validation && mysqli_num_rows($validation) > 0) {
+        $order = mysqli_fetch_assoc($validation);
     }
-} else {
-    ?>
-    <h4>Unable to fetch tracking ID.</h4>
-<?php
-    die();
 }
-$orderData = mysqli_fetch_array($validation);
+
+if (!$order) {
+    ?>
+    <div class="page-head"><div><h1>Order not found</h1></div></div>
+    <section class="card">
+        <div class="empty">
+            <span class="empty__icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></span>
+            <p>That tracking number does not match any order.</p>
+            <a class="btn btn--primary btn--sm" href="orders.php">Back to orders</a>
+        </div>
+    </section>
+    <?php
+    include('Includes/footer.php');
+    exit;
+}
+
+$status = (int) $order['status'];
+$items  = mysqli_query($con,
+    "SELECT oi.perfume_qty, oi.price, p.name, p.image_path
+     FROM order_item oi
+     JOIN perfumes p ON p.id = oi.perfume_id
+     WHERE oi.order_id = " . (int) $order['id']);
+
+$statuses = [0 => 'Processing', 1 => 'Completed', 2 => 'Shipped', 3 => 'Delivered', 4 => 'Cancelled'];
 ?>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <h4 class="fw-bolder">Order Details</h4>
-            <hr>
-            <div class="card">
-                <div class="card-header text-white bg-dark fw-bolder">
-                    Order Details
-                    
-                    <a href="orders.php" class="btn btn-primary btn-sm float-end"><i class="fa-solid fa-reply"></i></a>
-                </div>
-                <div class="card-body bg-gray-100">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h4>Delivery Details</h4>
-                            <hr>
-                            <div class="row">
-                                <div class="col-md-12 mb-2">
-                                    <label for="" class="fw-bold">Name</label>
-                                    <div class="border p-1">
-                                        <?= $orderData['name']; ?>
-                                    </div>
-                                </div>
-                                <div class="col-md-12 mb-2">
-                                    <label for="" class="fw-bold">Email</label>
-                                    <div class="border p-1">
-                                        <?= $orderData['email']; ?>
-                                    </div>
-                                </div>
-                                <div class="col-md-12 mb-2">
-                                    <label for="" class="fw-bold">Username</label>
-                                    <div class="border p-1">
-                                        <?= $orderData['username']; ?>
-                                    </div>
-                                </div>
-                                <div class="col-md-12 mb-2">
-                                    <label for="" class="fw-bold">Account Name</label>
-                                    <div class="border p-1">
-                                        <?= $orderData['id_name']; ?>
-                                    </div>
-                                </div>
-                                <div class="col-md-12 mb-2">
-                                    <label for="" class="fw-bold">Account Email</label>
-                                    <div class="border p-1">
-                                        <?= $orderData['id_email']; ?>
-                                    </div>
-                                </div>
-                                <div class="col-md-12 mb-2">
-                                    <label for="" class="fw-bold">Contact</label>
-                                    <div class="border p-1">
-                                        <?= $orderData['contacts']; ?>
-                                    </div>
-                                </div>
-                                <div class="col-md-12 mb-2">
-                                    <label for="" class="fw-bold">Tracking No.</label>
-                                    <div class="border p-1">
-                                        <?= $orderData['tracking_no']; ?>
-                                    </div>
-                                </div>
-                                <div class="col-md-12 mb-2">
-                                    <label for="" class="fw-bold">Address</label>
-                                    <div class="border p-1">
-                                        <?= $orderData['address'] . ", Zipcode - " . $orderData['zipcode'] . "."; ?>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="col-md-6">
-                            <h4>Item List</h4>
-                            <hr>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped table-responsive table-dark">
-                                    <thead>
-                                        <tr>
-                                            <th colspan="2">Product</th>
-                                            <th>Price</th>
-                                            <th>Quantity</th>
-                                            <th>Net Price</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-
-                                        </tr>
-                                        <?php
-                                        $order_query = "SELECT o.id as OrderID, o.tracking_no, oi.*, p.*
-                                                            FROM orders o, order_item oi, perfumes p
-                                                            WHERE oi.order_id = o.id
-                                                            AND p.id = oi.perfume_id
-                                                            AND o.tracking_no = '$tracking_no';";
-                                        $order_query_run = mysqli_query($con, $order_query);
-
-                                        if (mysqli_num_rows($order_query_run) > 0) {
-                                            foreach ($order_query_run as $key) {
-                                        ?>
-                                                <tr>
-                                                    <td class="align-middle">
-                                                        <img src="../images/<?= $key['image_path']; ?> " alt="<?= $key['name']; ?>" width="100px" height="100px">
-
-                                                    </td>
-                                                    <td><?= $key['name']; ?></td>
-                                                    <td class="align-middle">
-                                                        Tk. <?= $key['price']; ?>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <?= $key['perfume_qty']; ?>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        Tk. <?= $key['perfume_qty'] * $key['price']; ?>
-                                                    </td>
-                                                </tr>
-                                        <?php
-                                            }
-                                        }
-
-                                        ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <hr>
-                            <h4 class="fw-bold">Total Price: <span class="float-end text-danger"><?= $orderData['total_price']; ?></span></h4>
-                            <hr>
-                            <div class="border p-1 mb-3">
-                                <label for="" class="fw-bold">Payment Mode: </label>
-                                <?= $orderData['payment_mode']; ?>
-                            </div>
-                            <div>
-                                <label for="" class="fw-bold">Status: </label>
-                                <form action="Includes/code.php" method="post">
-                                    <input type="hidden" name="tracking_no" value="<?= $orderData['tracking_no']; ?>">
-                                    echo <?= $orderData['tracking_no']; ?>;
-                                    <select name="order_status" id="" class="form-select">
-                                        <option value="0" <?= $orderData['status'] == 0 ? "selected" : "" ?>>Processing</option>
-                                        <option value="1" <?= $orderData['status'] == 1 ? "selected" : "" ?>>Completed</option>
-                                        <option value="2" <?= $orderData['status'] == 2 ? "selected" : "" ?>>Shipped</option>
-                                        <option value="3" <?= $orderData['status'] == 3 ? "selected" : "" ?>>Delivered</option>
-                                        <option value="4" <?= $orderData['status'] == 4 ? "selected" : "" ?>>Cancelled</option>
-                                    </select>
-                                    <button type="submit" name="updateOrder_btn" class="btn btn-primary float-end w-100 mt-2">Update</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="page-head">
+    <div>
+        <h1><?= e($order['tracking_no']) ?></h1>
+        <p>Placed <?= e(date('j F Y \a\t H:i', strtotime($order['created_at']))) ?></p>
+    </div>
+    <div style="display:flex;align-items:center;gap:var(--s-4)">
+        <span class="badge" data-status="<?= $status ?>"><?= e(orderStatus($status)) ?></span>
+        <a class="btn btn--quiet" href="orders.php">Back</a>
     </div>
 </div>
+
+<div class="grid-2">
+
+    <section class="card">
+        <div class="card__head"><h2>Items</h2></div>
+        <div class="card__body">
+            <?php if ($items && mysqli_num_rows($items) > 0) { ?>
+                <?php foreach ($items as $item) { ?>
+                    <div class="line-item">
+                        <img src="../images/<?= e($item['image_path']) ?>" alt="" loading="lazy">
+                        <div>
+                            <p class="line-item__name"><?= e($item['name']) ?></p>
+                            <p class="line-item__meta"><?= taka($item['price']) ?> x <?= (int) $item['perfume_qty'] ?></p>
+                        </div>
+                        <p class="line-item__amt"><?= taka($item['price'] * $item['perfume_qty']) ?></p>
+                    </div>
+                <?php } ?>
+            <?php } else { ?>
+                <div class="empty"><p>This order has no line items.</p></div>
+            <?php } ?>
+
+            <div class="total-row">
+                <span>Total</span>
+                <span><?= taka($order['total_price']) ?></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="side-stack">
+
+        <section class="card">
+            <div class="card__head"><h2>Update status</h2></div>
+            <div class="card__body">
+                <form action="Includes/code.php" method="post" class="form">
+                    <input type="hidden" name="tracking_no" value="<?= e($order['tracking_no']) ?>">
+                    <div class="field">
+                        <label for="o-status">Status</label>
+                        <select class="select" id="o-status" name="order_status">
+                            <?php foreach ($statuses as $code => $label) { ?>
+                                <option value="<?= $code ?>" <?= $status === $code ? 'selected' : '' ?>>
+                                    <?= $label ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                        <span class="field__hint">The customer sees this on their orders page.</span>
+                    </div>
+                    <button class="btn btn--primary btn--block" type="submit" name="updateOrder_btn">Save status</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card__head"><h2>Deliver to</h2></div>
+            <div class="card__body">
+                <dl class="kv">
+                    <div>
+                        <dt>Recipient</dt>
+                        <dd><?= e($order['name']) ?></dd>
+                    </div>
+                    <div>
+                        <dt>Contact</dt>
+                        <dd><a href="tel:<?= e($order['contacts']) ?>"><?= e($order['contacts']) ?></a></dd>
+                    </div>
+                    <div>
+                        <dt>Email</dt>
+                        <dd style="word-break:break-word"><a href="mailto:<?= e($order['email']) ?>"><?= e($order['email']) ?></a></dd>
+                    </div>
+                    <div>
+                        <dt>Address</dt>
+                        <dd><?= e($order['address']) ?><?= $order['zipcode'] ? ', ' . e($order['zipcode']) : '' ?></dd>
+                    </div>
+                    <div>
+                        <dt>Payment</dt>
+                        <dd><?= e($order['payment_mode']) ?></dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card__head"><h2>Account</h2></div>
+            <div class="card__body">
+                <dl class="kv">
+                    <div>
+                        <dt>Username</dt>
+                        <dd><?= e($order['username']) ?></dd>
+                    </div>
+                    <div>
+                        <dt>Registered name</dt>
+                        <dd><?= e($order['id_name']) ?></dd>
+                    </div>
+                    <div>
+                        <dt>Registered email</dt>
+                        <dd style="word-break:break-word"><?= e($order['id_email']) ?></dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
+
+    </div>
 </div>
 
-
-<?php
-include('includes/footer.php');
-?>
+<?php include('Includes/footer.php'); ?>

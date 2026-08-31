@@ -57,6 +57,19 @@ def main():
         check("seed loads (all FKs, UNIQUEs and CHECKs satisfied)", False, str(e))
         return report()
 
+    # The expansion seed must apply cleanly on top of the base seed: no id
+    # collisions, no duplicate names, every foreign key still satisfied.
+    exp_path = os.path.join(HERE, "mysql", "03_seed_expansion.sql")
+    if os.path.isfile(exp_path):
+        exp = re.sub(r"ALTER TABLE[^;]+;", "",
+                     io.open(exp_path, encoding="utf-8").read())
+        try:
+            db.executescript(exp)
+            total = db.execute("SELECT COUNT(*) FROM perfumes").fetchone()[0]
+            check("expansion seed applies on top of the base seed (%d products)" % total, True)
+        except Exception as e:
+            check("expansion seed applies on top of the base seed", False, str(e))
+
     viol = db.execute("PRAGMA foreign_key_check").fetchall()
     check("no foreign key violations after seeding", not viol, str(viol))
 
@@ -107,23 +120,60 @@ def main():
     n = db.execute("SELECT COUNT(*) FROM (SELECT name FROM perfumes GROUP BY name HAVING COUNT(*)>1)").fetchone()[0]
     check("perfume names are unique (display-perfume.php?name= resolves one row)", n == 0)
 
-    print("\n[5] Brand pages return products (name LIKE filters in brandsearchfunctions.php)")
-    for brand, pattern in [
-        ("Dior", "%dior%"), ("Chanel", "%chanel%"), ("Lattafa", "%lattafa%"),
-        ("Mancera", "%mancera%"), ("Tom Ford", "%tom%ford%"), ("Hugo Boss", "%hugo%boss%"),
-    ]:
-        n = db.execute(
-            "SELECT COUNT(*) FROM perfumes WHERE status=1 AND LOWER(name) LIKE ?", (pattern,)
-        ).fetchone()[0]
-        check("%-9s brand page returns %d product(s)" % (brand, n), n > 0)
+    print("\n[5] Every brand page in the registry returns products")
+    helpers = io.open(os.path.join(HERE, os.pardir, "includes", "helpers.php"),
+                      encoding="utf-8").read()
+    reg = helpers[helpers.index("function brandList()"):helpers.index("function brandBySlug")]
+    brands = re.findall(
+        r"'([a-z]+)' => \['label' => '([^']+)', 'pattern' => '([^']+)'", reg)
+    check("brand registry parsed from includes/helpers.php", len(brands) > 0,
+          "%d houses" % len(brands))
 
-    print("\n[6] Every image_path points at a file that exists in /images")
-    missing = [
-        r[0] for r in db.execute("SELECT image_path FROM perfumes")
-        if not os.path.isfile(os.path.join(IMAGES, r[0]))
-    ]
-    check("all %d image_path values resolve" % db.execute("SELECT COUNT(*) FROM perfumes").fetchone()[0],
-          not missing, "missing: %s" % missing)
+    empty = []
+    for slug, label, pattern in brands:
+        n = db.execute(
+            "SELECT COUNT(*) FROM perfumes WHERE status=1 AND LOWER(name) LIKE ?",
+            (pattern.lower(),)).fetchone()[0]
+        if n == 0:
+            empty.append("%s [%s]" % (label, pattern))
+    check("all %d brand pages have at least one product" % len(brands),
+          not empty, "empty: " + ", ".join(empty))
+
+    # A page file must exist for every registry entry, and vice versa.
+    brand_dir = os.path.join(HERE, os.pardir, "brands")
+    on_disk = {f[:-4] for f in os.listdir(brand_dir) if f.endswith(".php")}
+    in_reg = {s for s, _l, _p in brands}
+    check("brands/ has exactly one page per registered house",
+          on_disk == in_reg,
+          "only on disk: %s | only in registry: %s"
+          % (sorted(on_disk - in_reg), sorted(in_reg - on_disk)))
+
+    print("\n[6] Photography")
+    # An empty image_path is deliberate: the product has no photograph yet and
+    # renders the "photography pending" tile. A non-empty one must resolve.
+    paths = [r[0] for r in db.execute("SELECT image_path FROM perfumes")]
+    named = [p for p in paths if p.strip()]
+    pending = len(paths) - len(named)
+    missing = [p for p in named if not os.path.isfile(os.path.join(IMAGES, p))]
+    check("all %d named image_path values resolve" % len(named), not missing,
+          "missing: %s" % missing)
+    check("%d product(s) awaiting photography render the pending tile" % pending, True)
+
+    # No product may carry a photograph of a different house's bottle. The
+    # st_ files are the only shared ones, and each is either unbranded or
+    # matched to its own house, so assert that mapping has not drifted.
+    BRANDED = {
+        "st_turquoise_flacon.jpg": "versace",
+        "st_black_monolith.jpg":   "prada",
+        "st_noir_sparkle.jpg":     "saint laurent",
+        "st_minimal_white.jpg":    "armani",
+    }
+    wrong = []
+    for img, house in BRANDED.items():
+        for (name,) in db.execute("SELECT name FROM perfumes WHERE image_path = ?", (img,)):
+            if house not in name.lower():
+                wrong.append("%s on %s" % (img, name))
+    check("no product shows another house's bottle", not wrong, "; ".join(wrong))
 
     unused = sorted(set(os.listdir(IMAGES)) - {r[0] for r in db.execute("SELECT image_path FROM perfumes")})
     check("no image file is left without a catalogue row", not unused, "unused: %s" % unused)

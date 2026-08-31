@@ -49,8 +49,10 @@ echo crumb(['Home' => 'index.php', 'Cart' => null]);
                     <div class="cart-line" data-cart-line data-unit-price="<?= (float) $line['price'] ?>">
 
                         <a class="cart-line__media" href="display-perfume.php?name=<?= urlencode($line['perfume_name']) ?>">
-                            <img src="images/<?= e($line['image_path']) ?>"
-                                 alt="<?= e($line['perfume_name']) ?> bottle" loading="lazy" width="168" height="210">
+                            <?php if (trim($line['image_path']) !== '') { ?>
+                                <img src="images/<?= e($line['image_path']) ?>"
+                                     alt="<?= e($line['perfume_name']) ?> bottle" loading="lazy" width="168" height="210">
+                            <?php } else { ?><?= pendingMedia($line['perfume_name']) ?><?php } ?>
                         </a>
 
                         <div>
@@ -85,7 +87,7 @@ echo crumb(['Home' => 'index.php', 'Cart' => null]);
                             </button>
                         </div>
 
-                        <div style="text-align:right;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap"
+                        <div style="text-align:right;font-family:'Jost', sans-serif;font-weight:600;white-space:nowrap"
                              data-line-total><?= taka($line['price'] * $line['perfume_quantity']) ?></div>
                     </div>
                 <?php } ?>

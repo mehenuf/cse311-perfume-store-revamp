@@ -50,18 +50,22 @@ echo crumb([
 <section class="section shell detail">
 
     <div class="detail__media">
-        <img src="images/<?= e($product['image_path']) ?>"
-             alt="<?= e($product['name']) ?> bottle"
-             width="800" height="1000" decoding="async">
+        <?php if (trim($product['image_path']) !== '') { ?>
+            <img src="images/<?= e($product['image_path']) ?>"
+                 alt="<?= e($product['name']) ?> bottle"
+                 width="800" height="1000" decoding="async">
+        <?php } else { ?>
+            <?= pendingMedia($product['name']) ?>
+        <?php } ?>
     </div>
 
     <div class="detail__body stack" data-qty data-min="1" data-max="<?= $maxQty ?>">
 
-        <p style="color:var(--text-faint);font-size:var(--t-sm);margin:0"><?= e($stockText) ?></p>
+        <p style="color:var(--fg-faint);font-size:var(--t-sm);margin:0"><?= e($stockText) ?></p>
         <h1 class="detail__title" style="margin-top:var(--s-2)"><?= e($product['name']) ?></h1>
         <p class="detail__price"><?= taka($product['price']) ?></p>
 
-        <p style="color:var(--text-muted)"><?= e($product['description']) ?></p>
+        <p style="color:var(--fg-muted)"><?= e($product['description']) ?></p>
 
         <dl class="notes">
             <div>
@@ -88,7 +92,7 @@ echo crumb([
             <a class="btn btn--ghost btn--lg" href="perfumes.php">Browse the collection</a>
 
         <?php } elseif (!$isAuthed) { ?>
-            <p style="color:var(--text-muted);font-size:var(--t-sm)">
+            <p style="color:var(--fg-muted);font-size:var(--t-sm)">
                 Log in to add this to your cart.
             </p>
             <div style="display:flex;flex-wrap:wrap;gap:var(--s-3)">

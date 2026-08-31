@@ -1,13 +1,23 @@
+<?php
+/** Storefront footer. Expects $basePath ('' at root, '../' one level down). */
+$basePath   = isset($basePath) ? $basePath : '';
+$footBrands = array_slice(brandList(), 0, 8, true);
+?>
 <footer class="footer">
     <div class="shell">
         <div class="footer__grid">
 
             <div>
-                <a class="nav__brand" href="index.php" style="margin-bottom:var(--s-4)">
-                    <span class="nav__mark" aria-hidden="true">PS</span>
-                    <span>Perfume Store</span>
+                <a class="nav__brand" href="<?= $basePath ?>index.php" style="margin-bottom:var(--s-5)">
+                    <svg class="nav__mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M9.6 2.5h4.8v2.9H9.6z" stroke="currentColor" stroke-width="1.1"/>
+                        <path d="M8 5.4h8l1.6 3.1v11.1a1.9 1.9 0 0 1-1.9 1.9H8.3a1.9 1.9 0 0 1-1.9-1.9V8.5L8 5.4Z"
+                              stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                        <path d="M9.4 11.6h5.2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                    </svg>
+                    <span>Perfume<b>Store</b></span>
                 </a>
-                <p style="color:var(--text-muted);font-size:var(--t-sm);max-width:34ch">
+                <p style="color:var(--fg-muted);font-size:var(--t-sm);max-width:34ch">
                     A curated house of designer and niche fragrance, delivered anywhere in Bangladesh.
                     Every bottle is sourced sealed and checked before it ships.
                 </p>
@@ -16,22 +26,20 @@
             <div>
                 <h3>Shop</h3>
                 <ul>
-                    <li><a href="perfumes.php">Full collection</a></li>
-                    <li><a href="shoppingcart.php">Your cart</a></li>
-                    <li><a href="orders.php">Your orders</a></li>
-                    <li><a href="checkout.php">Checkout</a></li>
+                    <li><a href="<?= $basePath ?>perfumes.php">Full collection</a></li>
+                    <li><a href="<?= $basePath ?>shoppingcart.php">Your cart</a></li>
+                    <li><a href="<?= $basePath ?>orders.php">Your orders</a></li>
+                    <li><a href="<?= $basePath ?>checkout.php">Checkout</a></li>
                 </ul>
             </div>
 
             <div>
-                <h3>Brands</h3>
+                <h3>Houses</h3>
                 <ul>
-                    <li><a href="dior.php">Dior</a></li>
-                    <li><a href="chanel.php">Chanel</a></li>
-                    <li><a href="tomford.php">Tom Ford</a></li>
-                    <li><a href="mancera.php">Mancera</a></li>
-                    <li><a href="lattafa.php">Lattafa</a></li>
-                    <li><a href="hugoboss.php">Hugo Boss</a></li>
+                    <?php foreach ($footBrands as $slug => $b) { ?>
+                        <li><a href="<?= $basePath ?>brands/<?= $slug ?>.php"><?= e($b['label']) ?></a></li>
+                    <?php } ?>
+                    <li><a href="<?= $basePath ?>perfumes.php">All houses</a></li>
                 </ul>
             </div>
 
@@ -40,7 +48,7 @@
                 <ul>
                     <li><a href="tel:+8801700000001">+880 1700 000001</a></li>
                     <li><a href="mailto:mehenuf@gmail.com">mehenuf@gmail.com</a></li>
-                    <li style="color:var(--text-muted);font-size:var(--t-sm);line-height:1.7">
+                    <li style="color:var(--fg-muted);font-size:var(--t-sm);line-height:1.7">
                         House 12, Road 5<br>
                         Dhanmondi, Dhaka 1205
                     </li>

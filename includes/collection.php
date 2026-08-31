@@ -8,6 +8,7 @@
  *   $collectionCrumbs array  label => href (null for the current page)
  *   $collectionRows   mysqli_result
  */
+$basePath = isset($basePath) ? $basePath : '';
 echo crumb($collectionCrumbs);
 ?>
 <section class="section shell">
@@ -17,7 +18,7 @@ echo crumb($collectionCrumbs);
             <p><?= e($collectionLede) ?></p>
         </div>
         <?php if ($collectionRows && mysqli_num_rows($collectionRows) > 0) { ?>
-            <p style="color:var(--text-faint);font-size:var(--t-sm);margin:0">
+            <p style="color:var(--fg-faint);font-size:var(--t-sm);margin:0">
                 <?= mysqli_num_rows($collectionRows) ?> available
             </p>
         <?php } ?>
@@ -32,7 +33,7 @@ echo crumb($collectionCrumbs);
             <span class="empty__icon"><i class="fa-solid fa-wind" aria-hidden="true"></i></span>
             <h2 style="font-size:var(--t-h3)">Nothing here yet</h2>
             <p>This shelf is empty for now. Browse the full collection to find something else.</p>
-            <a class="btn btn--primary" href="perfumes.php">View the collection</a>
+            <a class="btn btn--primary" href="<?= $basePath ?>perfumes.php">View the collection</a>
         </div>
     <?php } ?>
 </section>

@@ -1,68 +1,104 @@
 <?php
-//echo substr($_SERVER['SCRIPT_NAME'], strrpos($_SERVER['SCRIPT_NAME'], "/")+1);
-$page = substr($_SERVER['SCRIPT_NAME'], strrpos($_SERVER['SCRIPT_NAME'], "/") + 1);
-//echo $page;
+/**
+ * Admin rail. Expects $adminPage from header.php.
+ *
+ * Counts are live so the operator sees workload before clicking anything;
+ * a nav that shows nothing is a nav you have to guess at.
+ */
+$pendingOrders = 0;
+$activeOrders  = 0;
+$liveProducts  = 0;
+
+if (isset($con)) {
+    if ($r = mysqli_query($con, "SELECT COUNT(*) n FROM orders WHERE status = 0")) {
+        $row = mysqli_fetch_assoc($r); $pendingOrders = (int) $row['n'];
+    }
+    if ($r = mysqli_query($con, "SELECT COUNT(*) n FROM orders WHERE status IN (1,2)")) {
+        $row = mysqli_fetch_assoc($r); $activeOrders = (int) $row['n'];
+    }
+    if ($r = mysqli_query($con, "SELECT COUNT(*) n FROM perfumes WHERE status = 1")) {
+        $row = mysqli_fetch_assoc($r); $liveProducts = (int) $row['n'];
+    }
+}
+
+/** Active-state attribute for a rail link. */
+function railCurrent($file, $adminPage)
+{
+    return $file === $adminPage ? ' aria-current="page"' : '';
+}
 ?>
-<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-gradient-primary" id="sidenav-main">
-    <div class="sidenav-header">
-        <i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
-        <a class="navbar-brand m-0 <?= $page == "add.php" ? 'active-bg-gradient-primary' : '' ?>" href="add.php" target="_blank">
-            <span class="ms-1 font-weight-bold text-white">Admin Control</span>
+<div class="rail__scrim" data-rail-scrim></div>
+
+<aside class="rail" data-rail aria-label="Admin sections">
+
+    <a class="rail__brand" href="index.php">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9.6 2.5h4.8v2.9H9.6z" stroke="currentColor" stroke-width="1.1"/>
+            <path d="M8 5.4h8l1.6 3.1v11.1a1.9 1.9 0 0 1-1.9 1.9H8.3a1.9 1.9 0 0 1-1.9-1.9V8.5L8 5.4Z"
+                  stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+            <path d="M9.4 11.6h5.2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+        </svg>
+        <span>Admin</span>
+    </a>
+
+    <nav class="rail__nav">
+
+        <div class="rail__group">
+            <p class="rail__label">Overview</p>
+            <ul>
+                <li>
+                    <a class="rail__link" href="index.php"<?= railCurrent('index.php', $adminPage) ?>>
+                        <i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Dashboard
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="rail__group">
+            <p class="rail__label">Catalogue</p>
+            <ul>
+                <li>
+                    <a class="rail__link" href="perfume.php"<?= railCurrent('perfume.php', $adminPage) ?>>
+                        <i class="fa-solid fa-bottle-droplet" aria-hidden="true"></i> Products
+                        <span class="rail__count"><?= $liveProducts ?></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="rail__link" href="add.php"<?= railCurrent('add.php', $adminPage) ?>>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add product
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="rail__group">
+            <p class="rail__label">Orders</p>
+            <ul>
+                <li>
+                    <a class="rail__link" href="orders.php"<?= railCurrent('orders.php', $adminPage) ?>>
+                        <i class="fa-solid fa-inbox" aria-hidden="true"></i> New
+                        <span class="rail__count"><?= $pendingOrders ?></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="rail__link" href="active-orders.php"<?= railCurrent('active-orders.php', $adminPage) ?>>
+                        <i class="fa-solid fa-truck" aria-hidden="true"></i> In progress
+                        <span class="rail__count"><?= $activeOrders ?></span>
+                    </a>
+                </li>
+                <li>
+                    <a class="rail__link" href="previous-orders.php"<?= railCurrent('previous-orders.php', $adminPage) ?>>
+                        <i class="fa-solid fa-box-archive" aria-hidden="true"></i> Closed
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </nav>
+
+    <div class="rail__foot">
+        <a class="btn btn--ghost btn--sm btn--block" href="../index.php">
+            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> View store
         </a>
-    </div>
-    <hr class="horizontal light mt-0 mb-2">
-    <div class="collapse navbar-collapse  w-auto  max-height-vh-100" id="sidenav-collapse-main">
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link text-white active-bg-gradient-primary" href="../index.php">
-                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="fa-solid fa-house fa-bounce"></i>
-                    </div>
-                    <span class="nav-link-text ms-1">Homepage </span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white <?= $page == "index.php" ? 'active-bg-gradient-primary' : '' ?>" href="index.php">
-                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="material-icons opacity-10">dashboard</i>
-                    </div>
-                    <span class="nav-link-text ms-1">Admin Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white <?= $page == "perfume.php" ? 'active-bg-gradient-primary' : '' ?>" href="perfume.php">
-                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="material-icons opacity-10">list_alt</i>
-                    </div>
-                    <span class="nav-link-text ms-1">Perfume Listing</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white <?= $page == "orders.php" ? 'active-bg-gradient-secondary' : '' ?>" href="orders.php">
-                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="material-icons opacity-10">shopping_bag</i>
-                    </div>
-                    <span class="nav-link-text ms-1">Orders</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white <?= $page == "add.php" ? 'active-bg-gradient-secondary' : '' ?>" href="add.php">
-                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="material-icons opacity-10">add</i>
-                    </div>
-                    <span class="nav-link-text ms-1">Add Perfume</span>
-                </a>
-            </li>
-            <li class="nav-item mt-3 justify-content-center align-bottom text-center">
-                <a href="logout.php" class="btn btn-dark text-white <?= $page == "logout.php" ? 'active-bg-gradient-primary' : '' ?>">
-                    <div class="text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="material-icons opacity-10">logout</i>
-                        <span class="nav-link-text ms-1">Logout</span>
-                    </div>
-                </a>
-            </li>
-        </ul>
-    </div>
-    <div class="sidenav-footer position-absolute w-100 bottom-0 ">
     </div>
 </aside>

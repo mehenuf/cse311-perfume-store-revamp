@@ -1,112 +1,142 @@
 <?php
 include('../middleware/adminmiddleware.php');
-include('../admin/Includes/header.php');
+$pageTitle = 'Dashboard';
+include('Includes/header.php');
+include('../functions/myfunctions.php');
 
-//echo substr($_SERVER['SCRIPT_NAME'], strrpos($_SERVER['SCRIPT_NAME'], "/")+1);
-//echo strrpos($_SERVER['SCRIPT_NAME'], "/");
+/** Single-value query helper. */
+function scalar($sql, $fallback = 0)
+{
+    global $con;
+    $r = mysqli_query($con, $sql);
+    if (!$r) return $fallback;
+    $row = mysqli_fetch_row($r);
+    return $row ? $row[0] : $fallback;
+}
+
+$revenue      = (float) scalar("SELECT COALESCE(SUM(total_price),0) FROM orders WHERE status <> 4");
+$orderCount   = (int)   scalar("SELECT COUNT(*) FROM orders");
+$pending      = (int)   scalar("SELECT COUNT(*) FROM orders WHERE status = 0");
+$customers    = (int)   scalar("SELECT COUNT(*) FROM customer WHERE admin_check = 0");
+$liveCount    = (int)   scalar("SELECT COUNT(*) FROM perfumes WHERE status = 1");
+$hiddenCount  = (int)   scalar("SELECT COUNT(*) FROM perfumes WHERE status = 0");
+$outOfStock   = (int)   scalar("SELECT COUNT(*) FROM perfumes WHERE qty = 0 AND status = 1");
+
+$recent = mysqli_query($con,
+    "SELECT id, tracking_no, name, total_price, status, created_at
+     FROM orders ORDER BY created_at DESC LIMIT 6");
+
+$lowStock = mysqli_query($con,
+    "SELECT id, name, qty, image_path FROM perfumes
+     WHERE status = 1 AND qty <= 12 ORDER BY qty ASC LIMIT 6");
 ?>
-<div class="py-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <?php
-                if (isset($_SESSION['message'])) {
-                ?>
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <strong>Congrats!</strong> <?= $_SESSION['message']; ?>.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php
-                    unset($_SESSION['message']);
-                }
-                ?>
-                <h1>Welcome to our store</h1>
 
-            </div>
-        </div>
+<div class="page-head">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Everything that needs your attention, first.</p>
     </div>
-    <div class="container">
-        <div class="row mt-4">
-            <div class="col-lg-5 col-sm-5">
-                <div class="card  mb-2">
-                    <div class="card-header p-3 pt-2">
-                        <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-xl mt-n4 position-absolute">
-                            <i class="material-icons opacity-10">weekend</i>
-                        </div>
-                        <div class="text-end pt-1">
-                            <p class="text-sm mb-0 text-capitalize">Bookings</p>
-                            <h4 class="mb-0">281</h4>
-                        </div>
-                    </div>
+    <a class="btn btn--primary" href="add.php">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add product
+    </a>
+</div>
 
-                    <hr class="dark horizontal my-0">
-                    <div class="card-footer p-3">
-                        <p class="mb-0"><span class="text-success text-sm font-weight-bolder">+55% </span>than last week</p>
-                    </div>
-                </div>
-
-                <div class="card  mb-2">
-                    <div class="card-header p-3 pt-2">
-                        <div class="icon icon-lg icon-shape bg-gradient-primary shadow-primary shadow text-center border-radius-xl mt-n4 position-absolute">
-                            <i class="material-icons opacity-10">leaderboard</i>
-                        </div>
-                        <div class="text-end pt-1">
-                            <p class="text-sm mb-0 text-capitalize">Today's Users</p>
-                            <h4 class="mb-0">2,300</h4>
-                        </div>
-                    </div>
-
-                    <hr class="dark horizontal my-0">
-                    <div class="card-footer p-3">
-                        <p class="mb-0"><span class="text-success text-sm font-weight-bolder">+3% </span>than last month</p>
-                    </div>
-                </div>
-
-            </div>
-            <div class="col-lg-5 col-sm-5 mt-sm-0 mt-4">
-                <div class="card  mb-2">
-                    <div class="card-header p-3 pt-2 bg-transparent">
-                        <div class="icon icon-lg icon-shape bg-gradient-success shadow-success text-center border-radius-xl mt-n4 position-absolute">
-                            <i class="material-icons opacity-10">store</i>
-                        </div>
-                        <div class="text-end pt-1">
-                            <p class="text-sm mb-0 text-capitalize ">Revenue</p>
-                            <h4 class="mb-0 ">34k</h4>
-                        </div>
-                    </div>
-
-                    <hr class="horizontal my-0 dark">
-                    <div class="card-footer p-3">
-                        <p class="mb-0 "><span class="text-success text-sm font-weight-bolder">+1% </span>than yesterday</p>
-                    </div>
-                </div>
-
-                <div class="card ">
-                    <div class="card-header p-3 pt-2 bg-transparent">
-                        <div class="icon icon-lg icon-shape bg-gradient-info shadow-info text-center border-radius-xl mt-n4 position-absolute">
-                            <i class="material-icons opacity-10">person_add</i>
-                        </div>
-                        <div class="text-end pt-1">
-                            <p class="text-sm mb-0 text-capitalize ">Followers</p>
-                            <h4 class="mb-0 ">+91</h4>
-                        </div>
-                    </div>
-
-                    <hr class="horizontal my-0 dark">
-                    <div class="card-footer p-3">
-                        <p class="mb-0 ">Just updated</p>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-        <div class="col-lg-6 col-md-5">
-            <div id="map" class="mt-0 mt-lg-n4"></div>
-        </div>
+<div class="stats">
+    <div class="stat">
+        <p class="stat__k">Revenue</p>
+        <p class="stat__v"><?= taka($revenue) ?></p>
+        <p class="stat__m">Across <?= $orderCount ?> order<?= $orderCount === 1 ? '' : 's' ?>, cancellations excluded</p>
+    </div>
+    <div class="stat">
+        <p class="stat__k">Awaiting action</p>
+        <p class="stat__v"><?= $pending ?></p>
+        <p class="stat__m"><?= $pending ? '<b>Needs processing</b>' : 'Nothing waiting' ?></p>
+    </div>
+    <div class="stat">
+        <p class="stat__k">Customers</p>
+        <p class="stat__v"><?= $customers ?></p>
+        <p class="stat__m">Registered accounts</p>
+    </div>
+    <div class="stat">
+        <p class="stat__k">Catalogue</p>
+        <p class="stat__v"><?= $liveCount ?></p>
+        <p class="stat__m"><?= $hiddenCount ?> unpublished<?= $outOfStock ? ', <b>' . $outOfStock . ' out of stock</b>' : '' ?></p>
     </div>
 </div>
 
+<div class="grid-2">
 
-<?php
-include('includes/footer.php');
-?>
+    <section class="card">
+        <div class="card__head">
+            <h2>Latest orders</h2>
+            <a class="btn btn--quiet btn--sm" href="orders.php">All orders</a>
+        </div>
+        <div class="card__body card__body--flush">
+            <?php if ($recent && mysqli_num_rows($recent) > 0) { ?>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Tracking</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Status</th>
+                                <th scope="col" class="num">Total</th>
+                                <th scope="col"><span class="visually-hidden">Open</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recent as $o) { ?>
+                                <tr>
+                                    <td class="table__title"><?= e($o['tracking_no']) ?></td>
+                                    <td>
+                                        <?= e($o['name']) ?>
+                                        <span class="table__sub"><?= e(date('j M Y', strtotime($o['created_at']))) ?></span>
+                                    </td>
+                                    <td><span class="badge" data-status="<?= (int) $o['status'] ?>"><?= e(orderStatus($o['status'])) ?></span></td>
+                                    <td class="num"><?= taka($o['total_price']) ?></td>
+                                    <td class="table__actions">
+                                        <a class="btn btn--ghost btn--sm" href="order-history.php?trackid=<?= urlencode($o['tracking_no']) ?>">Open</a>
+                                    </td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php } else { ?>
+                <div class="empty">
+                    <span class="empty__icon"><i class="fa-solid fa-inbox" aria-hidden="true"></i></span>
+                    <p>No orders have been placed yet.</p>
+                </div>
+            <?php } ?>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card__head">
+            <h2>Running low</h2>
+            <a class="btn btn--quiet btn--sm" href="perfume.php">Catalogue</a>
+        </div>
+        <div class="card__body">
+            <?php if ($lowStock && mysqli_num_rows($lowStock) > 0) { ?>
+                <?php foreach ($lowStock as $p) { ?>
+                    <div class="line-item">
+                        <img src="../images/<?= e($p['image_path']) ?>" alt="" loading="lazy">
+                        <div>
+                            <p class="line-item__name"><?= e($p['name']) ?></p>
+                            <p class="line-item__meta"><?= (int) $p['qty'] ?> left in stock</p>
+                        </div>
+                        <a class="btn btn--ghost btn--sm" href="edit-perfume.php?id=<?= (int) $p['id'] ?>">Edit</a>
+                    </div>
+                <?php } ?>
+            <?php } else { ?>
+                <div class="empty">
+                    <span class="empty__icon"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+                    <p>Every published bottle is comfortably in stock.</p>
+                </div>
+            <?php } ?>
+        </div>
+    </section>
+
+</div>
+
+<?php include('Includes/footer.php'); ?>

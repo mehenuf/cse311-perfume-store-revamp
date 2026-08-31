@@ -15,7 +15,7 @@ include('includes/header.php');
     <div class="panel auth-card" style="max-width:620px">
         <div class="panel__head">
             <h1 style="font-size:var(--t-h2)">Create your account</h1>
-            <p style="color:var(--text-muted);font-size:var(--t-sm);margin-top:var(--s-2)">
+            <p style="color:var(--fg-muted);font-size:var(--t-sm);margin-top:var(--s-2)">
                 It takes a minute, and your cart follows you between visits.
             </p>
         </div>
@@ -77,8 +77,8 @@ include('includes/header.php');
             </div>
         </form>
 
-        <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--text-muted);font-size:var(--t-sm)">
-            Already have an account? <a href="login.php" style="color:var(--accent);font-weight:600">Log in</a>
+        <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--fg-muted);font-size:var(--t-sm)">
+            Already have an account? <a href="login.php" style="color:var(--gold);font-weight:600">Log in</a>
         </p>
     </div>
 </div>

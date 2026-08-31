@@ -37,13 +37,13 @@ echo crumb(['Home' => 'index.php', 'Orders' => null]);
                     <tbody>
                         <?php foreach ($orders as $order) { ?>
                             <tr>
-                                <td style="font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap">
+                                <td style="font-family:'Jost', sans-serif;font-weight:600;white-space:nowrap">
                                     <?= e($order['tracking_no']) ?>
                                 </td>
-                                <td style="color:var(--text-muted);white-space:nowrap">
+                                <td style="color:var(--fg-muted);white-space:nowrap">
                                     <?= e(date('j M Y', strtotime($order['created_at']))) ?>
                                 </td>
-                                <td style="font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap">
+                                <td style="font-family:'Jost', sans-serif;font-weight:600;white-space:nowrap">
                                     <?= taka($order['total_price']) ?>
                                 </td>
                                 <td>

@@ -5,15 +5,19 @@
  */
 list($stockText, $stockLow) = stockLabel($p['qty']);
 ?>
-<article class="product" data-product data-reveal>
+<article class="product" data-product data-reveal="rise">
     <div class="product__media">
-        <img src="images/<?= e($p['image_path']) ?>"
-             alt="<?= e($p['name']) ?> bottle"
-             loading="lazy" decoding="async" width="480" height="600">
+        <?php if (trim($p['image_path']) !== '') { ?>
+            <img src="<?= $basePath ?>images/<?= e($p['image_path']) ?>"
+                 alt="<?= e($p['name']) ?> bottle"
+                 loading="lazy" decoding="async" width="480" height="600">
+        <?php } else { ?>
+            <?= pendingMedia($p['name']) ?>
+        <?php } ?>
     </div>
     <div class="product__body">
         <h3 class="product__name">
-            <a class="product__link" href="display-perfume.php?name=<?= urlencode($p['name']) ?>">
+            <a class="product__link" href="<?= $basePath ?>display-perfume.php?name=<?= urlencode($p['name']) ?>">
                 <?= e($p['name']) ?>
             </a>
         </h3>

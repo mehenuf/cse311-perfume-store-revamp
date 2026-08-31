@@ -1,0 +1,45 @@
+*{
+    font-family: 'Open Sans', sans-serif;
+}
+
+label{
+    font-family: 'Poppins', sans-serif;
+}
+
+a {
+    text-decoration: none;
+}
+
+h6{
+    text-decoration: none;
+}
+
+.underline {
+    height: 5px;
+    width: 120px;
+    background-color: darkcyan;
+    border-radius: 20px;
+}
+.underline2 {
+    height: 5px;
+    width: 150px;
+    background-color: darkcyan;
+    border-radius: 20px;
+}
+
+.underline3 {
+    height: 5px;
+    width: 200px;
+    background-color: darkcyan;
+    border-radius: 20px;
+}
+
+.bg-bisque {
+    background-color: bisque;
+}
+.bg-awhite {
+    background-color:rgb(227, 226, 224);
+}
+.bg-crimson{
+    background-color: crimson;
+}

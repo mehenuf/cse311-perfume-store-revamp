@@ -518,3 +518,42 @@ button, input, select, textarea { font: inherit; color: inherit; }
     color: var(--fg-faint);
     font-size: .9rem;
 }
+
+/* ==========================================================================
+   Continuity
+   An Operate surface wants the jumps removed, not motion added. Page changes
+   stop flashing, images stop popping, scrollers stop dragging the page.
+   Nothing here draws attention to itself.
+   ========================================================================== */
+
+/* Navigating between admin pages keeps the rail and topbar still, so only the
+   content area changes. That is the single biggest fluidity win here: the
+   sidebar no longer redraws on every click. */
+@view-transition { navigation: auto; }
+
+.rail   { view-transition-name: admin-rail; }
+.topbar { view-transition-name: admin-topbar; }
+
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root) { animation: admin-vt-out 140ms ease both; }
+    ::view-transition-new(root) { animation: admin-vt-in 240ms cubic-bezier(.16, 1, .3, 1) both; }
+}
+@keyframes admin-vt-out { to   { opacity: 0; } }
+@keyframes admin-vt-in  { from { opacity: 0; transform: translateY(6px); } }
+
+/* Thumbnails fade as they decode rather than snapping in one row at a time. */
+@media (prefers-reduced-motion: no-preference) {
+    .table__thumb, .line-item img, .preview-img {
+        opacity: 0;
+        transition: opacity var(--d-2) var(--ease);
+    }
+    img[data-loaded='true'] { opacity: 1; }
+}
+
+/* A wide table should not drag the page sideways with it. */
+.table-wrap { overscroll-behavior-x: contain; }
+.rail__nav  { overscroll-behavior-y: contain; }
+
+/* Rows and controls answer the pointer without shifting layout. */
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(1px); }

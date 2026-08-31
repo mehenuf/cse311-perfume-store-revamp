@@ -72,12 +72,24 @@
             var url = URL.createObjectURL(file);
             preview.src = url;
             preview.hidden = false;
+            preview.dataset.loaded = 'true';
             if (placeholder) placeholder.hidden = true;
             preview.addEventListener('load', function () { URL.revokeObjectURL(url); }, { once: true });
         });
     }
 
-    function boot() { initRail(); initConfirm(); initImagePreview(); }
+
+    /* ---- images fade in as they decode, rather than popping ---- */
+    function initImageArrival() {
+        function mark(img) { img.dataset.loaded = 'true'; }
+        document.querySelectorAll('img').forEach(function (img) {
+            if (img.complete && img.naturalWidth > 0) { mark(img); return; }
+            img.addEventListener('load', function () { mark(img); }, { once: true });
+            img.addEventListener('error', function () { mark(img); }, { once: true });
+        });
+    }
+
+    function boot() { initRail(); initConfirm(); initImagePreview(); initImageArrival(); }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', boot);

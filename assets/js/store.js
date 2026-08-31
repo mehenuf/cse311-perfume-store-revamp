@@ -156,6 +156,7 @@
             }
 
             function sync() {
+                railEdge(rail);
                 if (!prev || !next) return;
                 var max = rail.scrollWidth - rail.clientWidth - 2;
                 prev.disabled = rail.scrollLeft <= 2;
@@ -194,6 +195,85 @@
                 });
             });
         });
+    }
+
+
+    /* ---------------------------------------------------------------------
+       Images arriving
+       Marks each image once it has actually decoded, so CSS can fade it in
+       instead of letting it pop. Cached images are marked immediately, which
+       keeps a repeat visit instant rather than re-animating everything.
+       --------------------------------------------------------------------- */
+    function initImageArrival() {
+        function mark(img) { img.dataset.loaded = 'true'; }
+
+        function watch(img) {
+            if (img.dataset.loaded === 'true') return;
+            // complete + naturalWidth means it came from cache this instant
+            if (img.complete && img.naturalWidth > 0) { mark(img); return; }
+            img.addEventListener('load', function () { mark(img); }, { once: true });
+            // A broken file must not stay invisible forever.
+            img.addEventListener('error', function () { mark(img); }, { once: true });
+        }
+
+        document.querySelectorAll('img').forEach(watch);
+
+        // Anything injected later (a reloaded cart fragment) gets the same treatment.
+        if ('MutationObserver' in window) {
+            new MutationObserver(function (records) {
+                records.forEach(function (r) {
+                    r.addedNodes.forEach(function (node) {
+                        if (node.nodeType !== 1) return;
+                        if (node.tagName === 'IMG') watch(node);
+                        else if (node.querySelectorAll) node.querySelectorAll('img').forEach(watch);
+                    });
+                });
+            }).observe(document.body, { childList: true, subtree: true });
+        }
+    }
+
+    /* ---------------------------------------------------------------------
+       Shared element across a navigation
+       Naming the photograph you clicked lets the view transition carry it
+       into the product page, so the bottle grows instead of the page
+       reloading. Names must be unique per document, so only ever one.
+       --------------------------------------------------------------------- */
+    function initSharedMedia() {
+        if (!document.startViewTransition && !('CSSViewTransitionRule' in window)) {
+            // No support: the click still navigates normally.
+        }
+        document.addEventListener('click', function (e) {
+            var link = e.target.closest('.product__link, .cart-line__media, .cart-line__name');
+            if (!link) return;
+            var card = link.closest('.product') || link.closest('[data-cart-line]');
+            if (!card) return;
+            var media = card.querySelector('.product__media, .cart-line__media');
+            if (!media) return;
+
+            // A name must be unique in the document. On the product page the
+            // detail image already carries it from CSS, so clicking a related
+            // product would create a duplicate and abort the transition.
+            var detail = document.querySelector('.detail__media');
+            if (detail && detail !== media) detail.style.viewTransitionName = 'none';
+
+            document.querySelectorAll('[style*="view-transition-name"]').forEach(function (el) {
+                if (el !== detail) el.style.viewTransitionName = '';
+            });
+            media.style.viewTransitionName = 'product-media';
+        }, true);
+    }
+
+    /* ---------------------------------------------------------------------
+       Rail edges
+       Fades whichever end still has content beyond it, so a horizontal
+       scroller reads as continuous rather than clipped.
+       --------------------------------------------------------------------- */
+    function railEdge(rail) {
+        var max = rail.scrollWidth - rail.clientWidth;
+        if (max <= 2) { rail.removeAttribute('data-edge'); return; }
+        var atStart = rail.scrollLeft <= 2;
+        var atEnd = rail.scrollLeft >= max - 2;
+        rail.dataset.edge = atStart ? 'end' : (atEnd ? 'start' : 'both');
     }
 
     /* ---------------------------------------------------------------------
@@ -383,6 +463,11 @@
         var next = Math.max(0, (parseInt(el.textContent, 10) || 0) + delta);
         el.textContent = next;
         el.hidden = next === 0;
+
+        // A beat, so a number that changed without a page load is noticed.
+        if (reduceMotion || next === 0) return;
+        el.dataset.bumped = 'true';
+        window.setTimeout(function () { delete el.dataset.bumped; }, 460);
     }
 
     /* ---------------------------------------------------------------------
@@ -394,6 +479,8 @@
         initRails();
         initQty();
         initCart();
+        initImageArrival();
+        initSharedMedia();
     }
 
     if (document.readyState === 'loading') {

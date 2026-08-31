@@ -52,6 +52,7 @@ $description = isset($pageDescription) && $pageDescription !== ''
 
 <body>
     <a class="skip-link" href="#main">Skip to content</a>
+    <div class="scroll-line" aria-hidden="true"></div>
 
     <?php include(__DIR__ . '/navbar.php'); ?>
 

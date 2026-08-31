@@ -539,6 +539,9 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .detail { display: grid; gap: var(--s-6); align-items: start; }
 @media (min-width: 900px) { .detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-8); } }
 .detail__media {
+    /* The other half of the shared-element morph: the grid names the card it
+       came from, this names where it lands. */
+    view-transition-name: product-media;
     position: sticky; top: calc(var(--nav-h) + var(--s-5));
     overflow: hidden; background: var(--ink-sunken);
     border: 1px solid var(--line); aspect-ratio: 4 / 5;
@@ -923,3 +926,138 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     text-transform: uppercase;
     color: var(--fg-faint);
 }
+
+/* ==========================================================================
+   20. Continuity
+   These are not decorations. Each one removes a moment where the interface
+   currently jumps: between pages, while an image decodes, at the edge of a
+   scroller, when a number changes. The hero is still the only authored
+   set-piece; everything here is connective tissue.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   20.1 Between pages
+   A multi-page PHP site normally flashes white and starts over on every click.
+   Cross-document view transitions make navigation feel like one surface.
+   Chromium honours this today; everywhere else simply navigates as before.
+   -------------------------------------------------------------------------- */
+@view-transition { navigation: auto; }
+
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root) {
+        animation: vt-out 220ms cubic-bezier(.7, 0, .84, 0) both;
+    }
+    ::view-transition-new(root) {
+        animation: vt-in 380ms var(--ease) both;
+    }
+    /* The product photograph carries across from the grid into the detail
+       page, so the bottle you clicked is the bottle that grows. */
+    ::view-transition-group(product-media) { animation-duration: 460ms; }
+    ::view-transition-old(product-media),
+    ::view-transition-new(product-media) { animation: none; mix-blend-mode: normal; }
+}
+@keyframes vt-out { to { opacity: 0; transform: translateY(-8px); } }
+@keyframes vt-in  { from { opacity: 0; transform: translateY(10px); } }
+
+/* The nav and footer are the same objects on every page, so they should not
+   cross-fade with the content. */
+.nav    { view-transition-name: site-nav; }
+.footer { view-transition-name: site-footer; }
+
+/* --------------------------------------------------------------------------
+   20.2 Scroll position, made visible
+   A hairline that fills as you move down a long catalogue. Pure CSS, driven
+   by the scroll timeline, so it costs no JavaScript and never desyncs.
+   -------------------------------------------------------------------------- */
+.scroll-line {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 2px;
+    z-index: 150;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    pointer-events: none;
+}
+@supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .scroll-line {
+            animation: scroll-fill linear both;
+            animation-timeline: scroll(root block);
+        }
+    }
+}
+@keyframes scroll-fill { to { transform: scaleX(1); } }
+
+/* --------------------------------------------------------------------------
+   20.3 Images arriving
+   Product photography pops in as each file decodes. Fading it in over the
+   sunken ground turns a jolt into an arrival.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+    .product__media img,
+    .brand-tile img,
+    .editorial__media img,
+    .detail__media img,
+    .cart-line__media img {
+        opacity: 0;
+        transition: opacity var(--d-3) var(--ease), transform var(--d-4) var(--ease);
+    }
+    /* data-loaded is set once the file has actually decoded */
+    img[data-loaded='true'] { opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+   20.4 Scrollers that feel continuous
+   Contained overscroll stops a horizontal flick from dragging the whole page,
+   and the edge mask tells you there is more without drawing a control.
+   -------------------------------------------------------------------------- */
+.rail {
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) { .rail { scroll-behavior: auto; } }
+
+.rail[data-edge='both']  { mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
+.rail[data-edge='start'] { mask-image: linear-gradient(90deg, #000 95%, transparent); }
+.rail[data-edge='end']   { mask-image: linear-gradient(90deg, transparent, #000 5%); }
+
+.nav__drawer, .table-wrap { overscroll-behavior: contain; }
+
+/* --------------------------------------------------------------------------
+   20.5 Numbers that change
+   The cart count is the one figure that updates without a page load, so it
+   earns a beat of its own. Without it the number silently swaps.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+    .nav__cart-count[data-bumped='true'] { animation: bump 420ms var(--ease); }
+}
+@keyframes bump {
+    35% { transform: scale(1.35); }
+    70% { transform: scale(.94); }
+    to  { transform: scale(1); }
+}
+
+/* --------------------------------------------------------------------------
+   20.6 Pressable surfaces
+   A gold hairline draws along the foot of a card on hover, so the pointer has
+   somewhere to land rather than only tinting the background.
+   -------------------------------------------------------------------------- */
+.product::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--d-2) var(--ease);
+}
+.product:hover::after,
+.product:focus-within::after { transform: scaleX(1); }
+
+/* Buttons lift on hover rather than only changing colour. */
+.btn--primary:hover,
+.btn--ghost:hover { transform: translateY(-1px); }
+.btn--primary:active,
+.btn--ghost:active { transform: translateY(1px); }

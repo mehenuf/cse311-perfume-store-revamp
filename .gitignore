@@ -10,8 +10,10 @@
 # --------------------------------------------------------------
 #  1. Secrets and credentials  ·  NEVER commit these
 # --------------------------------------------------------------
-config/env.php
-config/env.local.php
+# Every env file except the committed template.
+# Covers env.php, env.local.php, env.production.php, env.staging.php ...
+config/env*.php
+!config/env.example.php
 
 .env
 .env.*

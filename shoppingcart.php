@@ -2,100 +2,130 @@
 session_start();
 include('authenticate.php');
 include('functions/functions.php');
+
+$pageTitle       = 'Your cart';
+$pageDescription = 'Review the fragrances in your cart before checking out.';
 include('includes/header.php');
+
+$cartItems = displayCart();
+$lines     = [];
+$total     = 0;
+$count     = 0;
+
+if ($cartItems) {
+    foreach ($cartItems as $row) {
+        $lines[] = $row;
+        $total  += $row['price'] * $row['perfume_quantity'];
+        $count  += (int) $row['perfume_quantity'];
+    }
+}
+
+echo crumb(['Home' => 'index.php', 'Cart' => null]);
 ?>
-<div class="py-3 bg-secondary">
-    <div class="container">
-        <h6 class="text-white">
-            <a class="text-white" href="index.php" style="text-decoration: none;">
-                Home /
-            </a>
-            <a class="text-white" href="shoppingcart.php" style="text-decoration: none;">
-                Shopping Cart
-            </a>
-        </h6>
-    </div>
-</div>
-<div class="py-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <div id="shopcart">
-                    <?php
-                    $cart_items = displayCart();
-                    if (mysqli_num_rows($cart_items) > 0) {
-                    ?>
-                        <div class="card mx-auto shadow">
-                            <div class="card-header">
-                                <h4>Your Cart</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-md-5">
-                                        <h6>Product</h6>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <h6>Price</h6>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <h6>Quantity</h6>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <h6>Action</h6>
-                                    </div>
-                                </div>
-                                <?php
-                                foreach ($cart_items as $key) {
-                                ?>
-                                    <div class="card perfume_data shadow-sm mb-4">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-2">
-                                                <img src="images/<?= $key['image_path'] ?>" alt="<?= $key['perfume_name'] ?>" class="w-75">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <h5><?= $key['perfume_name'] ?></h5>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <h5><?= $key['price'] ?></h5>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <input type="hidden" class="perfumeID" value="<?= $key['perfume_id'] ?>">
-                                                <div class="input-group mb-3" style="width: 125px;">
-                                                    <button class="input-group-text decrement-btn updateQty">-</button>
-                                                    <input type="text" class="form-control text-center perfume-qty bg-white" value="<?= $key['perfume_quantity'] ?>" disabled>
-                                                    <button class="input-group-text increment-btn updateQty">+</button>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <button class="btn btn-outline-danger btn-sm delete_cart_item" value="<?= $key['cart_id'] ?>"><i class="fa-solid fa-trash-can me-1"></i> Remove</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php
-                                }
-                                ?>
-                            </div>
-                            <div class="float-start">
-                                <a href="checkout.php" class="btn btn-outline-primary w-100">Checkout</a>
-                            </div>
-                        </div>
-                    <?php
-                    } else {
-                    ?>
-                        <div class="card card-body shadow-blur text-center text-danger">
-                            <h4 class="py-3">
-                                Your cart is empty!!!
-                            </h4>
-                        </div>
-                    <?php
-                    }
-                    ?>
-                </div>
-            </div>
+
+<section class="section shell">
+    <div class="section-head">
+        <div>
+            <h1 style="font-size:var(--t-h1)">Your cart</h1>
+            <p data-cart-item-count><?= $count ?> <?= $count === 1 ? 'item' : 'items' ?></p>
         </div>
     </div>
-</div>
 
+    <?php if (count($lines) === 0) { ?>
+
+        <div class="empty">
+            <span class="empty__icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i></span>
+            <h2 style="font-size:var(--t-h3)">Your cart is empty</h2>
+            <p>Nothing here yet. Find something worth wearing.</p>
+            <a class="btn btn--primary" href="perfumes.php">Browse the collection</a>
+        </div>
+
+    <?php } else { ?>
+
+        <div class="cart-layout">
+
+            <div class="panel">
+                <?php foreach ($lines as $line) { ?>
+                    <div class="cart-line" data-cart-line data-unit-price="<?= (float) $line['price'] ?>">
+
+                        <a class="cart-line__media" href="display-perfume.php?name=<?= urlencode($line['perfume_name']) ?>">
+                            <img src="images/<?= e($line['image_path']) ?>"
+                                 alt="<?= e($line['perfume_name']) ?> bottle" loading="lazy" width="168" height="210">
+                        </a>
+
+                        <div>
+                            <a class="cart-line__name" href="display-perfume.php?name=<?= urlencode($line['perfume_name']) ?>">
+                                <?= e($line['perfume_name']) ?>
+                            </a>
+                            <p class="cart-line__price"><?= taka($line['price']) ?> each</p>
+                        </div>
+
+                        <div class="cart-line__controls"
+                             data-qty data-cart-qty data-min="1" data-max="10"
+                             data-perfume-id="<?= (int) $line['perfume_id'] ?>">
+                            <div class="qty">
+                                <button type="button" data-qty-step="-1" aria-label="Decrease quantity"
+                                        <?= (int) $line['perfume_quantity'] <= 1 ? 'disabled' : '' ?>>
+                                    <i class="fa-solid fa-minus" aria-hidden="true"></i>
+                                </button>
+                                <input type="number" value="<?= (int) $line['perfume_quantity'] ?>"
+                                       min="1" max="10" data-qty-input
+                                       aria-label="Quantity of <?= e($line['perfume_name']) ?>" readonly>
+                                <button type="button" data-qty-step="1" aria-label="Increase quantity"
+                                        <?= (int) $line['perfume_quantity'] >= 10 ? 'disabled' : '' ?>>
+                                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
+
+                            <button class="btn btn--danger btn--sm" type="button"
+                                    data-remove-line="<?= (int) $line['cart_id'] ?>">
+                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                <span class="visually-hidden">Remove <?= e($line['perfume_name']) ?></span>
+                                Remove
+                            </button>
+                        </div>
+
+                        <div style="text-align:right;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap"
+                             data-line-total><?= taka($line['price'] * $line['perfume_quantity']) ?></div>
+                    </div>
+                <?php } ?>
+            </div>
+
+            <aside class="panel summary">
+                <div class="panel__head">
+                    <h2 style="font-size:var(--t-h3)">Order summary</h2>
+                </div>
+
+                <div class="summary__row">
+                    <span>Subtotal</span>
+                    <span data-cart-total><?= taka($total) ?></span>
+                </div>
+                <div class="summary__row">
+                    <span>Delivery</span>
+                    <span>Calculated at checkout</span>
+                </div>
+                <div class="summary__row">
+                    <span>Payment</span>
+                    <span>Cash on delivery</span>
+                </div>
+
+                <div class="summary__total">
+                    <span>Total</span>
+                    <span data-cart-total><?= taka($total) ?></span>
+                </div>
+
+                <a class="btn btn--primary btn--lg btn--block" href="checkout.php" style="margin-top:var(--s-5)">
+                    Checkout
+                </a>
+                <a class="btn btn--quiet btn--block" href="perfumes.php" style="margin-top:var(--s-2)">
+                    Keep shopping
+                </a>
+            </aside>
+
+        </div>
+
+    <?php } ?>
+</section>
 
 <?php
 include('includes/outro.php');

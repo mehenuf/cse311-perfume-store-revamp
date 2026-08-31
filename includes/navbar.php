@@ -1,77 +1,109 @@
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark shadow">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="index.php">Perfume Store</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNavDropdown">
-            <ul class="navbar-nav mx-auto">
-                <li class="nav-item ">
-                    <a class="nav-link active" aria-current="page" href="index.php">Home <i class="fa-solid fa-house fa-bounce"></i></a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Perfumes
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="perfumes.php">All Perfumes</a></li>
-                        <li><a class="dropdown-item" href="#">Male</a></li>
-                        <li><a class="dropdown-item" href="#">Female</a></li>
-                        <li><a class="dropdown-item" href="#">Unisex</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Brands
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="dior.php">Dior</a></li>
-                        <li><a class="dropdown-item" href="chanel.php">Chanel</a></li>
-                        <li><a class="dropdown-item" href="tomford.php">Tom Ford</a></li>
-                        <li><a class="dropdown-item" href="mancera.php">Mancera</a></li>
-                        <li><a class="dropdown-item" href="lattafa.php">Lattafa</a></li>
-                        <li><a class="dropdown-item" href="hugoboss.php">Hugo Boss</a></li>
-                    </ul>
-                </li>
+<?php
+require_once(__DIR__ . '/../config/dbcon.php');
 
+$currentPage = basename($_SERVER['PHP_SELF']);
+$isAuthed    = isset($_SESSION['auth']);
+$isAdmin     = $isAuthed && isset($_SESSION['admin_check']) && $_SESSION['admin_check'] == 1;
 
+// Live cart count for the header badge.
+$cartCount = 0;
+if ($isAuthed && isset($_SESSION['auth_user']['user_id'])) {
+    $uid  = (int) $_SESSION['auth_user']['user_id'];
+    $res  = mysqli_query($con, "SELECT COALESCE(SUM(perfume_qty), 0) AS n FROM cart WHERE user_id = $uid");
+    if ($res && ($row = mysqli_fetch_assoc($res))) {
+        $cartCount = (int) $row['n'];
+    }
+}
 
-                <?php
-                if (isset($_SESSION['auth'])) {
-                ?>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <?= $_SESSION['auth_user']['email'] ?> <i class="fa-solid fa-user"></i>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="shoppingcart.php"><i class="fa-solid fa-cart-shopping"></i> My Cart</a></li>
-                            <li><a class="dropdown-item" href="orders.php"><i class="fa-solid fa-cart-flatbed"></i> My Orders</a></li>
-                            <li><a class="dropdown-item" href="logout.php"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                    <?php
-                    if ($_SESSION['admin_check'] == 1) {
-                    ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="admin/index.php">Admin Panel <i class="fa-solid fa-user-tie fa-flip"></i></a>
-                        </li>
-                    <?php
-                    }
-                } else {
-                    ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="register.php">Sign up</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.php">Log in</a>
-                    </li>
-                <?php
-                }
+$brands = [
+    'dior.php'      => 'Dior',
+    'chanel.php'    => 'Chanel',
+    'tomford.php'   => 'Tom Ford',
+    'mancera.php'   => 'Mancera',
+    'lattafa.php'   => 'Lattafa',
+    'hugoboss.php'  => 'Hugo Boss',
+];
 
-                ?>
+/** Marks the active link for both styling and assistive tech. */
+function navCurrent($page, $currentPage)
+{
+    return $page === $currentPage ? ' aria-current="page"' : '';
+}
+?>
+<nav class="nav" data-nav aria-label="Primary">
+    <div class="shell nav__inner">
 
+        <a class="nav__brand" href="index.php">
+            <span class="nav__mark" aria-hidden="true">PS</span>
+            <span>Perfume Store</span>
+        </a>
 
-            </ul>
+        <ul class="nav__links">
+            <li><a class="nav__link" href="index.php"<?= navCurrent('index.php', $currentPage) ?>>Home</a></li>
+            <li><a class="nav__link" href="perfumes.php"<?= navCurrent('perfumes.php', $currentPage) ?>>Collection</a></li>
+
+            <li class="nav__group" data-nav-group data-open="false">
+                <a class="nav__link" href="perfumes.php" data-nav-trigger aria-expanded="false" aria-haspopup="true">
+                    Brands <i class="fa-solid fa-chevron-down" style="font-size:.62em;opacity:.6" aria-hidden="true"></i>
+                </a>
+                <ul class="nav__menu">
+                    <?php foreach ($brands as $file => $label) { ?>
+                        <li><a href="<?= $file ?>"><?= $label ?></a></li>
+                    <?php } ?>
+                </ul>
+            </li>
+
+            <?php if ($isAuthed) { ?>
+                <li><a class="nav__link" href="orders.php"<?= navCurrent('orders.php', $currentPage) ?>>Orders</a></li>
+            <?php } ?>
+            <?php if ($isAdmin) { ?>
+                <li><a class="nav__link" href="admin/index.php">Admin</a></li>
+            <?php } ?>
+        </ul>
+
+        <div class="nav__actions">
+            <?php if ($isAuthed) { ?>
+                <a class="btn btn--quiet nav__cart" href="shoppingcart.php" aria-label="Your cart">
+                    <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                    <span class="nav__cart-count" data-cart-count<?= $cartCount === 0 ? ' hidden' : '' ?>><?= $cartCount ?></span>
+                </a>
+
+                <a class="btn btn--ghost btn--sm" href="logout.php">
+                    <span class="visually-hidden">Log out of </span><?= htmlspecialchars($_SESSION['auth_user']['username'], ENT_QUOTES) ?>
+                </a>
+            <?php } else { ?>
+                <a class="btn btn--quiet btn--sm" href="login.php">Log in</a>
+                <a class="btn btn--primary btn--sm" href="register.php">Create account</a>
+            <?php } ?>
+
+            <button class="nav__toggle" type="button" data-nav-toggle aria-expanded="false"
+                    aria-controls="nav-drawer" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+
+    <div class="nav__drawer" id="nav-drawer" data-nav-drawer data-open="false">
+        <div>
+            <div class="shell nav__drawer-inner">
+                <ul>
+                    <li><a href="index.php">Home</a></li>
+                    <li><a href="perfumes.php">Collection</a></li>
+                    <?php if ($isAuthed) { ?>
+                        <li><a href="shoppingcart.php">Cart<?= $cartCount ? ' (' . $cartCount . ')' : '' ?></a></li>
+                        <li><a href="orders.php">Orders</a></li>
+                    <?php } ?>
+                    <?php if ($isAdmin) { ?>
+                        <li><a href="admin/index.php">Admin panel</a></li>
+                    <?php } ?>
+                </ul>
+                <p class="nav__drawer-label">Brands</p>
+                <ul>
+                    <?php foreach ($brands as $file => $label) { ?>
+                        <li><a href="<?= $file ?>"><?= $label ?></a></li>
+                    <?php } ?>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>

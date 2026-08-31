@@ -4,16 +4,40 @@ session_start();
 include('../../config/dbcon.php');
 include('../../functions/myfunctions.php');
 
+/**
+ * Reduce an uploaded filename to something safe to place on disk:
+ * strip any directory part, keep only sane characters, and force a
+ * known image extension.
+ */
+function safeUploadName($name)
+{
+    $name = basename((string) $name);
+    if ($name === '') {
+        return '';
+    }
+    $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+    if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+        return '';
+    }
+    $stem = pathinfo($name, PATHINFO_FILENAME);
+    $stem = preg_replace('/[^A-Za-z0-9_-]+/', '_', $stem);
+    $stem = trim($stem, '_');
+    if ($stem === '') {
+        $stem = 'perfume';
+    }
+    return substr($stem, 0, 80) . '.' . $ext;
+}
+
 if (isset($_POST['addperfume_btn'])) {
     $name = $_POST['name'];
     $perfume_notes = $_POST['perfume_notes'];
     $description = $_POST['description'];
     $volume = $_POST['volume'];
     $qty = $_POST['qty'];
-    $image = $_FILES['image_path']['name'];
-    $path = "../../images";
-    //$extension = pathinfo($image, PATHINFO_EXTENSION);
-    $img_path = $image;
+    // Absolute upload directory, so it resolves no matter what the current
+    // working directory is on the host.
+    $path = __DIR__ . '/../../images';
+    $img_path = safeUploadName($_FILES['image_path']['name']);
     $price = $_POST['price'];
     if (isset($_POST['trending'])) {
         $trending = 1;
@@ -33,7 +57,7 @@ if (isset($_POST['addperfume_btn'])) {
     $add_query_run = mysqli_query($con, $add_query);
 
     if ($add_query_run) {
-        move_uploaded_file($_FILES['image']['tmp_name'], $path . '/' . $img_path);
+        move_uploaded_file($_FILES['image_path']['tmp_name'], $path . '/' . $img_path);
         redirect("../add.php", "The perfume was successfully added!!");
     } else {
         redirect("../add.php", "There was an error adding the perfume  :( ");
@@ -46,7 +70,8 @@ if (isset($_POST['addperfume_btn'])) {
     $volume = $_POST['volume'];
     $price = $_POST['price'];
     $qty = $_POST['quantity'];
-    $new_image = $_FILES['image_path']['name'];
+    $path = __DIR__ . '/../../images';
+    $new_image = safeUploadName($_FILES['image_path']['name']);
     $old_image = $_POST['old_image'];
     if (isset($_POST['trending'])) {
         $trending = 1;
@@ -85,8 +110,9 @@ if (isset($_POST['addperfume_btn'])) {
 
         if ($_FILES['image_path']['name'] != "") {
             move_uploaded_file($_FILES['image_path']['tmp_name'], $path . '/' . $new_image);
-            if (file_exists("../../images/" . $old_image)) {
-                unlink("../../images/" . $old_image);
+            if ($old_image !== '' && $old_image !== $new_image
+                && file_exists($path . '/' . $old_image)) {
+                unlink($path . '/' . $old_image);
             }
             //echo "before redirect";
             //redirect_func("../edit-perfume.php", "The edit was saved successfully!");
@@ -106,13 +132,19 @@ if (isset($_POST['addperfume_btn'])) {
 
     $remove_query = "DELETE FROM perfumes WHERE id = $delete_id;";
     $remove_query_run = mysqli_query($con, $remove_query);
+
     if ($remove_query_run == true) {
-        redirect("../perfume.php", "Perfume was successfully deleted!");
-        if (file_exists("../../images/" . $old_image)) {
-            unlink("../../images/" . $old_image);
-        } else {
-            redirect("../perfume.php", "There's being a fucking error and i don't know what's wrong");
+        // Delete the file first: redirect() ends the request, so anything
+        // after it never ran.
+        $imageFile = __DIR__ . '/../../images/' . $image;
+        if ($image !== '' && file_exists($imageFile)) {
+            unlink($imageFile);
         }
+        redirect("../perfume.php", "Perfume was successfully deleted!");
+    } else {
+        // A perfume that has already been ordered cannot be deleted, because
+        // order_item.perfume_id is ON DELETE RESTRICT. Unpublish it instead.
+        redirect("../perfume.php", "This perfume appears in past orders, so it cannot be deleted. Untick Status to unpublish it instead.");
     }
 } elseif (isset($_POST['updateOrder_btn'])) {
     //echo "button clicked";

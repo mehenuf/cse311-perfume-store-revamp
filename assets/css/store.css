@@ -56,7 +56,7 @@
     --r-media: 12px;
 
     /* fluid type scale */
-    --t-display: clamp(2.75rem, 1.6rem + 4.6vw, 5.5rem);
+    --t-display: clamp(2.2rem, 1.35rem + 3.6vw, 4.25rem);
     --t-h1:      clamp(2.1rem, 1.4rem + 2.9vw, 3.5rem);
     --t-h2:      clamp(1.65rem, 1.25rem + 1.7vw, 2.5rem);
     --t-h3:      clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
@@ -332,8 +332,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (min-width: 1024px) { .nav__actions { margin-inline-start: 0; } }
 
 .nav__toggle {
-    display: grid;
-    place-items: center;
+    /* Flex with an explicit gap, so the bar pitch is exactly
+       1.5px + 4px = 5.5px and the open-state translate lands both
+       bars dead centre. Grid auto-rows did not give a predictable pitch. */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     width: 40px; height: 40px;
     background: transparent;
     border: 1px solid var(--line);
@@ -346,7 +352,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
     background: var(--text);
     transition: transform var(--d-base) var(--ease), opacity var(--d-fast) var(--ease);
 }
-.nav__toggle span + span { margin-top: 4px; }
 .nav__toggle[aria-expanded='true'] span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
 .nav__toggle[aria-expanded='true'] span:nth-child(2) { opacity: 0; }
 .nav__toggle[aria-expanded='true'] span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
@@ -589,7 +594,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
     }
 }
 
-.hero__copy { max-width: 34ch; }
+/* No width clamp: the grid column governs, so the headline resolves to two
+   lines at desktop and three on a phone instead of being squeezed narrow. */
+.hero__copy { max-width: 100%; }
 .hero__title {
     font-size: var(--t-display);
     font-weight: 600;
@@ -599,9 +606,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .hero__title em {
     font-style: italic;
     font-weight: 600;
-    line-height: 1.1;      /* descender clearance */
+    line-height: 1.1;          /* descender clearance */
     padding-bottom: 0.06em;
     display: inline-block;
+    /* inline-block eats the following space; the italic's right side
+       bearing makes it read tighter still, so give it back explicitly */
+    margin-inline-end: 0.14em;
 }
 .hero__sub {
     margin-top: var(--s-5);
@@ -643,7 +653,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
     gap: var(--s-4);
 }
 @media (min-width: 640px)  { .brand-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .brand-grid { grid-template-columns: repeat(3, 1fr); } }
+/* Four tracks, with the first tile of each row spanning two. Six houses fill
+   exactly two rows with no empty cell, and the rows are not identical. */
+@media (min-width: 1024px) { .brand-grid { grid-template-columns: repeat(4, 1fr); } }
 
 .brand-tile {
     position: relative;
@@ -672,7 +684,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(to top, rgba(8, 9, 11, 0.92) 8%, rgba(8, 9, 11, 0.35) 62%, rgba(8, 9, 11, 0.15));
+    /* Bottle photography is mostly light, so the label needs a real scrim,
+       not a hint of one. Holds WCAG AA for the white name over every shot. */
+    background: linear-gradient(to top,
+        rgba(8, 9, 11, 0.94) 0%,
+        rgba(8, 9, 11, 0.86) 26%,
+        rgba(8, 9, 11, 0.48) 58%,
+        rgba(8, 9, 11, 0.14) 100%);
 }
 .brand-tile__name {
     font-family: 'Outfit', sans-serif;
@@ -682,9 +700,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
     letter-spacing: -0.02em;
 }
 .brand-tile__count { font-size: var(--t-xs); color: rgba(246, 245, 243, 0.68); }
-/* first tile spans two columns on wide screens for rhythm */
 @media (min-width: 1024px) {
-    .brand-tile:first-child { grid-column: span 2; min-height: 230px; }
+    /* Row one leads wide, row two closes wide, so the two rows mirror
+       rather than repeat. Six tiles still fill eight tracks exactly. */
+    .brand-tile:nth-child(1),
+    .brand-tile:nth-child(6) { grid-column: span 2; }
+    .brand-tile { min-height: 240px; }
 }
 
 /* --------------------------------------------------------------------------

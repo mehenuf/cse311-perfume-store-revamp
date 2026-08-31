@@ -2,31 +2,43 @@
 /**
  * Single database connection for the whole application.
  *
- * Reads credentials from environment variables so the same code runs
- * against local XAMPP and against a hosted cloud database. Nothing
- * secret is committed - set the variables on your host (or in a local
- * .env consumed by your web server).
+ * Settings are resolved in this order:
  *
- *   DB_HOST     hostname                      (default: localhost)
- *   DB_PORT     port                          (default: 3306)
- *   DB_USER     username                      (default: root)
- *   DB_PASS     password                      (default: empty)
- *   DB_NAME     database name                 (default: perfumestore)
- *   DB_SSL      "1" to require TLS - most managed MySQL hosts need this
- *   DB_SSL_CA   optional path to a CA bundle supplied by the host
+ *   1. config/env.php      a file you create on the server (see env.example.php).
+ *                          This is the route for shared hosts like InfinityFree,
+ *                          which do not let you set environment variables.
+ *   2. environment vars    DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME,
+ *                          DB_SSL, DB_SSL_CA. Use these on hosts that support
+ *                          them (Render, Koyeb, Fly).
+ *   3. built-in defaults   localhost / root / no password / perfumestore,
+ *                          which reproduce the original XAMPP setup so local
+ *                          development keeps working with no config at all.
  *
- * With no environment set, the defaults reproduce the original XAMPP
- * setup, so local development keeps working unchanged.
+ * config/env.php holds a live password, so keep it off GitHub.
  */
 
 if (!isset($con)) {
 
-    $env = function ($key, $default = '') {
-        $value = getenv($key);
-        if ($value === false || $value === '') {
-            $value = isset($_ENV[$key]) ? $_ENV[$key] : $default;
+    $localConfig = [];
+    if (is_file(__DIR__ . '/env.php')) {
+        $loaded = require __DIR__ . '/env.php';
+        if (is_array($loaded)) {
+            $localConfig = $loaded;
         }
-        return $value;
+    }
+
+    $env = function ($key, $default = '') use ($localConfig) {
+        if (isset($localConfig[$key]) && $localConfig[$key] !== '') {
+            return $localConfig[$key];
+        }
+        $value = getenv($key);
+        if ($value !== false && $value !== '') {
+            return $value;
+        }
+        if (isset($_ENV[$key]) && $_ENV[$key] !== '') {
+            return $_ENV[$key];
+        }
+        return $default;
     };
 
     $host     = $env('DB_HOST', 'localhost');
@@ -37,12 +49,12 @@ if (!isset($con)) {
 
     $con = mysqli_init();
 
-    // Managed MySQL providers (Aiven, TiDB Cloud, Clever Cloud, PlanetScale)
-    // only accept TLS connections.
+    // Managed MySQL providers (Aiven, TiDB Cloud, Clever Cloud) require TLS.
+    // Shared hosts such as InfinityFree do not: leave DB_SSL unset there.
     if ($env('DB_SSL', '0') === '1') {
-        $ca = $env('DB_SSL_CA', '');
-        mysqli_ssl_set($con, null, null, $ca !== '' ? $ca : null, null, null);
+        $ca    = $env('DB_SSL_CA', '');
         $flags = MYSQLI_CLIENT_SSL;
+        mysqli_ssl_set($con, null, null, $ca !== '' ? $ca : null, null, null);
         if ($ca === '') {
             $flags |= MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
         }
@@ -52,7 +64,12 @@ if (!isset($con)) {
     }
 
     if (mysqli_connect_errno()) {
-        die('Unable to connect! Reason: ' . mysqli_connect_error());
+        // Never print credentials or the raw driver error to visitors.
+        if ($env('APP_DEBUG', '0') === '1') {
+            die('Database connection failed: ' . mysqli_connect_error());
+        }
+        http_response_code(503);
+        die('The store is temporarily unavailable. Please try again shortly.');
     }
 
     mysqli_set_charset($con, 'utf8mb4');

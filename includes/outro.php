@@ -1,36 +1,57 @@
-<div class="py-5 bg-dark">
-    <div class="container text-white ">
-        <div class="row">
-            <div class="col-md-3">
-                <h4 class="fw-bold">Perfume Store</h4>
-                <div class="underline3 mb-2"></div>
-                <a href="index.php" class="text-white text-decoration-none"><i class="fa-solid fa-angle-right"></i> Home</a><br>
-                <a href="shoppingcart.php" class="text-white text-decoration-none"><i class="fa-solid fa-angle-right"></i> Your Cart</a><br>
-                <a href="checkout.php" class="text-white text-decoration-none"><i class="fa-solid fa-angle-right"></i> Checkout</a><br>
-                <a href="orders.php" class="text-white text-decoration-none"><i class="fa-solid fa-angle-right"></i> Your Orders</a><br>
-                <a href="perfumes.php" class="text-white text-decoration-none"><i class="fa-solid fa-angle-right"></i> Our Collection</a><br>
-            </div>
-            <div class="col-md-3 text-white">
-                <h4>
-                    Address
-                </h4>
-                <div class="underline mb-2"></div>
-                <p>
-                    #69, 10th Floor,<br>
-                    420 Street,<br>
-                    City, Country.
+<footer class="footer">
+    <div class="shell">
+        <div class="footer__grid">
+
+            <div>
+                <a class="nav__brand" href="index.php" style="margin-bottom:var(--s-4)">
+                    <span class="nav__mark" aria-hidden="true">PS</span>
+                    <span>Perfume Store</span>
+                </a>
+                <p style="color:var(--text-muted);font-size:var(--t-sm);max-width:34ch">
+                    A curated house of designer and niche fragrance, delivered anywhere in Bangladesh.
+                    Every bottle is sourced sealed and checked before it ships.
                 </p>
-                <a href="tel:+8801000000000" class="text-white"><i class="fa-solid fa-phone-volume" style="color: #ffffff;"></i> +880 10 000 00000 </a><br>
-                <a href="mailto:mehenuf@gmail.com" class="text-white"><i class="fa-solid fa-at" style="color: #ffffff;"></i> mehenuf@gmail.com </a>
             </div>
-            <div class="col-md-6">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m24!1m12!1m3!1d464.93576586811685!2d-6.580082579971572!3d55.210813652992364!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m9!3e6!4m3!3m2!1d55.2092197!2d-6.580910599999999!4m3!3m2!1d55.2106924!2d-6.5796063!5e0!3m2!1sen!2sbd!4v1698828551214!5m2!1sen!2sbd" class="w-100" height="200" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+            <div>
+                <h3>Shop</h3>
+                <ul>
+                    <li><a href="perfumes.php">Full collection</a></li>
+                    <li><a href="shoppingcart.php">Your cart</a></li>
+                    <li><a href="orders.php">Your orders</a></li>
+                    <li><a href="checkout.php">Checkout</a></li>
+                </ul>
             </div>
+
+            <div>
+                <h3>Brands</h3>
+                <ul>
+                    <li><a href="dior.php">Dior</a></li>
+                    <li><a href="chanel.php">Chanel</a></li>
+                    <li><a href="tomford.php">Tom Ford</a></li>
+                    <li><a href="mancera.php">Mancera</a></li>
+                    <li><a href="lattafa.php">Lattafa</a></li>
+                    <li><a href="hugoboss.php">Hugo Boss</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h3>Contact</h3>
+                <ul>
+                    <li><a href="tel:+8801700000001">+880 1700 000001</a></li>
+                    <li><a href="mailto:mehenuf@gmail.com">mehenuf@gmail.com</a></li>
+                    <li style="color:var(--text-muted);font-size:var(--t-sm);line-height:1.7">
+                        House 12, Road 5<br>
+                        Dhanmondi, Dhaka 1205
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="footer__note">
+            <span>Copyright <?= date('Y') ?> Mehenuf Hossain Bhuiyan. All rights reserved.</span>
+            <span>Cash on delivery across Bangladesh</span>
         </div>
     </div>
-</div>
-<div class="py-1 bg-crimson">
-    <div class="text-center">
-        <p class="mb-0 text-white">All rights reserved. Copyright @ Mehenuf Hossain Bhuiyan - <?= date('Y') ?></p>
-    </div>
-</div>
+</footer>

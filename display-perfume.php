@@ -1,89 +1,144 @@
 <?php
 session_start();
-include('includes/header.php');
 include('functions/functions.php');
+require_once('includes/helpers.php');
 
-
+$product = null;
 if (isset($_GET['name'])) {
-    $name = $_GET['name'];
-    $displaybyid = getViaNameActive("perfumes", $name);
-    $display_perfume = mysqli_fetch_array($displaybyid);
-
-    if ($display_perfume) {
-?>
-        <div class="py-3 bg-secondary">
-            <div class="container">
-                <h6 class="text-white">
-                    <a class="text-white" href="perfumes.php" style="text-decoration: none;">
-                        Perfumes /
-                    </a>
-                    <a class="text-white" href="perfumes.php" style="text-decoration: none;">
-                        All Perfumes /
-                    </a>
-                    <a class="text-white" href="perfumes.php" style="text-decoration: none;">
-                    </a>
-                    <?= $display_perfume['name']; ?>
-                </h6>
-            </div>
-        </div>
-        <div class="bg-light py-4">
-            <div class="container perfume_data mt-5" style="text-decoration: none;">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="shadow">
-                            <img src="images/<?= $display_perfume['image_path']; ?>" alt="<?= $display_perfume['name']; ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-8 mb-8 mt-2">
-                        <h4 class="fw-bolder"><?= $display_perfume['name']; ?></h4>
-                        <hr>
-
-                        <p><?= $display_perfume['description']; ?></p>
-                        <div class="card shadow-blur">
-                            <div class="card-body">
-                                <h6><?= $display_perfume['perfume_notes'] ?></h6>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <h5>Tk. <span class="text-success fw-bold"><?= $display_perfume['price'] ?></span></h5>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="input-group mb-3" style="width: 125px;">
-                                    <button class="input-group-text decrement-btn">-</button>
-                                    <input type="text" class="form-control text-center perfume-qty bg-white" value="1" disabled>
-                                    <button class="input-group-text increment-btn">+</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <button class="btn btn-danger px-4 add_to_cart" value="<?= $display_perfume['id'] ?>"><i class="fa-solid fa-cart-shopping fa-beat me-2"></i> Add to Cart</button>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-primary px-4"><i class="fa-regular fa-heart fa-beat-fade me-2"></i> Add to Wishlist</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-
-
-<?php
-    } else {
-        echo "Invalid Product ID";
-        $_SESSION['message'] = "Product wasn't found in our archive.";
+    $rows = getViaNameActive('perfumes', mysqli_real_escape_string($con, $_GET['name']));
+    if ($rows && mysqli_num_rows($rows) > 0) {
+        $product = mysqli_fetch_assoc($rows);
     }
-} else {
-    echo "Something went wrong";
 }
 
+$pageTitle       = $product ? $product['name'] : 'Fragrance not found';
+$pageDescription = $product
+    ? mb_substr(strip_tags($product['description']), 0, 155)
+    : 'That fragrance is not in our archive.';
+
+include('includes/header.php');
+
+if (!$product) {
+    echo crumb(['Home' => 'index.php', 'Collection' => 'perfumes.php', 'Not found' => null]);
+    ?>
+    <section class="section shell">
+        <div class="empty">
+            <span class="empty__icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+            <h1 style="font-size:var(--t-h2)">We could not find that fragrance</h1>
+            <p>It may have been unpublished or renamed. The rest of the shelf is still here.</p>
+            <a class="btn btn--primary" href="perfumes.php">View the collection</a>
+        </div>
+    </section>
+    <?php
+    include('includes/outro.php');
+    include('includes/footer.php');
+    exit;
+}
+
+list($stockText, $stockLow) = stockLabel($product['qty']);
+$inStock  = (int) $product['qty'] > 0;
+$maxQty   = max(1, min(10, (int) $product['qty']));
+$isAuthed = isset($_SESSION['auth']);
+
+echo crumb([
+    'Home'       => 'index.php',
+    'Collection' => 'perfumes.php',
+    $product['name'] => null,
+]);
+?>
+
+<section class="section shell detail">
+
+    <div class="detail__media">
+        <img src="images/<?= e($product['image_path']) ?>"
+             alt="<?= e($product['name']) ?> bottle"
+             width="800" height="1000" decoding="async">
+    </div>
+
+    <div class="detail__body stack" data-qty data-min="1" data-max="<?= $maxQty ?>">
+
+        <p style="color:var(--text-faint);font-size:var(--t-sm);margin:0"><?= e($stockText) ?></p>
+        <h1 class="detail__title" style="margin-top:var(--s-2)"><?= e($product['name']) ?></h1>
+        <p class="detail__price"><?= taka($product['price']) ?></p>
+
+        <p style="color:var(--text-muted)"><?= e($product['description']) ?></p>
+
+        <dl class="notes">
+            <div>
+                <dt>Composition</dt>
+                <dd><?= e($product['perfume_notes']) ?></dd>
+            </div>
+        </dl>
+
+        <dl class="spec">
+            <div>
+                <dt>Bottle</dt>
+                <dd><?= e($product['volume']) ?></dd>
+            </div>
+            <div>
+                <dt>Availability</dt>
+                <dd><?= $inStock ? (int) $product['qty'] . ' in stock' : 'Sold out' ?></dd>
+            </div>
+        </dl>
+
+        <?php if (!$inStock) { ?>
+            <p style="color:var(--warn);font-size:var(--t-sm)">
+                This bottle is out of stock. Check back soon or browse something similar.
+            </p>
+            <a class="btn btn--ghost btn--lg" href="perfumes.php">Browse the collection</a>
+
+        <?php } elseif (!$isAuthed) { ?>
+            <p style="color:var(--text-muted);font-size:var(--t-sm)">
+                Log in to add this to your cart.
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--s-3)">
+                <a class="btn btn--primary btn--lg" href="login.php">Log in</a>
+                <a class="btn btn--ghost btn--lg" href="register.php">Create account</a>
+            </div>
+
+        <?php } else { ?>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-4)">
+                <div class="qty">
+                    <button type="button" data-qty-step="-1" aria-label="Decrease quantity" disabled>
+                        <i class="fa-solid fa-minus" aria-hidden="true"></i>
+                    </button>
+                    <input type="number" value="1" min="1" max="<?= $maxQty ?>"
+                           data-qty-input aria-label="Quantity" readonly>
+                    <button type="button" data-qty-step="1" aria-label="Increase quantity"
+                            <?= $maxQty <= 1 ? 'disabled' : '' ?>>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <button class="btn btn--primary btn--lg" type="button"
+                        data-add-to-cart="<?= (int) $product['id'] ?>">
+                    <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Add to cart
+                </button>
+            </div>
+        <?php } ?>
+    </div>
+</section>
+
+<?php
+// More from the same house, matched on the first word of the product name.
+$firstWord = mysqli_real_escape_string($con, strtok($product['name'], ' '));
+$related   = mysqli_query($con,
+    "SELECT * FROM perfumes
+     WHERE status = 1 AND name LIKE '" . $firstWord . "%' AND id <> " . (int) $product['id'] . "
+     ORDER BY price DESC LIMIT 4");
+
+if ($related && mysqli_num_rows($related) > 0) { ?>
+    <section class="section section--sunken">
+        <div class="shell">
+            <div class="section-head">
+                <div><h2>More from <?= e($firstWord) ?></h2></div>
+            </div>
+            <div class="card-grid card-grid--4">
+                <?php foreach ($related as $p) { include('includes/product-card.php'); } ?>
+            </div>
+        </div>
+    </section>
+<?php }
 
 include('includes/outro.php');
 include('includes/footer.php');

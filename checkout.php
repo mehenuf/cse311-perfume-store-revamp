@@ -2,105 +2,135 @@
 session_start();
 include('authenticate.php');
 include('functions/functions.php');
-include('includes/header.php');
-?>
-<div class="py-3 bg-secondary">
-    <div class="container">
-        <h6 class="text-white">
-            <a class="text-white" href="index.php" style="text-decoration: none;">
-                Home /
-            </a>
-            <a class="text-white" href="checkout.php" style="text-decoration: none;">
-                Checkout
-            </a>
-        </h6>
-    </div>
-</div>
-<div class="py-5">
-    <div class="container">
-        <div class="card shadow">
-            <div class="card-header">
-                <h3 class="fw-bolder">Checkout</h3>
-            </div>
-            <div class="card-body">
-                <form action="functions/placeorder.php" method="post">
-                    <div class="row">
-                        <div class="col-md-7">
-                            <h4 class="fw-bolder">Basic Details</h4>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="fw-bold">Full Name</label><br>
-                                    <input type="text" name="name" required placeholder="Enter your full legal name." class="form-control w-100">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="fw-bold">Email</label><br>
-                                    <input type="email" name="email" required placeholder="Enter your e-mail." class="form-control w-100">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="fw-bold">Contact</label><br>
-                                    <input type="text" name="contact" required placeholder="Enter your contact no." class="form-control w-100">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="fw-bold">Zip Code</label><br>
-                                    <input type="text" name="zipcode" required placeholder="Enter your area zip code." class="form-control w-100">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="fw-bold">Address</label><br>
-                                    <textarea name="address" required class="form-control" placeholder="Provide your address." rows="3"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-5">
-                            <h4>Your Cart</h4>
-                            <hr>
 
-                            <div class="row align-items-center">
-                                <div class="col-md-6">
-                                    <h6>Product</h6>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6>Price</h6>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6>Quantity</h6>
-                                </div>
-                            </div>
-                            <?php
-                            $cart_items = displayCart();
-                            $totalcost = 0;
-                            foreach ($cart_items as $key) {
-                            ?>
-                                <div class="mb-1 border">
-                                    <div class="row align-items-center">
-                                        <div class="col-md-2">
-                                            <img src="images/<?= $key['image_path'] ?>" alt="<?= $key['perfume_name'] ?>" class="w-75">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <h5><?= $key['perfume_name'] ?></h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h5>Tk. <?= $key['price'] * $key['perfume_quantity'] ?></h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <h5><?= $key['perfume_quantity'] ?></h5>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php
-                                $totalcost += $key['price'] * $key['perfume_quantity'];
-                            }
-                            ?>
-                            <hr>
-                            <h5 class="fw-bold">Total bill: <span class="float-start">Tk. <?= $totalcost ?></span></h5>
-                            <button type="submit" name="placeorder" class="btn btn-outline-success btn-sm float-sm-start w-100">Confirm Order</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+$pageTitle       = 'Checkout';
+$pageDescription = 'Confirm your delivery details and place your order.';
+include('includes/header.php');
+
+$cartItems = displayCart();
+$lines     = [];
+$total     = 0;
+
+if ($cartItems) {
+    foreach ($cartItems as $row) {
+        $lines[] = $row;
+        $total  += $row['price'] * $row['perfume_quantity'];
+    }
+}
+
+echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => null]);
+?>
+
+<section class="section shell">
+    <div class="section-head">
+        <div>
+            <h1 style="font-size:var(--t-h1)">Checkout</h1>
+            <p>Cash on delivery. You pay the courier when the bottle reaches you.</p>
         </div>
     </div>
-</div>
 
+    <?php if (count($lines) === 0) { ?>
+
+        <div class="empty">
+            <span class="empty__icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i></span>
+            <h2 style="font-size:var(--t-h3)">There is nothing to check out</h2>
+            <p>Your cart is empty, so there is no order to place yet.</p>
+            <a class="btn btn--primary" href="perfumes.php">Browse the collection</a>
+        </div>
+
+    <?php } else { ?>
+
+        <form action="functions/placeorder.php" method="post">
+            <div class="cart-layout">
+
+                <div class="panel">
+                    <div class="panel__head">
+                        <h2 style="font-size:var(--t-h3)">Delivery details</h2>
+                    </div>
+
+                    <div class="form-grid form-grid--2">
+                        <div class="field">
+                            <label for="co-name">Full name</label>
+                            <input class="input" id="co-name" name="name" type="text" required
+                                   autocomplete="name" placeholder="Your full name">
+                        </div>
+
+                        <div class="field">
+                            <label for="co-email">Email</label>
+                            <input class="input" id="co-email" name="email" type="email" required
+                                   autocomplete="email" placeholder="you@example.com">
+                        </div>
+
+                        <div class="field">
+                            <label for="co-contact">Contact number</label>
+                            <input class="input" id="co-contact" name="contact" type="tel" required
+                                   autocomplete="tel" placeholder="+880 1700 000000">
+                            <span class="field__hint">The courier will call this number.</span>
+                        </div>
+
+                        <div class="field">
+                            <label for="co-zip">Zip code</label>
+                            <input class="input" id="co-zip" name="zipcode" type="text" required
+                                   autocomplete="postal-code" placeholder="1205">
+                        </div>
+
+                        <div class="field span-2">
+                            <label for="co-address">Delivery address</label>
+                            <textarea class="textarea" id="co-address" name="address" required rows="3"
+                                      autocomplete="street-address"
+                                      placeholder="House and road, area, city"></textarea>
+                            <span class="field__hint">Include a landmark if the address is hard to find.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="panel summary">
+                    <div class="panel__head">
+                        <h2 style="font-size:var(--t-h3)">Your order</h2>
+                    </div>
+
+                    <?php foreach ($lines as $line) { ?>
+                        <div class="cart-line" style="grid-template-columns:56px minmax(0,1fr) auto">
+                            <div class="cart-line__media" style="width:56px">
+                                <img src="images/<?= e($line['image_path']) ?>"
+                                     alt="<?= e($line['perfume_name']) ?> bottle" loading="lazy" width="112" height="140">
+                            </div>
+                            <div>
+                                <span class="cart-line__name" style="font-size:var(--t-sm)">
+                                    <?= e($line['perfume_name']) ?>
+                                </span>
+                                <p class="cart-line__price">Quantity <?= (int) $line['perfume_quantity'] ?></p>
+                            </div>
+                            <div style="text-align:right;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap">
+                                <?= taka($line['price'] * $line['perfume_quantity']) ?>
+                            </div>
+                        </div>
+                    <?php } ?>
+
+                    <div class="summary__row" style="margin-top:var(--s-4)">
+                        <span>Payment</span>
+                        <span>Cash on delivery</span>
+                    </div>
+
+                    <div class="summary__total">
+                        <span>Total</span>
+                        <span><?= taka($total) ?></span>
+                    </div>
+
+                    <button class="btn btn--primary btn--lg btn--block" type="submit" name="placeorder"
+                            style="margin-top:var(--s-5)">
+                        Place order
+                    </button>
+                    <a class="btn btn--quiet btn--block" href="shoppingcart.php" style="margin-top:var(--s-2)">
+                        Back to cart
+                    </a>
+                </aside>
+
+            </div>
+        </form>
+
+    <?php } ?>
+</section>
 
 <?php
 include('includes/outro.php');

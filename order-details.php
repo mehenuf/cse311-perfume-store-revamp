@@ -2,178 +2,144 @@
 session_start();
 include('authenticate.php');
 include('functions/functions.php');
-include('includes/header.php');
+
+$order    = null;
+$tracking = '';
 
 if (isset($_GET['trackid'])) {
-    $tracking_no = $_GET['trackid'];
-    //echo $tracking_no;
-    $validation = validateTrackID($tracking_no);
-    if (mysqli_num_rows($validation) <= 0) {
-?>
-        <h4>Something is wrong.</h4>
-    <?php
-        die();
+    $tracking   = mysqli_real_escape_string($con, $_GET['trackid']);
+    $validation = validateTrackID($tracking);          // already scoped to the session user
+    if ($validation && mysqli_num_rows($validation) > 0) {
+        $order = mysqli_fetch_assoc($validation);
     }
-} else {
-    ?>
-    <h4>Unable to fetch tracking ID.</h4>
-<?php
-    die();
 }
-$orderData = mysqli_fetch_array($validation);
+
+$pageTitle       = $order ? 'Order ' . $order['tracking_no'] : 'Order not found';
+$pageDescription = 'Order details and delivery status.';
+include('includes/header.php');
+
+if (!$order) {
+    echo crumb(['Home' => 'index.php', 'Orders' => 'orders.php', 'Not found' => null]);
+    ?>
+    <section class="section shell">
+        <div class="empty">
+            <span class="empty__icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></span>
+            <h1 style="font-size:var(--t-h2)">We could not find that order</h1>
+            <p>That tracking number does not match any order on your account.</p>
+            <a class="btn btn--primary" href="orders.php">Back to your orders</a>
+        </div>
+    </section>
+    <?php
+    include('includes/outro.php');
+    include('includes/footer.php');
+    exit;
+}
+
+$status    = (int) $order['status'];
+$cancelled = $status === 4;
+
+$items = mysqli_query($con,
+    "SELECT oi.perfume_qty, oi.price, p.name, p.image_path
+     FROM order_item oi
+     JOIN perfumes p ON p.id = oi.perfume_id
+     WHERE oi.order_id = " . (int) $order['id']);
+
+echo crumb([
+    'Home'   => 'index.php',
+    'Orders' => 'orders.php',
+    $order['tracking_no'] => null,
+]);
 ?>
-<div class="py-3 bg-secondary">
-    <div class="container">
-        <h6 class="text-white">
-            <a class="text-white" href="index.php" style="text-decoration: none;">
-                Home /
-            </a>
-            <a class="text-white" href="orders.php" style="text-decoration: none;">
-                My Orders /
-            </a>
-            <a class="text-white" href="order-details.php" style="text-decoration: none;">
-                Order Details /
-            </a>
-        </h6>
+
+<section class="section shell">
+    <div class="section-head">
+        <div>
+            <h1 style="font-size:var(--t-h1)">Order <?= e($order['tracking_no']) ?></h1>
+            <p>Placed <?= e(date('j F Y', strtotime($order['created_at']))) ?></p>
+        </div>
+        <span class="badge" data-status="<?= $status ?>"><?= e(orderStatus($status)) ?></span>
     </div>
-</div>
-<div class="py-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header text-white bg-dark fw-bolder">
-                        Order Details
-                        <a href="orders.php" class="btn btn-outline-danger btn-sm float-start"><i class="fa-solid fa-reply"></i></a>
-                    </div>
-                    <div class="card-body bg-dark-subtle">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h4>Delivery Details</h4>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-md-12 mb-2">
-                                        <label for="" class="fw-bold">Name</label>
-                                        <div class="border p-1">
-                                            <?= $orderData['name']; ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12 mb-2">
-                                        <label for="" class="fw-bold">Email</label>
-                                        <div class="border p-1">
-                                            <?= $orderData['email']; ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12 mb-2">
-                                        <label for="" class="fw-bold">Contact</label>
-                                        <div class="border p-1">
-                                            <?= $orderData['contacts']; ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12 mb-2">
-                                        <label for="" class="fw-bold">Tracking No.</label>
-                                        <div class="border p-1">
-                                            <?= $orderData['tracking_no']; ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12 mb-2">
-                                        <label for="" class="fw-bold">Address</label>
-                                        <div class="border p-1">
-                                            <?= $orderData['address'] . ", Zipcode - " . $orderData['zipcode'] . "."; ?>
-                                        </div>
-                                    </div>
-                                </div>
 
-                            </div>
-                            <div class="col-md-6">
-                                <h4>Item List</h4>
-                                <hr>
+    <div class="cart-layout">
 
-                                <table class="table table-bordered table-striped table-responsive table-dark">
-                                    <thead>
-                                        <tr>
-                                            <th colspan="2">Product</th>
-                                            <th>Price</th>
-                                            <th>Quantity</th>
-                                            <th>Net Price</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
+        <div class="panel">
+            <div class="panel__head">
+                <h2 style="font-size:var(--t-h3)">Items</h2>
+            </div>
 
-                                        </tr>
-                                            <?php
-                                                $userid = $_SESSION['auth_user']['user_id'];
-
-
-                                                $order_query = "SELECT o.id as OrderID, o.tracking_no, oi.*, p.*
-                                                            FROM orders o, order_item oi, perfumes p
-                                                            WHERE o.user_id = '$userid' 
-                                                            AND oi.order_id = o.id
-                                                            AND p.id = oi.perfume_id
-                                                            AND o.tracking_no = '$tracking_no';";
-                                                $order_query_run = mysqli_query($con, $order_query);
-
-                                                if (mysqli_num_rows($order_query_run) > 0) {
-                                                    foreach ($order_query_run as $key) {
-                                                        ?>
-                                                            <tr>
-                                                                <td class="align-middle">
-                                                                    <img src="images/<?= $key['image_path']; ?> " alt="<?= $key['name']; ?>" width="100px" height="100px">
-                                                                    
-                                                                </td>
-                                                                <td><?= $key['name']; ?></td>
-                                                                <td class="align-middle">
-                                                                    Tk. <?= $key['price']; ?>
-                                                                </td>
-                                                                <td class="align-middle">
-                                                                    <?= $key['perfume_qty']; ?>
-                                                                </td>
-                                                                <td class="align-middle">
-                                                                    Tk. <?= $key['perfume_qty'] * $key['price']; ?>
-                                                                </td>
-                                                            </tr>
-                                                        <?php
-                                                    }
-                                                }
-
-                                            ?>
-                                    </tbody>
-                                </table>
-                                <hr>
-                                <h4 class="fw-bold">Total Price: <span class="float-start text-danger"><?= $orderData['total_price']; ?></span></h4>
-                                <hr>
-                                <div class="border p-1 mb-3">
-                                    <label for="" class="fw-semibold">Payment Mode: </label>
-                                    <?= $orderData['payment_mode']; ?>
-                                </div>
-                                <div class="border p-1 mb-3">
-                                    <label for="" class="fw-semibold">Status: </label>
-                                    <?php
-                                        if ($orderData['status'] == 0) {
-                                            echo "Processing.";
-                                        } elseif ($orderData['status'] == 1) {
-                                            echo "Completed.";
-                                        } elseif ($orderData['status'] == 2) {
-                                            echo "Shipped.";
-                                        } elseif ($orderData['status'] == 3) {
-                                            echo "Delivered.";
-                                        } elseif ($orderData['status'] == 4) {
-                                            echo "Cancelled.";
-                                        }
-                                        
-                                     
-                                     ?>
-                                </div>
-                            </div>
+            <?php
+            $itemTotal = 0;
+            if ($items && mysqli_num_rows($items) > 0) {
+                foreach ($items as $item) {
+                    $itemTotal += $item['price'] * $item['perfume_qty'];
+            ?>
+                    <div class="cart-line" style="grid-template-columns:72px minmax(0,1fr) auto">
+                        <div class="cart-line__media" style="width:72px">
+                            <img src="images/<?= e($item['image_path']) ?>"
+                                 alt="<?= e($item['name']) ?> bottle" loading="lazy" width="144" height="180">
+                        </div>
+                        <div>
+                            <span class="cart-line__name"><?= e($item['name']) ?></span>
+                            <p class="cart-line__price">
+                                <?= taka($item['price']) ?> x <?= (int) $item['perfume_qty'] ?>
+                            </p>
+                        </div>
+                        <div style="text-align:right;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap">
+                            <?= taka($item['price'] * $item['perfume_qty']) ?>
                         </div>
                     </div>
-                </div>
+            <?php
+                }
+            }
+            ?>
+
+            <div class="summary__total">
+                <span>Order total</span>
+                <span><?= taka($order['total_price']) ?></span>
             </div>
         </div>
-    </div>
-</div>
 
+        <aside class="panel summary">
+            <div class="panel__head">
+                <h2 style="font-size:var(--t-h3)">Delivery</h2>
+            </div>
+
+            <div class="stack" style="font-size:var(--t-sm)">
+                <div>
+                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Recipient</div>
+                    <div><?= e($order['name']) ?></div>
+                </div>
+                <div>
+                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Contact</div>
+                    <div><?= e($order['contacts']) ?></div>
+                </div>
+                <div>
+                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Email</div>
+                    <div style="word-break:break-word"><?= e($order['email']) ?></div>
+                </div>
+                <div>
+                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Address</div>
+                    <div><?= e($order['address']) ?><?= $order['zipcode'] ? ', ' . e($order['zipcode']) : '' ?></div>
+                </div>
+                <div>
+                    <div style="color:var(--text-faint);font-size:var(--t-xs)">Payment</div>
+                    <div><?= e($order['payment_mode']) ?></div>
+                </div>
+            </div>
+
+            <?php if ($cancelled) { ?>
+                <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--danger);font-size:var(--t-sm)">
+                    This order was cancelled.
+                </p>
+            <?php } ?>
+
+            <a class="btn btn--ghost btn--block" href="orders.php" style="margin-top:var(--s-5)">
+                Back to your orders
+            </a>
+        </aside>
+
+    </div>
+</section>
 
 <?php
 include('includes/outro.php');

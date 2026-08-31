@@ -1,62 +1,45 @@
 <?php
 session_start();
-include('includes/header.php');
 
 if (isset($_SESSION['auth'])) {
     header('Location: index.php');
+    exit;
 }
 
-
+$pageTitle       = 'Log in';
+$pageDescription = 'Log in to your Perfume Store account.';
+include('includes/header.php');
 ?>
-<div class="py-5 ">
-    <div class="container container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
 
-                <?php
-                if (isset($_SESSION['message'])) {
-
-
-                ?>
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <strong>⚠︎ Warning!</strong> <?= $_SESSION['message']; ?>.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php
-                    unset($_SESSION['message']);
-                }
-                ?>
-
-
-                <div class="card mx-auto">
-                    <div class="card-header">
-                        <h3>Login</h3>
-                    </div>
-                    <div class="card-body">
-                        <form action="functions/authcode.php" method="post">
-
-                            <div class="mb-3">
-                                <label class="form-label">Username</label>
-                                <input type="text" name="var_username" class="form-control" placeholder="Enter an username">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="var_password" class="form-control" placeholder="Enter a valid password">
-                            </div>
-
-                            <button type="submit" name="login_btn" class="btn btn-outline-success">Login</button>
-                        </form>
-                    </div>
-                </div>
-
-            </div>
+<div class="shell auth-wrap">
+    <div class="panel auth-card">
+        <div class="panel__head">
+            <h1 style="font-size:var(--t-h2)">Welcome back</h1>
+            <p style="color:var(--text-muted);font-size:var(--t-sm);margin-top:var(--s-2)">
+                Log in to reach your cart and order history.
+            </p>
         </div>
+
+        <form action="functions/authcode.php" method="post" class="form-grid">
+            <div class="field">
+                <label for="li-username">Username</label>
+                <input class="input" id="li-username" name="var_username" type="text" required
+                       autocomplete="username" placeholder="Your username">
+            </div>
+
+            <div class="field">
+                <label for="li-password">Password</label>
+                <input class="input" id="li-password" name="var_password" type="password" required
+                       autocomplete="current-password" placeholder="Your password">
+            </div>
+
+            <button class="btn btn--primary btn--lg btn--block" type="submit" name="login_btn">Log in</button>
+        </form>
+
+        <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--text-muted);font-size:var(--t-sm)">
+            No account yet? <a href="register.php" style="color:var(--accent);font-weight:600">Create one</a>
+        </p>
     </div>
 </div>
 
-
-
-<?php
-include('includes/footer.php');
-?>
+<?php include('includes/footer.php'); ?>

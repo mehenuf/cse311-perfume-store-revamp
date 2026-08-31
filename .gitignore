@@ -1,0 +1,193 @@
+# ==============================================================
+#  Perfume Store  ·  .gitignore
+#
+#  NOTE: .gitignore only affects files git is NOT already tracking.
+#  If something is already committed, adding it here does nothing --
+#  you also have to run:   git rm --cached <path>
+# ==============================================================
+
+
+# --------------------------------------------------------------
+#  1. Secrets and credentials  ·  NEVER commit these
+# --------------------------------------------------------------
+config/env.php
+config/env.local.php
+
+.env
+.env.*
+*.env
+
+# FTP / SFTP / deploy credentials dropped by editors and clients
+sftp-config.json
+sftp-config-alt*.json
+.ftpconfig
+.ftpquota
+ftp-config.json
+deploy.php
+filezilla.xml
+*.filezilla
+
+# Keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+!assets/**/*.key
+
+
+# --------------------------------------------------------------
+#  2. Internal working notes  ·  useful locally, noise in the repo
+#     Delete a line here if you decide you want one published.
+# --------------------------------------------------------------
+FRONTEND.md
+DEPLOYMENT.md
+database/README.md
+docs/screenshots/README.md
+
+
+# --------------------------------------------------------------
+#  3. Development tooling and generated output
+# --------------------------------------------------------------
+tools/
+.claude/
+
+# One-off deployment diagnostic. Upload it by hand when you need it,
+# delete it from the server afterwards, keep it out of the repo.
+check.php
+
+
+# --------------------------------------------------------------
+#  4. Dependencies  ·  in case the project ever gains them
+# --------------------------------------------------------------
+vendor/
+node_modules/
+composer.phar
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+
+# --------------------------------------------------------------
+#  5. Editors and IDEs
+# --------------------------------------------------------------
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+nbproject/
+.fleet/
+.history/
+.buildpath
+.project
+.settings/
+
+
+# --------------------------------------------------------------
+#  6. Operating system clutter
+# --------------------------------------------------------------
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# Linux
+.directory
+.Trash-*
+.fuse_hidden*
+.nfs*
+
+
+# --------------------------------------------------------------
+#  7. Logs, caches and temporary files
+# --------------------------------------------------------------
+*.log
+error_log
+error_log.txt
+php_errors.log
+debug.log
+logs/
+*.cache
+.phpunit.result.cache
+*.tmp
+*.temp
+*.swp
+*.swo
+*.swn
+*~
+.sass-cache/
+
+
+# --------------------------------------------------------------
+#  8. Archives and backups
+#
+#  The database/ SQL files are deliberately NOT ignored -- they are
+#  part of the project. Only accidental dumps and backups are.
+# --------------------------------------------------------------
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+
+*.bak
+*.old
+*.orig
+*.rej
+*.save
+*.backup
+*.copy
+
+# Stray database dumps, without catching database/mysql/*.sql etc.
+/dump.sql
+/backup.sql
+/localhost.sql
+/perfumestore.sql
+*_backup.sql
+*_dump.sql
+*-backup.sql
+*.sql.bak
+*.sql.gz
+*.sql.zip
+
+
+# --------------------------------------------------------------
+#  9. Hosting platform leftovers
+# --------------------------------------------------------------
+.vercel
+.netlify
+.firebase/
+.htaccess.local
+.user.ini
+cgi-bin/
+_vti_*/
+.well-known/
+
+
+# --------------------------------------------------------------
+# 10. Local server artefacts
+#     Sessions and uploads created at runtime, not source.
+# --------------------------------------------------------------
+sessions/
+tmp/
+uploads/tmp/

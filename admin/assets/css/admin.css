@@ -331,7 +331,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .table tbody tr:last-child td { border-bottom: 0; }
 .table .num { text-align: right; }
 .table__thumb {
-    width: 44px; height: 55px; object-fit: cover;
+    width: 44px; min-width: 44px; height: 55px; object-fit: cover; max-width: none;
     background: var(--bg-sunken); border: 1px solid var(--line);
 }
 .table__title { font-weight: 500; }
@@ -433,7 +433,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     padding: var(--s-3) 0; border-bottom: 1px solid var(--line);
 }
 .line-item:last-child { border-bottom: 0; }
-.line-item img { width: 44px; height: 55px; object-fit: cover; background: var(--bg-sunken); border: 1px solid var(--line); }
+.line-item img { width: 44px; min-width: 44px; height: 55px; object-fit: cover; max-width: none; background: var(--bg-sunken); border: 1px solid var(--line); }
 .line-item__name { font-size: var(--t-sm); font-weight: 500; }
 .line-item__meta { font-size: var(--t-xs); color: var(--fg-faint); }
 .line-item__amt { font-size: var(--t-sm); font-variant-numeric: tabular-nums; white-space: nowrap; }

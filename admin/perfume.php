@@ -39,7 +39,7 @@ $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name AS
                             $qtyStyle = $qty === 0 ? 'color:var(--danger)' : ($qty <= 12 ? 'color:var(--warn)' : '');
                         ?>
                             <tr>
-                                <td style="width:44px">
+                                <td style="width: 84px; padding-right: 0;">
                                     <?php if (trim($item['image_path']) !== '') { ?>
                                         <img class="table__thumb" src="../images/<?= e($item['image_path']) ?>" alt="" loading="lazy">
                                     <?php } else { ?>

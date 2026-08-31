@@ -35,7 +35,7 @@ $adminUser  = isset($_SESSION['auth_user']['username']) ? $_SESSION['auth_user']
           integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
           crossorigin="anonymous" referrerpolicy="no-referrer">
 
-    <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="assets/css/admin.css?v=2">
 </head>
 
 <body>

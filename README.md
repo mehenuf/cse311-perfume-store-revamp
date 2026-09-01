@@ -1,10 +1,14 @@
 <div align="center">
 
-# 🧴 Perfume Store
+# Perfume Store
 
 **An online fragrance shop.** Browse designer and niche perfumes, add them to a cart,
 and check out with cash on delivery. Shop owners get a private admin panel to manage
 the catalogue and fulfil orders.
+
+**Live Demo:** [https://perfumestore.kesug.com/](https://perfumestore.kesug.com/)
+
+*This project is a modern revamp of the legacy project: [cse311-perfume-store](https://github.com/mehenuf/cse311-perfume-store).*
 
 [![PHP](https://img.shields.io/badge/PHP-8.x-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/)
 [![MySQL](https://img.shields.io/badge/MySQL-InnoDB-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
@@ -23,28 +27,6 @@ the catalogue and fulfil orders.
 
 ![Homepage](docs/screenshots/home.png)
 
-<details>
-<summary>📸 <strong>Screenshots not showing? Click here</strong></summary>
-
-<br>
-
-Drop your own screenshots into `docs/screenshots/` using these exact filenames and
-every image on this page starts working:
-
-| Filename | What to capture |
-|---|---|
-| `home.png` | The homepage hero, full width |
-| `collection.png` | The collection grid on `perfumes.php` |
-| `product.png` | A product page, for example Dior Sauvage |
-| `cart.png` | The cart with two or three items in it |
-| `admin.png` | The admin product list |
-| `mobile.png` | The homepage at phone width (375px) |
-
-Take them at 1440px wide at 100% zoom, in a dark-mode window, so they match the
-store's default look.
-
-</details>
-
 ---
 
 ## What is this?
@@ -55,44 +37,44 @@ run XAMPP, you can run this.
 
 There are two sides to it:
 
-**🛍️ The shop** — what customers see. They browse fragrances, filter by brand,
+**The Shop** — what customers see. They browse fragrances, filter by brand,
 read the scent notes, add bottles to a cart, and place an order. They can then track
 that order through to delivery.
 
-**🔐 The admin panel** — what you see. Add new perfumes with photos, edit prices and
+**The Admin Panel** — what you see. Add new perfumes with photos, edit prices and
 stock, hide products without deleting them, and move orders along from *Processing*
 to *Delivered*.
 
 ---
 
-## ✨ What it does
+## Features
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-### For shoppers
+### For Shoppers
 
-- 🔍 Browse 71 fragrances across 20 houses
-- 🌸 See top, heart and base notes for every fragrance
-- 🛒 Cart that remembers you between visits
-- 📦 Cash-on-delivery checkout
-- 🚚 Order tracking with a tracking number
-- 📱 Works properly on a phone
-- 🌗 Light or dark, your choice, remembered between visits
+- Browse 71 fragrances across 20 houses
+- View top, heart, and base notes for every fragrance
+- Persistent cart that remembers you between visits
+- Cash-on-delivery checkout system
+- Order tracking with a unique tracking number
+- Fully responsive design for mobile and desktop
+- Light and dark themes supported and remembered
 
 </td>
 <td width="50%" valign="top">
 
-### For the shop owner
+### For the Shop Owner
 
-- ➕ Add perfumes with photo upload
-- ✏️ Edit prices, stock and descriptions
-- 👁️ Publish or unpublish without deleting
-- ⭐ Flag bottles as trending for the homepage
-- 📋 See every order with full delivery details
-- 🔄 Update order status as it ships
-- 📉 Stock counts down automatically on each sale
+- Add perfumes with image upload functionality
+- Edit prices, stock quantities, and descriptions
+- Publish or unpublish items without deletion
+- Flag selected bottles as trending for the homepage
+- View all orders with complete delivery details
+- Update order statuses as items are shipped
+- Stock levels decrease automatically upon each sale
 
 </td>
 </tr>
@@ -100,19 +82,21 @@ to *Delivered*.
 
 ---
 
-## 🖼️ A look around
+## A Look Around
 
-| The collection | A product page |
+| The Collection | A Product Page |
 |:--:|:--:|
 | ![Collection](docs/screenshots/collection.png) | ![Product](docs/screenshots/product.png) |
-| **The cart** | **On a phone** |
-| ![Cart](docs/screenshots/cart.png) | ![Mobile](docs/screenshots/mobile.png) |
+| **The Cart** | **The Admin Panel** |
+| ![Cart](docs/screenshots/cart.png) | ![Admin Panel](docs/screenshots/admin.png) |
+| **On a Phone** | |
+| ![Mobile](docs/screenshots/mobile.png) | |
 
 ---
 
-## 🧰 Built with
+## Built With
 
-| Piece | What it is | Why |
+| Component | Description | Rationale |
 |---|---|---|
 | **PHP 8** | The language the pages are written in | Runs on almost any cheap or free host |
 | **MySQL / MariaDB** | Where products, users and orders are stored | The standard pairing with PHP |
@@ -126,7 +110,7 @@ to *Delivered*.
 
 ---
 
-## 🚀 Getting it running locally
+## Getting It Running Locally
 
 You'll need [XAMPP](https://www.apachefriends.org/) (or any Apache + PHP + MySQL setup).
 
@@ -152,7 +136,7 @@ Go to <http://localhost/phpmyadmin>, then:
 4. Upload `database/mysql/01_schema.sql` and click **Import** — this builds the tables
 5. Import `database/mysql/02_seed.sql` the same way — this fills them with products
 
-> ⚠️ Order matters. The schema file has to run before the seed file.
+> Note: Order matters. The schema file has to run before the seed file.
 
 ### 4. Open the shop
 
@@ -162,18 +146,18 @@ That's it. No config needed — the app defaults to XAMPP's standard settings.
 
 ### 5. Log in
 
-| Who | Username | Password |
+| User Role | Username | Password |
 |---|---|---|
-| 👑 Shop owner | `mehenuf` | `admin123` |
-| 🛍️ Customer | `arif` | `arif1234` |
+| Shop Owner | `shopadmin` | `admin123` |
+| Customer | `arif` | `arif1234` |
 
 The admin panel is at `/admin` once you're logged in as the shop owner.
 
-> 🔐 **Change these before showing anyone.** See [Security](#-security-before-you-go-public).
+> Note: **Change these before showing anyone.** See [Security](#security-before-you-go-public).
 
 ---
 
-## 🌍 Putting it online for free
+## Putting It Online For Free
 
 The short version: **Vercel and Netlify can't run this.** They serve static files and
 JavaScript functions — they don't run PHP, and the admin photo uploads need a real
@@ -191,7 +175,7 @@ are in **`DEPLOYMENT.md`**.
 
 ---
 
-## 🗄️ How the data is organised
+## How the Data is Organised
 
 Five tables. A customer has a cart and places orders; each order is made of order items;
 every cart line and order item points at a perfume.
@@ -260,17 +244,17 @@ with `4` Cancelled.
 
 A few deliberate choices worth knowing about:
 
-- 🧾 **Order history is protected.** A customer who has ordered can't be deleted, and
+- **Order history is protected.** A customer who has ordered can't be deleted, and
   a perfume that has ever sold can't be deleted either. Hide it instead by unticking
   *Status*, which shows it as *Unpublished*.
-- 💵 **Prices are frozen at purchase.** `order_item` stores what the customer actually
+- **Prices are frozen at purchase.** `order_item` stores what the customer actually
   paid, so changing a price later never rewrites an old receipt.
-- 🇧🇩 **All prices are in Bangladeshi Taka**, converted from international retail
+- **All prices are in Bangladeshi Taka**, converted from international retail
   prices at 1 USD = 120 BDT.
 
 ---
 
-## 📁 What's in the folders
+## What's in the Folders
 
 ```
 perfumestore/
@@ -298,7 +282,7 @@ perfumestore/
 
 ---
 
-## ✅ Checking everything works
+## Checking Everything Works
 
 Two scripts come with the project. Both need Python, and neither touches your live site.
 
@@ -327,22 +311,22 @@ Both currently pass.
 
 ---
 
-## 🔐 Security: before you go public
+## Security: Before You Go Public
 
 This started as a college project, and two things in it are fine for a demo but **not
 safe for a real shop taking real orders**:
 
 | Issue | What it means | The fix |
 |---|---|---|
-| 🔓 **Passwords are stored as plain text** | Anyone who gets a copy of the database can read every customer's password | Switch to PHP's `password_hash()` and `password_verify()` |
-| 💉 **SQL injection is possible** | A crafted web address could read or damage the database | Rewrite the queries to use prepared statements |
+| **Passwords are stored as plain text** | Anyone who gets a copy of the database can read every customer's password | Switch to PHP's `password_hash()` and `password_verify()` |
+| **SQL injection is possible** | A crafted web address could read or damage the database | Rewrite the queries to use prepared statements |
 
 Neither is hard to fix, and `DEPLOYMENT.md` walks through both. **Do them before you
 accept a single real order.**
 
 ---
 
-## 🗺️ Ideas for later
+## Ideas for Later
 
 - [ ] Hash passwords and switch to prepared statements
 - [ ] Search box and price/brand filters
@@ -354,7 +338,7 @@ accept a single real order.**
 
 ---
 
-## 🙏 Credits
+## Credits
 
 Product photography and brand names belong to their respective fragrance houses and
 are used here for demonstration only. A product only carries a photograph when that
@@ -362,6 +346,16 @@ photograph actually shows it, and no listing is ever given another house's bottl
 product added without a photo gets a designed *Photography pending* tile rather than a
 broken image. Icons by [Font Awesome](https://fontawesome.com/),
 type by [Google Fonts](https://fonts.google.com/).
+
+---
+
+## License
+
+**All Rights Reserved**
+
+This project and its source code are proprietary. You may not copy, modify, distribute, or use this project for yourself or commercially without explicit written permission.
+
+For any inquiries, permissions, or to discuss using this project, please contact me directly at: **[mehenuf.me](https://mehenuf.me)**
 
 <div align="center">
 

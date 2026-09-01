@@ -25,7 +25,7 @@
 
     --fg:       #e9eaec;
     --fg-muted: #a2a6ad;
-    --fg-faint: #767a82;
+    --fg-faint: #868a93;
 
     /* the storefront accent, rationed */
     --accent:      #d4af6a;
@@ -61,13 +61,22 @@
     --d-1: 150ms;
     --d-2: 280ms;
 
+    /* Which theme glyph the toggle shows: the one you would switch TO. */
+    --glyph-sun: block; --glyph-moon: none;
+
     --rail: 244px;
     --topbar: 60px;
 }
 
+/* Light palette.
+   Declared twice on purpose: once for visitors who have not chosen
+   (follow the system) and once for visitors who have (override it).
+   CSS cannot share one body across a media query and a plain selector.
+   THE TWO BODIES MUST STAY IDENTICAL -- tools/audit_frontend.py asserts it. */
 @media (prefers-color-scheme: light) {
-    :root {
+    :root:not([data-theme='dark']) {
         color-scheme: light;
+        --glyph-sun: none; --glyph-moon: block;
 
         --bg:        #f4f5f7;
         --bg-sunken: #eceef1;
@@ -80,7 +89,7 @@
 
         --fg:       #16181c;
         --fg-muted: #565b63;
-        --fg-faint: #7e848d;
+        --fg-faint: #676c74;
 
         --accent:      #7a5f18;
         --accent-wash: rgba(122, 95, 24, .10);
@@ -97,6 +106,39 @@
         --shadow-2: 0 8px 24px -10px rgba(20, 22, 26, .16);
         --shadow-3: 0 24px 56px -20px rgba(20, 22, 26, .2);
     }
+}
+
+:root[data-theme='light'] {
+    color-scheme: light;
+    --glyph-sun: none; --glyph-moon: block;
+
+    --bg:        #f4f5f7;
+    --bg-sunken: #eceef1;
+    --surface:   #ffffff;
+    --surface-2: #f7f8fa;
+    --raised:    #ffffff;
+
+    --line:        #e2e5e9;
+    --line-strong: #c8ccd3;
+
+    --fg:       #16181c;
+    --fg-muted: #565b63;
+    --fg-faint: #676c74;
+
+    --accent:      #7a5f18;
+    --accent-wash: rgba(122, 95, 24, .10);
+
+    --action:    #1b1e23;
+    --action-fg: #ffffff;
+
+    --ok:     #2d6b3d;
+    --warn:   #8a6410;
+    --danger: #a63535;
+    --info:   #2f5f8f;
+
+    --shadow-1: 0 1px 2px rgba(20, 22, 26, .06);
+    --shadow-2: 0 8px 24px -10px rgba(20, 22, 26, .16);
+    --shadow-3: 0 24px 56px -20px rgba(20, 22, 26, .2);
 }
 
 /* --------------------------------------------------------------------------
@@ -541,13 +583,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @keyframes admin-vt-out { to   { opacity: 0; } }
 @keyframes admin-vt-in  { from { opacity: 0; transform: translateY(6px); } }
 
-/* Thumbnails fade as they decode rather than snapping in one row at a time. */
+/* Thumbnails fade as they decode rather than snapping in one row at a time.
+
+   NEVER hide an image by default here. This block used to read
+   `.table__thumb { opacity: 0 }` with JavaScript adding the class that
+   revealed it, which meant a single stale cached admin.js made every product
+   photograph in the admin invisible -- exactly what happened in production.
+
+   So the hiding is opt-in: JavaScript marks an image data-arriving only if it
+   has NOT painted yet, and clears it on load or error. No script, no
+   attribute, and the image simply shows. The failure mode is a missing fade,
+   never a missing photograph.
+
+   Scoped to img on purpose: .table__thumb--empty is a span placeholder and
+   must never be caught by this. */
 @media (prefers-reduced-motion: no-preference) {
-    .table__thumb, .line-item img, .preview-img {
-        opacity: 0;
+    img.table__thumb, .line-item img, img.preview-img {
         transition: opacity var(--d-2) var(--ease);
     }
-    img[data-loaded='true'] { opacity: 1; }
+    img[data-arriving='true'] { opacity: 0; }
 }
 
 /* A wide table should not drag the page sideways with it. */
@@ -557,3 +611,116 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Rows and controls answer the pointer without shifting layout. */
 .btn:hover:not(:disabled) { transform: translateY(-1px); }
 .btn:active:not(:disabled) { transform: translateY(1px); }
+
+/* ==========================================================================
+   Theme control, and the far ends of the range
+   ========================================================================== */
+
+/* ---- topbar actions ----
+   Three controls that must survive a 320px phone. Each keeps its icon and
+   drops its label; the accessible name comes from the label when it is there
+   and from aria-label when it is not, so nothing is ever unnamed. */
+.topbar__act {
+    display: inline-flex; align-items: center; gap: var(--s-2);
+    height: 34px; padding-inline: var(--s-3);
+    border: 1px solid transparent; border-radius: var(--r-pill);
+    background: none; cursor: pointer;
+    color: var(--fg-muted); font-size: var(--t-xs); white-space: nowrap;
+    transition: color var(--d-1) var(--ease), background var(--d-1) var(--ease),
+                border-color var(--d-1) var(--ease);
+}
+.topbar__act:hover { color: var(--fg); background: var(--surface); border-color: var(--line); }
+.topbar__act svg { width: 16px; height: 16px; }
+.topbar__act i { font-size: .85em; }
+
+@media (max-width: 719px) {
+    .topbar__act-label { position: absolute; width: 1px; height: 1px; padding: 0;
+                         margin: -1px; overflow: hidden; clip: rect(0 0 0 0);
+                         white-space: nowrap; border: 0; }
+    .topbar__act { width: 34px; padding-inline: 0; justify-content: center; }
+    .topbar__actions { gap: var(--s-1); }
+    /* A long page name must shrink, not push the actions off screen. */
+    .topbar__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .topbar { padding-inline: var(--s-4); gap: var(--s-3); }
+}
+
+.theme-toggle__sun  { display: var(--glyph-sun); }
+.theme-toggle__moon { display: var(--glyph-moon); }
+
+@media (prefers-reduced-motion: no-preference) {
+    .topbar__act svg { transition: transform var(--d-2) var(--ease); }
+    .topbar__act:hover svg { transform: rotate(18deg); }
+}
+
+/* A theme change is a change of light, not of place: cross-fade rather than
+   the slide the admin root transition uses. */
+:root[data-theme-switching] ::view-transition-old(root),
+:root[data-theme-switching] ::view-transition-new(root) { animation: none; }
+:root[data-theme-switching] ::view-transition-new(root) {
+    animation: admin-fade 300ms var(--ease) both;
+}
+@keyframes admin-fade { from { opacity: 0; } }
+:root[data-theme-switching] .rail,
+:root[data-theme-switching] .topbar { view-transition-name: none; }
+
+/* ---- the rail's own footer must stay reachable ----
+   The nav scrolls; the footer does not. On a short phone in landscape the
+   whole rail was scrolling and View store fell off the bottom. */
+.rail { display: flex; flex-direction: column; }
+.rail__nav { min-height: 0; }
+.rail__foot { flex-shrink: 0; }
+
+/* ---- touch ---- */
+@media (pointer: coarse) {
+    .topbar__act, .topbar__burger { min-height: 40px; min-width: 40px; }
+    .rail__link { padding-block: var(--s-3); }
+}
+
+/* ---- wide workspaces ----
+   A fixed content column with nothing beside it wastes an ultra-wide screen,
+   but a table 3000px across is unreadable. Cap the measure and keep it left,
+   next to the rail, where the eye already is. */
+@media (min-width: 1900px) {
+    .content { max-width: 1720px; }
+}
+@media (min-width: 2600px) {
+    :root { --rail: 288px; }
+    .content { max-width: 2100px; }
+}
+
+/* ---- very small ---- */
+@media (max-width: 400px) {
+    .content { padding-inline: var(--s-4); }
+    .table th, .table td { padding-inline: var(--s-3); }
+}
+
+/* --------------------------------------------------------------------------
+   Letting wide content actually scroll instead of widening the page
+
+   A grid or flex item defaults to `min-width: auto`, which means it refuses
+   to shrink below its own min-content. The orders table is about 506px at its
+   narrowest, so every card holding one pushed the whole admin out to 506px and
+   the page scrolled sideways on every phone -- 214px of overflow at 320px wide.
+   The `overflow-x: auto` on .table-wrap could never engage, because its
+   ancestors had already grown to fit it.
+
+   Setting min-width: 0 down the chain lets the ancestors shrink to the
+   viewport again, at which point .table-wrap does its job and the table
+   scrolls inside its own box. Nothing else moves.
+   -------------------------------------------------------------------------- */
+.content,
+.card,
+.card__body,
+.grid-2 > *,
+.stats > * { min-width: 0; }
+
+/* The table itself may still be wider than the phone; that is what the
+   scroller is for. A sensible floor keeps columns from collapsing to
+   unreadable slivers inside it. */
+.table { min-width: 32rem; }
+
+/* Touch: a 28px control is too small to hit reliably. */
+@media (pointer: coarse) {
+    .btn--sm { min-height: 40px; padding-block: .6rem; }
+    .table td .btn, .table th .btn { min-height: 36px; }
+}

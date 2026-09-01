@@ -79,7 +79,7 @@ to *Delivered*.
 - 📦 Cash-on-delivery checkout
 - 🚚 Order tracking with a tracking number
 - 📱 Works properly on a phone
-- 🌗 Follows your system's dark or light mode
+- 🌗 Light or dark, your choice, remembered between visits
 
 </td>
 <td width="50%" valign="top">
@@ -120,7 +120,7 @@ to *Delivered*.
 | **Plain CSS** | All the styling, one file | No framework, so nothing to install or update |
 | **Vanilla JavaScript** | Cart actions, menus, animations | No jQuery, no libraries, ~12KB total |
 | **Font Awesome** | The icons | Loaded once from a CDN |
-| **Outfit + DM Sans** | The two fonts | Free from Google Fonts |
+| **Cormorant Garamond + Jost** | The two fonts | Free from Google Fonts |
 
 **Zero npm packages. Zero build step.** Edit a file, refresh the browser, done.
 
@@ -278,7 +278,6 @@ perfumestore/
 ├── index.php               the homepage
 ├── perfumes.php            the full collection
 ├── brands/                 one page per house, 20 of them
-├── brands/                 one page per house, 20 of them
 ├── display-perfume.php     a single product
 ├── shoppingcart.php        the cart
 ├── checkout.php            place an order
@@ -315,9 +314,14 @@ totals match their line items, and that every product photo actually exists.
 python tools/audit_frontend.py
 ```
 
-Runs **13 checks** on the pages themselves — that no HTML tag is left unclosed, that
-every linked file exists, that there are no duplicate element IDs, and that dark mode
-and reduced-motion support are both in place.
+Runs **33 checks** on the pages themselves — that no HTML tag is left unclosed, that
+every linked file exists, that there are no duplicate element IDs, that reduced-motion
+support is in place, and that every text colour clears the WCAG AA contrast minimum
+against every background it can sit on, in all four palettes.
+
+It also pins down bugs that have actually shipped here, so they cannot come back: no
+image may be hidden by CSS and revealed only by JavaScript, and every local stylesheet
+and script must carry a cache-busting version stamp.
 
 Both currently pass.
 
@@ -354,9 +358,9 @@ accept a single real order.**
 
 Product photography and brand names belong to their respective fragrance houses and
 are used here for demonstration only. A product only carries a photograph when that
-photograph actually shows it; the rest display a *Photography pending* tile until you
-upload a real shot from the admin panel. No listing is ever given another house's
-bottle. Icons by [Font Awesome](https://fontawesome.com/),
+photograph actually shows it, and no listing is ever given another house's bottle. A
+product added without a photo gets a designed *Photography pending* tile rather than a
+broken image. Icons by [Font Awesome](https://fontawesome.com/),
 type by [Google Fonts](https://fonts.google.com/).
 
 <div align="center">

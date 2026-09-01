@@ -32,7 +32,7 @@
 
     --fg:       #f1ede5;
     --fg-muted: #a7a298;
-    --fg-faint: #7b776e;
+    --fg-faint: #868177;
     --on-gold:  #0a0a0c;
 
     --gold:        #d4af6a;
@@ -73,13 +73,22 @@
     --d-3: 720ms;
     --d-4: 1200ms;
 
+    /* Which theme glyph the toggle shows: the one you would switch TO. */
+    --glyph-sun: block; --glyph-moon: none;
+
     --shell: 1440px;
     --nav-h: 76px;
 }
 
+/* Light palette.
+   Declared twice on purpose: once for visitors who have not chosen
+   (follow the system) and once for visitors who have (override it).
+   CSS cannot share one body across a media query and a plain selector.
+   THE TWO BODIES MUST STAY IDENTICAL -- tools/audit_frontend.py asserts it. */
 @media (prefers-color-scheme: light) {
-    :root {
+    :root:not([data-theme='dark']) {
         color-scheme: light;
+        --glyph-sun: none; --glyph-moon: block;
 
         --ink:        #f7f5f1;
         --ink-raised: #ffffff;
@@ -93,7 +102,7 @@
 
         --fg:       #14140f;
         --fg-muted: #55524b;
-        --fg-faint: #7c7870;
+        --fg-faint: #6b675f;
         --on-gold:  #fdfcfa;
 
         /* Deep enough to hold 4.5:1 on porcelain */
@@ -110,6 +119,40 @@
         --shadow-2: 0 10px 30px -12px rgba(30, 26, 18, .18);
         --shadow-3: 0 30px 70px -24px rgba(30, 26, 18, .22);
     }
+}
+
+:root[data-theme='light'] {
+    color-scheme: light;
+    --glyph-sun: none; --glyph-moon: block;
+
+    --ink:        #f7f5f1;
+    --ink-raised: #ffffff;
+    --ink-sunken: #efece6;
+    --surface:    #ffffff;
+    --surface-2:  #faf8f5;
+
+    --line:        #e2ddd4;
+    --line-strong: #c4bcae;
+    --line-gold:   rgba(122, 95, 24, .34);
+
+    --fg:       #14140f;
+    --fg-muted: #55524b;
+    --fg-faint: #6b675f;
+    --on-gold:  #fdfcfa;
+
+    /* Deep enough to hold 4.5:1 on porcelain */
+    --gold:        #7a5f18;
+    --gold-bright: #96762a;
+    --gold-deep:   #5d4711;
+    --gold-wash:   rgba(122, 95, 24, .09);
+
+    --ok:     #2f6b3c;
+    --warn:   #7d5a0d;
+    --danger: #97302f;
+
+    --shadow-1: 0 1px 2px rgba(30, 26, 18, .06);
+    --shadow-2: 0 10px 30px -12px rgba(30, 26, 18, .18);
+    --shadow-3: 0 30px 70px -24px rgba(30, 26, 18, .22);
 }
 
 /* --------------------------------------------------------------------------
@@ -197,9 +240,16 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 /* --------------------------------------------------------------------------
    3. Layout
    -------------------------------------------------------------------------- */
-.shell { width: 100%; max-width: var(--shell); margin-inline: auto; padding-inline: var(--s-5); }
-@media (min-width: 768px)  { .shell { padding-inline: var(--s-7); } }
-@media (min-width: 1280px) { .shell { padding-inline: var(--s-8); } }
+/* One token for the gutter, because two things depend on it: the shell pads
+   by it, and any full-bleed child (the rail) cancels it with an equal
+   negative margin. When they were separate numbers the rail was 16px wider
+   than the viewport on a 360px phone and the page overflowed sideways. */
+:root { --shell-pad: var(--s-5); }
+@media (max-width: 379px)  { :root { --shell-pad: var(--s-4); } }
+@media (min-width: 768px)  { :root { --shell-pad: var(--s-7); } }
+@media (min-width: 1280px) { :root { --shell-pad: var(--s-8); } }
+
+.shell { width: 100%; max-width: var(--shell); margin-inline: auto; padding-inline: var(--shell-pad); }
 
 .section { padding-block: var(--s-8); }
 @media (min-width: 768px) { .section { padding-block: var(--s-9); } }
@@ -462,9 +512,9 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .rail {
     display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 288px);
     gap: var(--s-5); overflow-x: auto;
-    scroll-snap-type: x mandatory; scroll-padding-inline: var(--s-5);
+    scroll-snap-type: x mandatory; scroll-padding-inline: var(--shell-pad);
     padding-block: var(--s-2) var(--s-6);
-    margin-inline: calc(var(--s-5) * -1); padding-inline: var(--s-5);
+    margin-inline: calc(var(--shell-pad) * -1); padding-inline: var(--shell-pad);
 }
 .rail > * { scroll-snap-align: start; }
 .rail .product { border: 1px solid var(--line); }
@@ -994,17 +1044,21 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
    Product photography pops in as each file decodes. Fading it in over the
    sunken ground turns a jolt into an arrival.
    -------------------------------------------------------------------------- */
+/* The hiding is opt-in, never the default. JavaScript marks an image
+   data-arriving only when it has not painted yet, and clears it on load or
+   on error. If store.js is stale, blocked or broken, no attribute is ever
+   set and every photograph shows -- it just does not fade. Hiding content by
+   default and revealing it with script is how a cached script file turns
+   into a catalogue with no pictures. */
 @media (prefers-reduced-motion: no-preference) {
     .product__media img,
     .brand-tile img,
     .editorial__media img,
     .detail__media img,
     .cart-line__media img {
-        opacity: 0;
         transition: opacity var(--d-3) var(--ease), transform var(--d-4) var(--ease);
     }
-    /* data-loaded is set once the file has actually decoded */
-    img[data-loaded='true'] { opacity: 1; }
+    img[data-arriving='true'] { opacity: 0; }
 }
 
 /* --------------------------------------------------------------------------
@@ -1061,3 +1115,172 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .btn--ghost:hover { transform: translateY(-1px); }
 .btn--primary:active,
 .btn--ghost:active { transform: translateY(1px); }
+
+/* ==========================================================================
+   21. Theme control, continuous rail, and the far ends of the range
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   21.1 Theme toggle
+   Both glyphs are in the markup; the palette decides which one is drawn, so
+   switching costs no request and cannot flash the wrong icon.
+   -------------------------------------------------------------------------- */
+.theme-toggle { border: 0; background: none; cursor: pointer; padding: 0; }
+.theme-toggle svg { width: 18px; height: 18px; }
+.theme-toggle__sun  { display: var(--glyph-sun); }
+.theme-toggle__moon { display: var(--glyph-moon); }
+
+@media (prefers-reduced-motion: no-preference) {
+    .theme-toggle svg { transition: transform var(--d-2) var(--ease); }
+    .theme-toggle:hover svg { transform: rotate(18deg); }
+}
+
+/* Switching theme is a change of light, not a change of place. The root
+   transition slides by default, which would be wrong here. */
+:root[data-theme-switching] ::view-transition-old(root),
+:root[data-theme-switching] ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+:root[data-theme-switching] ::view-transition-new(root) {
+    animation: vt-fade 320ms var(--ease) both;
+}
+@keyframes vt-fade { from { opacity: 0; } }
+
+/* The nav and footer are named for cross-page continuity, but on a theme
+   change they must repaint with everything else rather than sit still. */
+:root[data-theme-switching] .nav,
+:root[data-theme-switching] .footer { view-transition-name: none; }
+
+/* --------------------------------------------------------------------------
+   21.2 A rail that drifts
+   The trending rail moves on its own, slowly, the way a shop turntable does.
+   It is a hint that the row is horizontal, not a carousel that takes the
+   decision away: any touch, hover, focus or key press hands control back and
+   it never steals it again in that gesture.
+
+   Snap has to be off while it drifts. Mandatory snap fights a per-frame
+   scrollLeft and produces a stutter, which is worse than no snap at all.
+   -------------------------------------------------------------------------- */
+.rail[data-autoplay='running'] { scroll-snap-type: none; scroll-behavior: auto; }
+.rail__clone { visibility: visible; }
+
+@media (prefers-reduced-motion: reduce) {
+    .rail[data-autoplay] { scroll-snap-type: x mandatory; }
+}
+
+/* --------------------------------------------------------------------------
+   21.3 Small screens
+   Everything below is a real defect found by walking the range, not padding.
+   -------------------------------------------------------------------------- */
+
+/* The nav bar on a phone.
+   Four controls plus a wordmark do not fit in 390px: the account chip and
+   the burger were being cut off at the right edge. Two things give way, in
+   order of how much they cost to lose.
+
+   First the account trigger stops being a labelled chip and becomes a plain
+   icon, matching the cart beside it -- the name it showed was already hidden
+   at this width, so only a border and a chevron are lost.
+   Then, below 520px, the wordmark goes; the drawn flacon still identifies
+   the store, and the full name is one tap away in the drawer. */
+@media (max-width: 559px) {
+    .nav__inner { gap: var(--s-3); }
+    .nav__actions { gap: var(--s-1); }
+
+    .nav__group--end > [data-nav-trigger] {
+        width: 40px; height: 40px; padding: 0;
+        display: grid; place-items: center;
+        border: 0; background: none; color: var(--fg-muted);
+        border-radius: var(--r-pill);
+    }
+    .nav__group--end > [data-nav-trigger]:hover { color: var(--gold); background: var(--gold-wash); }
+    .nav__chev { display: none; }
+}
+
+@media (max-width: 519px) {
+    .nav__brand span { display: none; }
+    .nav__brand { min-height: 44px; min-width: 44px; justify-content: center; }
+}
+
+/* Touch targets. A 40px icon in a 76px bar is under the 44px minimum on the
+   cross axis; padding the bar is wrong, so the hit area is grown instead. */
+@media (pointer: coarse) {
+    .nav__icon, .nav__toggle, .rail-btn { min-height: 44px; min-width: 44px; }
+    .nav__menu a { padding-block: var(--s-3); }
+    .btn--sm { padding-block: .72rem; }
+}
+
+/* A phone held sideways.
+
+   Stacking the copy above the photographs made the hero 659px tall in a 360px
+   viewport: nearly two full screens before a single product appeared. A short,
+   wide viewport is the one case where the two-column hero belongs at a width
+   the desktop breakpoint would never reach, so it is asked for by shape rather
+   than by width alone. The display size steps down with it, since 59px of
+   serif in a 360px-tall window is most of the screen. */
+@media (max-height: 560px) and (orientation: landscape) {
+    .hero { min-height: 0; padding-block: var(--s-5) var(--s-6); }
+    .hero__title { font-size: clamp(2rem, 1.2rem + 2.4vw, 3rem); }
+    .hero__sub { margin-top: var(--s-4); }
+    .hero__cta { margin-top: var(--s-5); }
+    .hero__rule { margin-top: var(--s-4); }
+}
+@media (min-width: 620px) and (max-height: 560px) and (orientation: landscape) {
+    .hero {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: center;
+        gap: var(--s-6);
+    }
+    .hero__art { max-height: none; aspect-ratio: 4 / 3; }
+}
+
+/* iOS/Android URL bars: dvh keeps the hero from jumping as the bar retracts. */
+@supports (height: 100dvh) {
+    body { min-height: 100dvh; }
+}
+
+/* The account menu on a phone.
+   Anchoring a fixed-width panel to the account button pushed its left edge
+   past the viewport and gave the whole page an 8px horizontal scroll, even
+   while the menu was closed: a hidden panel still contributes overflow.
+   Below 560px it stops being a dropdown and becomes a sheet pinned to the
+   nav, measured against the viewport rather than against the button. */
+@media (max-width: 559px) {
+    .nav__menu--right {
+        position: fixed;
+        top: calc(var(--nav-h) + 6px);
+        left: var(--s-4);
+        right: var(--s-4);
+        width: auto;
+        min-width: 0;
+    }
+    .toasts { right: var(--s-4); left: var(--s-4); width: auto; }
+}
+
+
+
+/* --------------------------------------------------------------------------
+   21.4 Very wide and ultra-wide
+   At 21:9 and 32:9 a 1440px column stranded in the middle of the screen reads
+   as a bug. The shell widens in steps, and the card grid gains tracks so the
+   cards keep their proportion instead of stretching into letterboxes.
+   -------------------------------------------------------------------------- */
+@media (min-width: 1800px) {
+    :root { --shell: 1660px; }
+}
+@media (min-width: 2200px) {
+    :root { --shell: 1880px; --t-body: 1.06rem; }
+    .card-grid { grid-template-columns: repeat(4, 1fr); }
+    .card-grid--4 { grid-template-columns: repeat(5, 1fr); }
+}
+@media (min-width: 3000px) {
+    :root { --shell: 2280px; }
+    .card-grid--4 { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* Ultra-wide is short as well as wide. A full-height hero would leave the
+   copy floating in the middle of an enormous empty band. */
+@media (min-aspect-ratio: 2/1) and (min-width: 1600px) {
+    .hero { min-height: min(760px, calc(100dvh - var(--nav-h))); }
+}

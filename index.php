@@ -80,7 +80,7 @@ include('includes/header.php');
 
     <div class="shell">
         <?php if ($trending && mysqli_num_rows($trending) > 0) { ?>
-            <div class="rail" id="trending-rail" data-rail tabindex="0" aria-label="Trending fragrances">
+            <div class="rail" id="trending-rail" data-rail data-rail-autoplay tabindex="0" aria-label="Trending fragrances">
                 <?php foreach ($trending as $p) { include('includes/product-card.php'); } ?>
             </div>
         <?php } else { ?>

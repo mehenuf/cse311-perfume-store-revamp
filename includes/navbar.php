@@ -62,6 +62,23 @@ function navCurrent($page, $currentPage)
         </ul>
 
         <div class="nav__actions">
+
+            <!-- Theme. Follows the system until you touch it, then remembers.
+                 Both glyphs ship in the markup and CSS shows the one that
+                 matches the active theme, so there is no icon swap to wait for. -->
+            <button class="nav__icon theme-toggle" type="button" data-theme-toggle
+                    aria-label="Switch colour theme">
+                <svg class="theme-toggle__sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.3"/>
+                    <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6"
+                          stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+                <svg class="theme-toggle__moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M20.4 14.6A8.6 8.6 0 0 1 9.4 3.6a8.6 8.6 0 1 0 11 11Z"
+                          stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                </svg>
+            </button>
+
             <?php if ($isAuthed) { ?>
 
                 <a class="nav__icon" href="<?= $basePath ?>shoppingcart.php" aria-label="Your cart">

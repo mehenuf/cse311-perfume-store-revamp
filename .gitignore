@@ -217,6 +217,48 @@ database/**/*.local.sql
 #  PHP runtime leftovers on shared hosting
 # ---------------------------------------------------------------
 php_errorlog
-error_log
 .htaccess.bak
 sess_*
+
+
+# ---------------------------------------------------------------
+# 11. Python bytecode
+#     database/verify.py and the tools/ scripts are run directly, so
+#     their caches can appear next to them. tools/ is already ignored;
+#     database/ is not, and its .sql files must stay committed.
+# ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+
+
+# ---------------------------------------------------------------
+# 12. More editor and OS clutter
+# ---------------------------------------------------------------
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Office / LibreOffice lock files, easy to create by opening a doc
+#  in the repo folder
+~$*
+.~lock.*#
+
+# JetBrains per-user files that slip past .idea/
+*.iws
+
+
+# ---------------------------------------------------------------
+# 13. Runtime uploads
+#     Product photography in images/ IS committed. These are the
+#     temporary artefacts an upload leaves behind, not the photos.
+# ---------------------------------------------------------------
+images/tmp/
+images/*.part
+images/*.uploading

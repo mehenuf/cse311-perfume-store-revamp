@@ -1,5 +1,6 @@
     </main>
 
+    <script src="<?= $basePath ?>assets/js/theme.js?v=<?= @filemtime(__DIR__ . '/../assets/js/theme.js') ?>" defer></script>
     <script src="<?= $basePath ?>assets/js/store.js?v=<?= @filemtime(__DIR__ . '/../assets/js/store.js') ?>" defer></script>
 
     <?php if (isset($_SESSION['message']) && $_SESSION['message'] !== '') { ?>

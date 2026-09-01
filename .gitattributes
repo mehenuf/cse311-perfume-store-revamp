@@ -1,0 +1,53 @@
+# ==============================================================
+#  Perfume Store  ·  .gitattributes
+#
+#  This project is written on Windows and deployed to Linux shared
+#  hosting over FTP. Without this file, git stores whatever line
+#  endings happen to be on disk, and the repository ends up with a
+#  mix. That shows up as whole files appearing changed when nothing
+#  was edited, and as stray ^M characters in files a server reads
+#  line by line.
+#
+#  Rule: text is stored with LF in the repository and checked out
+#  however the local platform prefers. Binaries are never touched.
+# ==============================================================
+
+# Let git detect text files and normalise them to LF in the repo.
+* text=auto eol=lf
+
+# ---- source: always LF, on every platform ----
+*.php   text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+*.sql   text eol=lf
+*.py    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.html  text eol=lf
+*.svg   text eol=lf
+*.txt   text eol=lf
+.gitignore      text eol=lf
+.gitattributes  text eol=lf
+.htaccess       text eol=lf
+
+# ---- binaries: never converted, never diffed as text ----
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.avif binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary
+*.zip   binary
+
+# ---- keep development-only files out of `git archive` exports ----
+tools/          export-ignore
+docs/           export-ignore
+database/       export-ignore
+.gitattributes  export-ignore
+.gitignore      export-ignore

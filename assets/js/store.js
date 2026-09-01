@@ -158,6 +158,11 @@
             function sync() {
                 railEdge(rail);
                 if (!prev || !next) return;
+                // A drifting rail is a loop: it has no first or last card, so
+                // disabling an arrow there would be a lie.
+                if (rail.hasAttribute('data-rail-autoplay')) {
+                    prev.disabled = false; next.disabled = false; return;
+                }
                 var max = rail.scrollWidth - rail.clientWidth - 2;
                 prev.disabled = rail.scrollLeft <= 2;
                 next.disabled = rail.scrollLeft >= max;
@@ -205,15 +210,21 @@
        keeps a repeat visit instant rather than re-animating everything.
        --------------------------------------------------------------------- */
     function initImageArrival() {
-        function mark(img) { img.dataset.loaded = 'true'; }
+        // Clearing the attribute is what makes the image visible again, so it
+        // runs on load AND on error: a broken file shows its alt text rather
+        // than a transparent hole.
+        function arrived(img) { delete img.dataset.arriving; img.dataset.loaded = 'true'; }
 
         function watch(img) {
             if (img.dataset.loaded === 'true') return;
-            // complete + naturalWidth means it came from cache this instant
-            if (img.complete && img.naturalWidth > 0) { mark(img); return; }
-            img.addEventListener('load', function () { mark(img); }, { once: true });
-            // A broken file must not stay invisible forever.
-            img.addEventListener('error', function () { mark(img); }, { once: true });
+            // complete + naturalWidth means it came from cache this instant.
+            // It has already painted, so never hide it -- that would flicker.
+            if (img.complete && img.naturalWidth > 0) { img.dataset.loaded = 'true'; return; }
+
+            // Only now do we opt this image into being hidden while it loads.
+            img.dataset.arriving = 'true';
+            img.addEventListener('load', function () { arrived(img); }, { once: true });
+            img.addEventListener('error', function () { arrived(img); }, { once: true });
         }
 
         document.querySelectorAll('img').forEach(watch);
@@ -471,6 +482,149 @@
     }
 
     /* ---------------------------------------------------------------------
+       Rail drift
+       A slow, continuous pan, the way a shop turntable moves. It is a hint
+       that the row is horizontal, not a carousel that takes the decision
+       away: hover, touch, focus, wheel or an arrow hands control straight
+       back, and it only resumes once the row has been left alone.
+
+       The loop is seamless because the children are cloned once; when the
+       scroll passes the width of the original set it is rewound by exactly
+       that width, which is invisible since the content there is identical.
+       --------------------------------------------------------------------- */
+    function initRailDrift() {
+        if (reduceMotion) return;
+
+        document.querySelectorAll('[data-rail-autoplay]').forEach(function (rail) {
+            var originals = Array.prototype.slice.call(rail.children);
+            if (originals.length < 3) return;                 // nothing to loop
+            if (rail.scrollWidth <= rail.clientWidth + 8) return; // already fits
+
+            // Clones are decoration. They must not be announced twice, must
+            // not appear in the tab order, and must not duplicate any id.
+            originals.forEach(function (node) {
+                var copy = node.cloneNode(true);
+                copy.classList.add('rail__clone');
+                copy.setAttribute('aria-hidden', 'true');
+                copy.removeAttribute('id');
+                copy.querySelectorAll('[id]').forEach(function (el) { el.removeAttribute('id'); });
+
+                // The reveal observer only ever saw the originals, so a clone
+                // that kept data-reveal would sit at opacity 0 for good and
+                // the second half of the loop would pan through blanks.
+                // Clones are decoration: they arrive already revealed.
+                [copy].concat(Array.prototype.slice.call(copy.querySelectorAll('[data-reveal]')))
+                    .forEach(function (el) {
+                        if (!el.hasAttribute('data-reveal')) return;
+                        el.removeAttribute('data-reveal');
+                        el.setAttribute('data-shown', 'true');
+                    });
+                copy.querySelectorAll('a, button, input, select, textarea').forEach(function (el) {
+                    el.setAttribute('tabindex', '-1');
+                });
+                rail.appendChild(copy);
+            });
+
+            var loopWidth = 0;
+            function measure() {
+                var firstClone = rail.querySelector('.rail__clone');
+                loopWidth = firstClone
+                    ? firstClone.offsetLeft - originals[0].offsetLeft
+                    : 0;
+            }
+            measure();
+            if (loopWidth <= 0) return;
+
+            var SPEED = 26;          // px per second: slow enough to read a label
+            var IDLE  = 2600;        // ms of being left alone before it resumes
+            var pos = rail.scrollLeft;
+            var running = false;
+            var held = 0;            // pointer or focus is inside: never resume
+            var resumeAt = 0;
+            var last = 0;
+            var frame = 0;
+
+            function normalise(v) {
+                v = v % loopWidth;
+                return v < 0 ? v + loopWidth : v;
+            }
+
+            function tick(now) {
+                frame = window.requestAnimationFrame(tick);
+                var dt = last ? Math.min(now - last, 64) : 0;  // ignore tab-away gaps
+                last = now;
+
+                if (!running) {
+                    if (held || now < resumeAt) return;
+                    pos = normalise(rail.scrollLeft);
+                    running = true;
+                    rail.dataset.autoplay = 'running';
+                    return;
+                }
+                pos = normalise(pos + SPEED * dt / 1000);
+                rail.scrollLeft = pos;
+            }
+
+            function surrender() {
+                running = false;
+                resumeAt = window.performance.now() + IDLE;
+                rail.dataset.autoplay = 'paused';
+            }
+
+            ['pointerdown', 'wheel', 'touchstart', 'keydown'].forEach(function (evt) {
+                rail.addEventListener(evt, surrender, { passive: true });
+            });
+            rail.addEventListener('pointerenter', function () { held++; surrender(); });
+            rail.addEventListener('pointerleave', function () { held = Math.max(0, held - 1); surrender(); });
+            rail.addEventListener('focusin',  function () { held++; surrender(); });
+            rail.addEventListener('focusout', function () { held = Math.max(0, held - 1); surrender(); });
+
+            // The arrow buttons are a manual gesture like any other.
+            ['prev', 'next'].forEach(function (dir) {
+                var btn = document.querySelector('[data-rail-' + dir + '="' + rail.id + '"]');
+                if (btn) btn.addEventListener('click', surrender);
+            });
+
+            // Two independent reasons to stop: the rail is off screen, or the
+            // tab is in the background. Both are tracked, and the loop runs
+            // only when neither applies -- otherwise whichever event fired
+            // last would win and the other would be forgotten.
+            var onScreen = false;
+
+            function sync() {
+                var want = onScreen && !document.hidden;
+                if (want && !frame) {
+                    last = 0;
+                    frame = window.requestAnimationFrame(tick);
+                } else if (!want && frame) {
+                    window.cancelAnimationFrame(frame);
+                    frame = 0;
+                    running = false;
+                    rail.dataset.autoplay = 'paused';
+                }
+            }
+
+            new IntersectionObserver(function (entries) {
+                onScreen = entries[0].isIntersecting;
+                sync();
+            }, { threshold: 0 }).observe(rail);
+
+            document.addEventListener('visibilitychange', sync);
+
+            // A resize changes the loop length; keep the rewind point honest.
+            if ('ResizeObserver' in window) {
+                new ResizeObserver(function () {
+                    measure();
+                    if (loopWidth > 0) pos = normalise(pos);
+                }).observe(rail);
+            }
+
+            resumeAt = window.performance.now() + 900;   // let the page settle first
+            rail.dataset.autoplay = 'paused';
+        });
+    }
+
+    /* ---------------------------------------------------------------------
        Boot
        --------------------------------------------------------------------- */
     function boot() {
@@ -481,6 +635,7 @@
         initCart();
         initImageArrival();
         initSharedMedia();
+        initRailDrift();
     }
 
     if (document.readyState === 'loading') {

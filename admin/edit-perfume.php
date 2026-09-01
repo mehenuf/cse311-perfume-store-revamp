@@ -94,8 +94,21 @@ if (!$data) {
                 <div class="card__head"><h2>Photo</h2></div>
                 <div class="card__body">
                     <div class="upload">
-                        <img class="preview-img" data-image-preview src="../images/<?= e($data['image_path']) ?>"
-                             alt="Current photo of <?= e($data['name']) ?>">
+                        <?php $hasShot = trim($data['image_path']) !== ''; ?>
+                        <!-- An empty image_path would make this src "../images/",
+                             a request for the directory itself: a 404 and a broken
+                             image icon. A product with no photograph yet gets the
+                             same designed placeholder the list uses. -->
+                        <img class="preview-img" data-image-preview
+                             src="<?= $hasShot ? '../images/' . e($data['image_path']) : '' ?>"
+                             alt="<?= $hasShot ? 'Current photo of ' . e($data['name']) : '' ?>"
+                             <?= $hasShot ? '' : 'hidden' ?>>
+                        <?php if (!$hasShot) { ?>
+                            <span class="preview-img table__thumb--empty" data-image-placeholder
+                                  title="No photograph yet">
+                                <i class="fa-regular fa-image" aria-hidden="true"></i>
+                            </span>
+                        <?php } ?>
                         <div class="field" style="width:100%">
                             <label for="p-image">Replace image</label>
                             <input class="file" id="p-image" name="image_path" type="file"

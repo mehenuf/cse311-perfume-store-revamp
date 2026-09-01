@@ -72,6 +72,7 @@
             var url = URL.createObjectURL(file);
             preview.src = url;
             preview.hidden = false;
+            delete preview.dataset.arriving;
             preview.dataset.loaded = 'true';
             if (placeholder) placeholder.hidden = true;
             preview.addEventListener('load', function () { URL.revokeObjectURL(url); }, { once: true });
@@ -79,13 +80,18 @@
     }
 
 
-    /* ---- images fade in as they decode, rather than popping ---- */
+    /* ---- images fade in as they decode, rather than popping ----
+       The CSS never hides an image on its own. This marks one data-arriving
+       only while it is genuinely still loading, and clears that on load or on
+       error. If this file is stale or fails, nothing is marked and every
+       thumbnail is simply visible -- which is how it must fail. */
     function initImageArrival() {
-        function mark(img) { img.dataset.loaded = 'true'; }
+        function arrived(img) { delete img.dataset.arriving; img.dataset.loaded = 'true'; }
         document.querySelectorAll('img').forEach(function (img) {
-            if (img.complete && img.naturalWidth > 0) { mark(img); return; }
-            img.addEventListener('load', function () { mark(img); }, { once: true });
-            img.addEventListener('error', function () { mark(img); }, { once: true });
+            if (img.complete && img.naturalWidth > 0) { img.dataset.loaded = 'true'; return; }
+            img.dataset.arriving = 'true';
+            img.addEventListener('load', function () { arrived(img); }, { once: true });
+            img.addEventListener('error', function () { arrived(img); }, { once: true });
         });
     }
 

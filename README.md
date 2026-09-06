@@ -191,69 +191,7 @@ are in **`DEPLOYMENT.md`**.
 Five tables. A customer has a cart and places orders; each order is made of order items;
 every cart line and order item points at a perfume.
 
-```mermaid
-erDiagram
-    customer ||--o{ cart : "fills"
-    customer ||--o{ orders : "places"
-    orders   ||--o{ order_item : "contains"
-    perfumes ||--o{ cart : "sits in"
-    perfumes ||--o{ order_item : "sold as"
-
-    customer {
-        int id PK
-        string username UK
-        string email UK
-        string password
-        string name
-        string contacts
-        string address
-        date dob
-        tinyint admin_check "1 = shop owner"
-        string reset_token_hash "set while a password reset is pending"
-        timestamp reset_token_expires
-    }
-    perfumes {
-        int id PK
-        string name UK
-        text perfume_notes
-        text description
-        string volume
-        int qty "stock"
-        string image_path
-        decimal price "in Taka, the original price"
-        tinyint trending "1 = on homepage"
-        tinyint status "1 = visible"
-        tinyint discount_percent "0 = no discount"
-        timestamp discount_starts_at "optional"
-        timestamp discount_ends_at "optional"
-    }
-    cart {
-        int id PK
-        int user_id FK
-        int perfume_id FK
-        int perfume_qty
-    }
-    orders {
-        int id PK
-        string tracking_no UK
-        int user_id FK "NULL for a guest checkout"
-        string name
-        string email
-        string address
-        string zipcode
-        decimal total_price
-        string payment_mode
-        tinyint status "0 to 4"
-        timestamp created_at
-    }
-    order_item {
-        int id PK
-        int order_id FK
-        int perfume_id FK
-        int perfume_qty
-        decimal price "price when bought"
-    }
-```
+![Database schema diagram](docs/screenshots/schema.svg)
 
 **Order status** goes `0` Processing → `1` Completed → `2` Shipped → `3` Delivered,
 with `4` Cancelled.

@@ -1,5 +1,4 @@
 <?php
-//include('../config/dbcon.php');
 include(__DIR__ . '/../config/dbcon.php');
 
 function getData($table)
@@ -12,8 +11,10 @@ function getData($table)
 function getViaID($table, $id)
 {
     global $con;
-    $query = "SELECT * FROM perfumes WHERE id = '$id';";
-    return $query_run = mysqli_query($con, $query);
+    $stmt = mysqli_prepare($con, "SELECT * FROM perfumes WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, 'i', $id);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt);
 }
 
 function redirect($url, $message)
@@ -23,12 +24,6 @@ function redirect($url, $message)
     exit();
 }
 
-function redirect_func($url, $message)
-{
-    echo '<script>alert("' . $message . '");</script>';
-    echo '<script>window.location.href="' . $url . '";</script>';
-    exit();
-}
 function getOrders()
 {
     global $con;
@@ -54,10 +49,13 @@ function getActiveOrders() {
 
 function validateTrackID($tracking_no){
     global $con;
-    
-    $query =    "SELECT o.*, c.username as username, c.email as id_email, c.name as id_name
-                FROM orders o, customer c
-                WHERE o.user_id = c.id AND o.tracking_no = '$tracking_no'
-                ORDER BY o.created_at ASC;";
-    return $query_run = mysqli_query($con, $query);
+
+    $stmt = mysqli_prepare($con,
+        "SELECT o.*, c.username as username, c.email as id_email, c.name as id_name
+         FROM orders o, customer c
+         WHERE o.user_id = c.id AND o.tracking_no = ?
+         ORDER BY o.created_at ASC");
+    mysqli_stmt_bind_param($stmt, 's', $tracking_no);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt);
 }

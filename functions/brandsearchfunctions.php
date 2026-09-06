@@ -17,11 +17,14 @@ function getBrandProducts($slug)
     if (!$brand) {
         return false;
     }
-    $pattern = mysqli_real_escape_string($con, $brand['pattern']);
-    return mysqli_query($con,
+    $pattern = $brand['pattern'];
+    $stmt = mysqli_prepare($con,
         "SELECT * FROM perfumes
-         WHERE status = 1 AND name LIKE '" . $pattern . "'
+         WHERE status = 1 AND name LIKE ?
          ORDER BY price DESC, name ASC");
+    mysqli_stmt_bind_param($stmt, 's', $pattern);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt);
 }
 
 /** How many published products a brand has. Used for the homepage tiles. */
@@ -32,13 +35,12 @@ function countBrandProducts($slug)
     if (!$brand) {
         return 0;
     }
-    $pattern = mysqli_real_escape_string($con, $brand['pattern']);
-    $res = mysqli_query($con,
-        "SELECT COUNT(*) AS n FROM perfumes
-         WHERE status = 1 AND name LIKE '" . $pattern . "'");
-    if (!$res) {
-        return 0;
-    }
+    $pattern = $brand['pattern'];
+    $stmt = mysqli_prepare($con,
+        "SELECT COUNT(*) AS n FROM perfumes WHERE status = 1 AND name LIKE ?");
+    mysqli_stmt_bind_param($stmt, 's', $pattern);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
     $row = mysqli_fetch_assoc($res);
     return (int) $row['n'];
 }

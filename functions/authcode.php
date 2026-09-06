@@ -6,22 +6,26 @@ include('../config/dbcon.php');
 //if registration button is pressed then this portion will execute
 if (isset($_POST['signup_btn'])) {
     //taking info provided in the form into a variable
-    $name = mysqli_real_escape_string($con, $_POST['name']);
-    $username = mysqli_real_escape_string($con, $_POST['username']);
-    $password = mysqli_real_escape_string($con, $_POST['password']);
-    $repassword = mysqli_real_escape_string($con, $_POST['repassword']);
-    $email = mysqli_real_escape_string($con, $_POST['email']);
-    $address = mysqli_real_escape_string($con, $_POST['address']);
-    $contacts = mysqli_real_escape_string($con, $_POST['contacts']);
-    $dob = mysqli_real_escape_string($con, $_POST['dob']);
+    $name = $_POST['name'];
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $repassword = $_POST['repassword'];
+    $email = $_POST['email'];
+    $address = $_POST['address'];
+    $contacts = $_POST['contacts'];
+    $dob = $_POST['dob'];
 
     //sql query to check whether given email exists in database
-    $mailcheck_query = "SELECT email FROM customer WHERE email='$email';";
-    $mailcheck_query_run = mysqli_query($con, $mailcheck_query);
+    $mailcheck_stmt = mysqli_prepare($con, "SELECT email FROM customer WHERE email = ?");
+    mysqli_stmt_bind_param($mailcheck_stmt, 's', $email);
+    mysqli_stmt_execute($mailcheck_stmt);
+    $mailcheck_query_run = mysqli_stmt_get_result($mailcheck_stmt);
 
     //sql query to check whether given username exists in database
-    $usernamecheck_query = "SELECT username FROM customer WHERE username='$username';";
-    $usernamecheck_query_run = mysqli_query($con, $usernamecheck_query);
+    $usernamecheck_stmt = mysqli_prepare($con, "SELECT username FROM customer WHERE username = ?");
+    mysqli_stmt_bind_param($usernamecheck_stmt, 's', $username);
+    mysqli_stmt_execute($usernamecheck_stmt);
+    $usernamecheck_query_run = mysqli_stmt_get_result($usernamecheck_stmt);
 
     //if email already exists in the database then warning will be shown and then will take us to registration form again
     if (mysqli_num_rows($mailcheck_query_run) > 0) {
@@ -36,9 +40,16 @@ if (isset($_POST['signup_btn'])) {
             //if the confirmation password doesn't match with the password then warning will show
             //if the password matches with confirm passwords and every other conditions are met then the info will be inserted into database
             if ($password == $repassword) {
-                //inserting info from the registration form to database
-                $insert_query = "INSERT INTO customer (username, password, name, email, contacts, address, dob) VALUES ('$username', '$password', '$name', '$email', '$contacts', '$address', '$dob');";
-                $insert_query_run = mysqli_query($con, $insert_query);
+                // Never store the password itself, only a one-way hash of it --
+                // so a stolen copy of the database never hands out real passwords.
+                $hashed = password_hash($password, PASSWORD_DEFAULT);
+
+                $insert_stmt = mysqli_prepare($con,
+                    "INSERT INTO customer (username, password, name, email, contacts, address, dob)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($insert_stmt, 'sssssss',
+                    $username, $hashed, $name, $email, $contacts, $address, $dob);
+                $insert_query_run = mysqli_stmt_execute($insert_stmt);
 
                 //checking if insertion is working or not
                 if ($insert_query_run) {
@@ -59,16 +70,40 @@ if (isset($_POST['signup_btn'])) {
 } elseif (isset($_POST['login_btn'])) {
     //for login
     //will check whether the login button was pressed. If, then this part will execute
-    $query_username = mysqli_real_escape_string($con, $_POST['var_username']);
-    $query_password = mysqli_real_escape_string($con, $_POST['var_password']);
+    $query_username = $_POST['var_username'];
+    $query_password = (string) $_POST['var_password'];
 
-    $login_query = "SELECT * FROM customer WHERE username = '$query_username' AND password ='$query_password';";
-    $login_query_run = mysqli_query($con, $login_query);
+    // Look the account up by username only -- the password never appears in
+    // SQL, it is checked in PHP against the stored hash below.
+    $login_stmt = mysqli_prepare($con, "SELECT * FROM customer WHERE username = ?");
+    mysqli_stmt_bind_param($login_stmt, 's', $query_username);
+    mysqli_stmt_execute($login_stmt);
+    $userdata = mysqli_fetch_assoc(mysqli_stmt_get_result($login_stmt));
 
-    if (mysqli_num_rows($login_query_run) > 0) {
+    $authenticated = false;
+    if ($userdata) {
+        $storedHash = $userdata['password'];
+        if (password_verify($query_password, $storedHash)) {
+            $authenticated = true;
+        } elseif (hash_equals($storedHash, $query_password)) {
+            // A row created before hashing was added still holds a plain
+            // password. Accept it this one last time, then upgrade it
+            // immediately so it is never compared in plain text again.
+            $authenticated = true;
+            $upgraded = password_hash($query_password, PASSWORD_DEFAULT);
+            $rehash_stmt = mysqli_prepare($con, "UPDATE customer SET password = ? WHERE id = ?");
+            mysqli_stmt_bind_param($rehash_stmt, 'si', $upgraded, $userdata['id']);
+            mysqli_stmt_execute($rehash_stmt);
+        }
+    }
+
+    if ($authenticated) {
+        // A fresh session id on every privilege change, so a session id
+        // handed out before login cannot be reused to ride in as this user.
+        session_regenerate_id(true);
+
         $_SESSION['auth'] = true;
 
-        $userdata = mysqli_fetch_array($login_query_run);
         $userid = $userdata['id'];
         $username = $userdata['username'];
         $usermail = $userdata['email'];

@@ -109,8 +109,11 @@ function navCurrent($page, $currentPage)
                 </div>
 
             <?php } else { ?>
-                <a class="btn btn--quiet btn--sm" href="<?= $basePath ?>login.php">Log in</a>
-                <a class="btn btn--primary btn--sm" href="<?= $basePath ?>register.php">Create account</a>
+                <a class="btn btn--quiet btn--sm nav__auth nav__auth--login" href="<?= $basePath ?>login.php">Log in</a>
+                <a class="btn btn--primary btn--sm nav__auth" href="<?= $basePath ?>register.php">
+                    <span class="nav__auth-full">Create account</span>
+                    <span class="nav__auth-short">Sign up</span>
+                </a>
             <?php } ?>
 
             <button class="nav__toggle" type="button" data-nav-toggle aria-expanded="false"

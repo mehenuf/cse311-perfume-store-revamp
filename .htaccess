@@ -1,0 +1,28 @@
+# ==============================================================
+#  Perfume Store — baseline hardening
+#
+#  This only blocks paths that should never be requested directly over
+#  HTTP in the first place -- the app reaches config/, database/ and
+#  tools/ through PHP include()/require(), not a URL, so denying the
+#  browser path costs the site nothing.
+#
+#  Deliberately kept to RedirectMatch only (mod_alias). Directives like
+#  <FilesMatch> + Require/Order need AllowOverride Limit or AuthConfig,
+#  which some shared hosts restrict -- if the host doesn't grant it, the
+#  .htaccess fails to apply at all and the whole site 500s, which is a
+#  far worse outcome than the narrow gap this would have closed. Every
+#  path blocked below already needs nothing more than AllowOverride
+#  FileInfo, which is close to universally permitted.
+#
+#  Forcing HTTPS is deliberately NOT here: that belongs on the live host
+#  only, once a certificate is active (see DEPLOYMENT.md, "Turn on
+#  HTTPS"). Shipping it in the repo would break plain-HTTP local dev
+#  under XAMPP.
+# ==============================================================
+
+# Directories the application only ever reaches via PHP include(), never
+# via a URL. If any of these end up on a live host by accident (a full
+# FTP upload instead of a clean deploy), a visitor still can't read them.
+RedirectMatch 404 ^/config/
+RedirectMatch 404 ^/database/
+RedirectMatch 404 ^/tools/

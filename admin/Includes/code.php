@@ -1,8 +1,17 @@
 <?php
-session_start();
+/**
+ * Admin catalogue/order write endpoint.
+ *
+ * This used to be reachable with no admin check at all: a direct POST here
+ * could add, edit or delete any product, or change any order's status,
+ * without ever logging in. The middleware include below is the fix -- it
+ * must run before anything else in this file.
+ */
+$basePath = '../../';
+include(__DIR__ . '/../../middleware/adminmiddleware.php');
 
-include('../../config/dbcon.php');
-include('../../functions/myfunctions.php');
+include(__DIR__ . '/../../config/dbcon.php');
+include(__DIR__ . '/../../functions/myfunctions.php');
 
 /**
  * Reduce an uploaded filename to something safe to place on disk:
@@ -28,112 +37,104 @@ function safeUploadName($name)
     return substr($stem, 0, 80) . '.' . $ext;
 }
 
+/**
+ * True when the upload actually decodes as one of the accepted image types.
+ * The extension whitelist in safeUploadName() only checks the filename --
+ * this checks the bytes, so a renamed non-image file cannot be saved as one.
+ */
+function isRealImage($tmpPath)
+{
+    if (!is_uploaded_file($tmpPath)) {
+        return false;
+    }
+    $info = @getimagesize($tmpPath);
+    return $info !== false && in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_WEBP], true);
+}
+
 if (isset($_POST['addperfume_btn'])) {
-    $name = $_POST['name'];
+    $name          = $_POST['name'];
     $perfume_notes = $_POST['perfume_notes'];
-    $description = $_POST['description'];
-    $volume = $_POST['volume'];
-    $qty = $_POST['qty'];
+    $description   = $_POST['description'];
+    $volume        = $_POST['volume'];
+    $qty           = (int) $_POST['qty'];
+    $price         = (float) $_POST['price'];
+    $trending      = isset($_POST['trending']) ? 1 : 0;
+    $status        = isset($_POST['status']) ? 1 : 0;
+
     // Absolute upload directory, so it resolves no matter what the current
     // working directory is on the host.
-    $path = __DIR__ . '/../../images';
-    $img_path = safeUploadName($_FILES['image_path']['name']);
-    $price = $_POST['price'];
-    if (isset($_POST['trending'])) {
-        $trending = 1;
-    } else {
-        $trending = 0;
-    }
-    if (isset($_POST['status'])) {
-        $status = 1;
-    } else {
-        $status = 0;
-    }
-    //echo $img_path;
+    $path     = __DIR__ . '/../../images';
+    $img_path = isRealImage($_FILES['image_path']['tmp_name'] ?? '')
+        ? safeUploadName($_FILES['image_path']['name'])
+        : '';
 
-    $add_query = "INSERT INTO perfumes (name, perfume_notes, description, volume, qty, image_path, price, trending, status) VALUES 
-    ('$name', '$perfume_notes', '$description', '$volume', '$qty', '$img_path', '$price', '$trending', '$status');";
-
-    $add_query_run = mysqli_query($con, $add_query);
+    $stmt = mysqli_prepare($con,
+        "INSERT INTO perfumes (name, perfume_notes, description, volume, qty, image_path, price, trending, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    mysqli_stmt_bind_param($stmt, 'ssssisdii',
+        $name, $perfume_notes, $description, $volume, $qty, $img_path, $price, $trending, $status);
+    $add_query_run = mysqli_stmt_execute($stmt);
 
     if ($add_query_run) {
-        move_uploaded_file($_FILES['image_path']['tmp_name'], $path . '/' . $img_path);
+        if ($img_path !== '') {
+            move_uploaded_file($_FILES['image_path']['tmp_name'], $path . '/' . $img_path);
+        }
         redirect("../add.php", "The perfume was successfully added!!");
     } else {
         redirect("../add.php", "There was an error adding the perfume  :( ");
     }
 } else if (isset($_POST['save_edit_btn'])) {
-    $get_id = $_POST['get_id'];
-    $name = $_POST['name'];
+    $get_id        = (int) $_POST['get_id'];
+    $name          = $_POST['name'];
     $perfume_notes = $_POST['perfume_notes'];
-    $description = $_POST['description'];
-    $volume = $_POST['volume'];
-    $price = $_POST['price'];
-    $qty = $_POST['quantity'];
-    $path = __DIR__ . '/../../images';
-    $new_image = safeUploadName($_FILES['image_path']['name']);
-    $old_image = $_POST['old_image'];
-    if (isset($_POST['trending'])) {
-        $trending = 1;
-    } else {
-        $trending = 0;
-    }
-    if (isset($_POST['status'])) {
-        $status = 1;
-    } else {
-        $status = 0;
-    }
+    $description   = $_POST['description'];
+    $volume        = $_POST['volume'];
+    $price         = (float) $_POST['price'];
+    $qty           = (int) $_POST['quantity'];
+    $old_image     = $_POST['old_image'];
+    $trending      = isset($_POST['trending']) ? 1 : 0;
+    $status        = isset($_POST['status']) ? 1 : 0;
 
+    $path        = __DIR__ . '/../../images';
+    $hasNewImage = isRealImage($_FILES['image_path']['tmp_name'] ?? '');
+    $new_image   = $hasNewImage ? safeUploadName($_FILES['image_path']['name']) : '';
+    $re_image    = ($new_image !== '') ? $new_image : $old_image;
 
-    if (($new_image != null) || $old_image==null) {
-        $re_image = $new_image;
-    } else {
-        $re_image = $old_image;
-    }
+    $stmt = mysqli_prepare($con,
+        "UPDATE perfumes SET
+            name = ?, perfume_notes = ?, description = ?, volume = ?,
+            image_path = ?, price = ?, qty = ?, trending = ?, status = ?
+         WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, 'sssssdiiii',
+        $name, $perfume_notes, $description, $volume, $re_image, $price, $qty, $trending, $status, $get_id);
+    $update_query_run = mysqli_stmt_execute($stmt);
 
-
-    $update_query = "UPDATE perfumes
-                        SET
-                        name = '$name', 
-                        perfume_notes = '$perfume_notes', 
-                        description = '$description', 
-                        volume = '$volume', 
-                        image_path = '$re_image', 
-                        price = '$price', 
-                        qty = '$qty',
-                        trending = '$trending', 
-                        status = '$status' 
-                        WHERE id = '$get_id';";
-
-    $update_query_run = mysqli_query($con, $update_query);
-    if ($update_query_run == true) {
-
-        if ($_FILES['image_path']['name'] != "") {
+    if ($update_query_run) {
+        if ($hasNewImage && $new_image !== '') {
             move_uploaded_file($_FILES['image_path']['tmp_name'], $path . '/' . $new_image);
             if ($old_image !== '' && $old_image !== $new_image
                 && file_exists($path . '/' . $old_image)) {
                 unlink($path . '/' . $old_image);
             }
-            //echo "before redirect";
-            //redirect_func("../edit-perfume.php", "The edit was saved successfully!");
-            //echo"after redirect" ;
         }
         redirect("../edit-perfume.php?id=$get_id", "The edit was saved successfully");
     } else {
-        //redirect_func("../edit-perfume.php", "An error was occured!");
         redirect("../edit-perfume.php?id=$get_id", "An error was occured!");
     }
 } else if (isset($_POST['dlt_perfume_btn'])) {
-    $delete_id = mysqli_escape_string($con, $_POST['delete_id']);
-    $perfume_query = "SELECT * FROM perfumes WHERE id = $delete_id;";
-    $perfume_query_run = mysqli_query($con, $perfume_query);
-    $perfume_data = mysqli_fetch_array($perfume_query_run);
-    $image = $perfume_data['image_path'];
+    $delete_id = (int) $_POST['delete_id'];
 
-    $remove_query = "DELETE FROM perfumes WHERE id = $delete_id;";
-    $remove_query_run = mysqli_query($con, $remove_query);
+    $stmt = mysqli_prepare($con, "SELECT image_path FROM perfumes WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, 'i', $delete_id);
+    mysqli_stmt_execute($stmt);
+    $perfume_data = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+    $image        = $perfume_data ? $perfume_data['image_path'] : '';
 
-    if ($remove_query_run == true) {
+    $stmt = mysqli_prepare($con, "DELETE FROM perfumes WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, 'i', $delete_id);
+    $remove_query_run = mysqli_stmt_execute($stmt);
+
+    if ($remove_query_run) {
         // Delete the file first: redirect() ends the request, so anything
         // after it never ran.
         $imageFile = __DIR__ . '/../../images/' . $image;
@@ -147,12 +148,12 @@ if (isset($_POST['addperfume_btn'])) {
         redirect("../perfume.php", "This perfume appears in past orders, so it cannot be deleted. Untick Status to unpublish it instead.");
     }
 } elseif (isset($_POST['updateOrder_btn'])) {
-    //echo "button clicked";
-    $tracking_no = $_POST['tracking_no'];
-    $order_status = $_POST['order_status'];
+    $tracking_no  = $_POST['tracking_no'];
+    $order_status = (int) $_POST['order_status'];
 
-    $update_order_query = "UPDATE orders SET status = '$order_status' WHERE tracking_no = '$tracking_no';";
-    $update_order_query_run = mysqli_query($con, $update_order_query);
+    $stmt = mysqli_prepare($con, "UPDATE orders SET status = ? WHERE tracking_no = ?");
+    mysqli_stmt_bind_param($stmt, 'is', $order_status, $tracking_no);
+    mysqli_stmt_execute($stmt);
 
-    redirect("../order-history.php?trackid=$tracking_no", "Order Status has been updated");
+    redirect("../order-history.php?trackid=" . urlencode($tracking_no), "Order Status has been updated");
 }

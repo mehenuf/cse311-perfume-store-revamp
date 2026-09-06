@@ -307,28 +307,40 @@ It also pins down bugs that have actually shipped here, so they cannot come back
 image may be hidden by CSS and revealed only by JavaScript, and every local stylesheet
 and script must carry a cache-busting version stamp.
 
-Both currently pass.
+```bash
+php tests/run.php
+```
+
+A regression suite for the request handlers, covering login/registration, the admin
+access-control guard, and the catalogue/cart write endpoints. Needs a PHP CLI with
+`pdo_sqlite` (no MySQL, no XAMPP) — see `tests/README.md` for what it does and doesn't
+cover.
+
+All three currently pass.
 
 ---
 
 ## Security: Before You Go Public
 
-This started as a college project, and two things in it are fine for a demo but **not
-safe for a real shop taking real orders**:
+This started as a college project, and it originally shipped with issues that are fine
+for a demo but **not safe for a real shop taking real orders**. Both have since been fixed:
 
-| Issue | What it means | The fix |
+| Issue | What it meant | The fix that's now in place |
 |---|---|---|
-| **Passwords are stored as plain text** | Anyone who gets a copy of the database can read every customer's password | Switch to PHP's `password_hash()` and `password_verify()` |
-| **SQL injection is possible** | A crafted web address could read or damage the database | Rewrite the queries to use prepared statements |
+| **Passwords were stored as plain text** | Anyone who got a copy of the database could read every customer's password | `functions/authcode.php` now hashes with `password_hash()` / verifies with `password_verify()`. Any account created before this change is upgraded to a real hash automatically the next time it logs in — no manual migration step needed. |
+| **SQL injection was possible** | A crafted web address or form field could read or damage the database | Every query built from request input (`functions/`, `admin/Includes/code.php`, and the `?id=`/`?name=`/`?trackid=` pages) now uses parameterized `mysqli_prepare`/`bind_param` queries instead of string concatenation. |
+| **The admin catalogue/order endpoint had no auth check** | Anyone could POST to `admin/Includes/code.php` directly — no login required — to add, edit or delete products, or change any order's status | It now starts with the same admin-only guard every other admin page uses (`middleware/adminmiddleware.php`), which was also fixed to actually stop the page (`exit`) when it redirects, instead of rendering the page anyway. |
 
-Neither is hard to fix, and `DEPLOYMENT.md` walks through both. **Do them before you
-accept a single real order.**
+Still worth doing before a real launch: CSRF tokens on the state-changing forms (login,
+register, checkout, cart actions, admin actions) and login rate-limiting. Neither was in
+place before either change, so it isn't a regression, but both are standard practice for
+a shop handling real accounts and orders.
 
 ---
 
 ## Ideas for Later
 
-- [ ] Hash passwords and switch to prepared statements
+- [ ] CSRF tokens on state-changing forms, and login rate-limiting
 - [ ] Search box and price/brand filters
 - [ ] Wishlist (the button exists, it doesn't do anything yet)
 - [ ] Customer reviews and ratings

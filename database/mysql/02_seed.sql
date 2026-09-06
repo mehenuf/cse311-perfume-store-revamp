@@ -27,9 +27,12 @@ DELETE FROM customer;
 
 -- ------------------------------------------------------------
 -- customer
--- NOTE: passwords are stored in plain text because functions/authcode.php
--- authenticates with "WHERE username = ? AND password = ?". See the
--- README - hashing these is the single most important follow-up fix.
+-- NOTE: these passwords are seeded here in plain text so a developer can
+-- read and use them straight out of this file. functions/authcode.php
+-- hashes real passwords with password_hash()/password_verify(); it also
+-- accepts one of these plain-text rows on first login and immediately
+-- rehashes it, so logging in as any of these accounts still works and
+-- upgrades the row automatically -- no manual migration needed.
 -- admin_check = 1 grants access to /admin.
 -- ------------------------------------------------------------
 INSERT INTO customer (id, username, password, name, email, contacts, address, dob, admin_check) VALUES

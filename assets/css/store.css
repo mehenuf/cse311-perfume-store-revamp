@@ -343,6 +343,10 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .nav__actions { display: flex; align-items: center; gap: var(--s-3); margin-inline-start: auto; }
 @media (min-width: 1080px) { .nav__actions { margin-inline-start: 0; } }
 
+/* The logged-out pair carries a short label for the width it costs at the
+   narrowest phones; the full label is what everyone else reads. */
+.nav__auth-short { display: none; }
+
 .nav__icon {
     position: relative; display: grid; place-items: center;
     width: 40px; height: 40px; border-radius: var(--r-pill);
@@ -675,7 +679,7 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .cart-line__media img { width: 100%; height: 100%; object-fit: cover; }
 .cart-line__name { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; }
 .cart-line__price { margin-top: var(--s-1); font-size: var(--t-xs); color: var(--fg-faint); }
-.cart-line__controls { display: flex; align-items: center; gap: var(--s-4); grid-column: 2 / -1; }
+.cart-line__controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4); grid-column: 2 / -1; }
 @media (min-width: 720px) { .cart-line__controls { grid-column: auto; } }
 .cart-line__total { text-align: right; font-size: 1.05rem; color: var(--gold); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
@@ -1196,11 +1200,25 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     }
     .nav__group--end > [data-nav-trigger]:hover { color: var(--gold); background: var(--gold-wash); }
     .nav__chev { display: none; }
+
+    /* "Create account" plus "Log in" plus the theme toggle and the burger
+       do not fit one row under 560px -- the pair was pushing the burger
+       past the viewport edge, forcing a horizontal scroll to reach it. */
+    .nav__auth-full { display: none; }
+    .nav__auth-short { display: inline; }
+    .nav__auth.btn--sm { padding-inline: var(--s-3); }
 }
 
 @media (max-width: 519px) {
     .nav__brand span { display: none; }
     .nav__brand { min-height: 44px; min-width: 44px; justify-content: center; }
+}
+
+@media (max-width: 379px) {
+    /* Still not enough room for both pills at the narrowest phones. Log in
+       stays one tap away in the drawer; the burger must never be the thing
+       you have to scroll sideways to reach. */
+    .nav__auth--login { display: none; }
 }
 
 /* Touch targets. A 40px icon in a 76px bar is under the 44px minimum on the

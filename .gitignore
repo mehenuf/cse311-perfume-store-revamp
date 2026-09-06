@@ -54,6 +54,7 @@ docs/screenshots/README.md
 # --------------------------------------------------------------
 tools/
 .claude/
+.impeccable/
 
 # One-off deployment diagnostic. Upload it by hand when you need it,
 # delete it from the server afterwards, keep it out of the repo.
@@ -262,3 +263,10 @@ venv/
 images/tmp/
 images/*.part
 images/*.uploading
+
+# ---------------------------------------------------------------
+# 14. Test suite scratch files
+#     tests/run.php cleans these up after itself; this is a backstop
+#     for a run that crashed before it could.
+# ---------------------------------------------------------------
+tests/.tmp_*.sqlite

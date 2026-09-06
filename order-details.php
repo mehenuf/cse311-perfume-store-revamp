@@ -7,7 +7,7 @@ $order    = null;
 $tracking = '';
 
 if (isset($_GET['trackid'])) {
-    $tracking   = mysqli_real_escape_string($con, $_GET['trackid']);
+    $tracking   = $_GET['trackid'];
     $validation = validateTrackID($tracking);          // already scoped to the session user
     if ($validation && mysqli_num_rows($validation) > 0) {
         $order = mysqli_fetch_assoc($validation);

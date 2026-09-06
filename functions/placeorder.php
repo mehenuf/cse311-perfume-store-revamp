@@ -6,11 +6,11 @@ include('../functions/functions.php');
 
 if (isset($_SESSION['auth'])) {
     if (isset($_POST['placeorder'])) {
-        $name = mysqli_real_escape_string($con, $_POST['name']);
-        $email = mysqli_real_escape_string($con, $_POST['email']);
-        $contact = mysqli_real_escape_string($con, $_POST['contact']);
-        $zipcode = mysqli_real_escape_string($con, $_POST['zipcode']);
-        $address = mysqli_real_escape_string($con, $_POST['address']);
+        $name = $_POST['name'];
+        $email = $_POST['email'];
+        $contact = $_POST['contact'];
+        $zipcode = $_POST['zipcode'];
+        $address = $_POST['address'];
 
         if (($name == null) || $email == null || $contact == null || $zipcode == null || $address == null) {
             echo "null checked";
@@ -28,64 +28,52 @@ if (isset($_SESSION['auth'])) {
 
 
         $username = $_SESSION['auth_user']['username'];
-        $tracking_no = "TRK" . rand(1000000, 999999999999) . substr($username,0,4);
-        $user_id = $_SESSION['auth_user']['user_id'];
-        $payment_id = rand(1, 9999999999);
+        $tracking_no = "TRK" . random_int(1000000, 999999999999) . substr($username,0,4);
+        $user_id = (int) $_SESSION['auth_user']['user_id'];
+        $payment_id = random_int(1, 999999999);
 
 
-        $orderinsert_query =    "INSERT INTO orders
-                        (tracking_no, user_id, name, email, contacts, address, zipcode, total_price, payment_mode, payment_id)
-                        VALUES (
-                            '$tracking_no',
-                            '$user_id',
-                            '$name',
-                            '$email',
-                            '$contact',
-                            '$address',
-                            '$zipcode',
-                            '$totalcost',
-                            'COD',
-                            '$payment_id');";
-        $orderinsert_query_run = mysqli_query($con, $orderinsert_query);
+        $orderinsert_stmt = mysqli_prepare($con,
+            "INSERT INTO orders
+                (tracking_no, user_id, name, email, contacts, address, zipcode, total_price, payment_mode, payment_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'COD', ?)");
+        mysqli_stmt_bind_param($orderinsert_stmt, 'sisssssdi',
+            $tracking_no, $user_id, $name, $email, $contact, $address, $zipcode, $totalcost, $payment_id);
+        $orderinsert_query_run = mysqli_stmt_execute($orderinsert_stmt);
 
 
         if ($orderinsert_query_run) {
             $order_id = mysqli_insert_id($con);
 
+            $insertitem_stmt = mysqli_prepare($con,
+                "INSERT INTO order_item (order_id, perfume_id, perfume_qty, price) VALUES (?, ?, ?, ?)");
+            $fetch_stmt = mysqli_prepare($con, "SELECT qty FROM perfumes WHERE id = ?");
+            $updateqty_stmt = mysqli_prepare($con, "UPDATE perfumes SET qty = ? WHERE id = ?");
 
             foreach ($cart_items as $key) {
 
-                $perfume_id = $key['perfume_id'];
-                $perfume_qty = $key['perfume_quantity'];
-                $price = $key['price'];
+                $perfume_id = (int) $key['perfume_id'];
+                $perfume_qty = (int) $key['perfume_quantity'];
+                $price = (float) $key['price'];
 
-                $insertitem_query = "INSERT INTO order_item
-                                    (order_id, perfume_id, perfume_qty, price) 
-                                    VALUES 
-                                    ('$order_id',
-                                    '$perfume_id',
-                                    '$perfume_qty',
-                                    '$price');";
-                $insertitem_query_run = mysqli_query($con, $insertitem_query);
+                mysqli_stmt_bind_param($insertitem_stmt, 'iiid', $order_id, $perfume_id, $perfume_qty, $price);
+                mysqli_stmt_execute($insertitem_stmt);
 
+                mysqli_stmt_bind_param($fetch_stmt, 'i', $perfume_id);
+                mysqli_stmt_execute($fetch_stmt);
+                $perfume_data = mysqli_fetch_assoc(mysqli_stmt_get_result($fetch_stmt));
+                $current_qty = $perfume_data ? (int) $perfume_data['qty'] : 0;
 
-                $perfumeFetch_query = "SELECT * FROM perfumes WHERE id = '$perfume_id';";
-                $perfumeFetch_query_run = mysqli_query($con, $perfumeFetch_query);
-                
-                $perfume_data = mysqli_fetch_array($perfumeFetch_query_run);
-                $current_qty = $perfume_data['qty'];
-
-                $new_qty = ($current_qty - $perfume_qty);
-                $update_qty_query = "UPDATE perfumes
-                                    SET qty = '$new_qty'
-                                    WHERE id = '$perfume_id';";
-                $update_qty_query_run = mysqli_query($con, $update_qty_query);
+                $new_qty = $current_qty - $perfume_qty;
+                mysqli_stmt_bind_param($updateqty_stmt, 'ii', $new_qty, $perfume_id);
+                mysqli_stmt_execute($updateqty_stmt);
             }
 
-            $reset_cart_query = "DELETE FROM cart WHERE user_id = '$user_id' ;";
-            $reset_cart_query_run = mysqli_query($con, $reset_cart_query);
+            $resetcart_stmt = mysqli_prepare($con, "DELETE FROM cart WHERE user_id = ?");
+            mysqli_stmt_bind_param($resetcart_stmt, 'i', $user_id);
+            mysqli_stmt_execute($resetcart_stmt);
 
-            
+
             $_SESSION['message'] = "Order placed successfully";
             header('Location: ../orders.php');
         }

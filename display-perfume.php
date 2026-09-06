@@ -5,7 +5,7 @@ require_once('includes/helpers.php');
 
 $product = null;
 if (isset($_GET['name'])) {
-    $rows = getViaNameActive('perfumes', mysqli_real_escape_string($con, $_GET['name']));
+    $rows = getViaNameActive('perfumes', $_GET['name']);
     if ($rows && mysqli_num_rows($rows) > 0) {
         $product = mysqli_fetch_assoc($rows);
     }
@@ -125,11 +125,16 @@ echo crumb([
 
 <?php
 // More from the same house, matched on the first word of the product name.
-$firstWord = mysqli_real_escape_string($con, strtok($product['name'], ' '));
-$related   = mysqli_query($con,
+$firstWord   = strtok($product['name'], ' ');
+$productId   = (int) $product['id'];
+$likePattern = $firstWord . '%';
+$related_stmt = mysqli_prepare($con,
     "SELECT * FROM perfumes
-     WHERE status = 1 AND name LIKE '" . $firstWord . "%' AND id <> " . (int) $product['id'] . "
+     WHERE status = 1 AND name LIKE ? AND id <> ?
      ORDER BY price DESC LIMIT 4");
+mysqli_stmt_bind_param($related_stmt, 'si', $likePattern, $productId);
+mysqli_stmt_execute($related_stmt);
+$related = mysqli_stmt_get_result($related_stmt);
 
 if ($related && mysqli_num_rows($related) > 0) { ?>
     <section class="section section--sunken">

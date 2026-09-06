@@ -274,3 +274,6 @@ tests/.tmp_*.sqlite
 tests/.tmp_*.sqlite-journal
 tests/.tmp_*.sqlite-wal
 tests/.tmp_*.sqlite-shm
+
+# User requested ignoring this specific summary log
+docs/catalog_expansion_summary.md

@@ -7,7 +7,9 @@ CREATE TABLE customer (
     contacts     VARCHAR(30),
     address      VARCHAR(255),
     dob          DATE,
-    admin_check  INTEGER NOT NULL DEFAULT 0
+    admin_check  INTEGER NOT NULL DEFAULT 0,
+    reset_token_hash    CHAR(64),
+    reset_token_expires TIMESTAMP
 );
 
 CREATE TABLE perfumes (
@@ -20,7 +22,10 @@ CREATE TABLE perfumes (
     image_path    VARCHAR(255),
     price         DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     trending      INTEGER NOT NULL DEFAULT 0,
-    status        INTEGER NOT NULL DEFAULT 1
+    status        INTEGER NOT NULL DEFAULT 1,
+    discount_percent   INTEGER NOT NULL DEFAULT 0,
+    discount_starts_at TIMESTAMP,
+    discount_ends_at   TIMESTAMP
 );
 
 CREATE TABLE cart (
@@ -34,7 +39,7 @@ CREATE TABLE cart (
 CREATE TABLE orders (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     tracking_no  VARCHAR(40) NOT NULL UNIQUE,
-    user_id      INTEGER NOT NULL REFERENCES customer(id),
+    user_id      INTEGER REFERENCES customer(id), -- NULL for a guest checkout
     name         VARCHAR(100) NOT NULL,
     email        VARCHAR(150) NOT NULL,
     contacts     VARCHAR(30),

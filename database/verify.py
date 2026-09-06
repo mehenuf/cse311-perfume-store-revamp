@@ -92,7 +92,10 @@ def main():
     orphans = [
         ("cart -> customer",       "SELECT COUNT(*) FROM cart c LEFT JOIN customer u ON c.user_id=u.id WHERE u.id IS NULL"),
         ("cart -> perfumes",       "SELECT COUNT(*) FROM cart c LEFT JOIN perfumes p ON c.perfume_id=p.id WHERE p.id IS NULL"),
-        ("orders -> customer",     "SELECT COUNT(*) FROM orders o LEFT JOIN customer u ON o.user_id=u.id WHERE u.id IS NULL"),
+        # user_id is nullable (a guest checkout with no account), so a NULL
+        # is a valid non-reference, not an orphan -- only a *set* user_id
+        # that fails to match a real customer counts.
+        ("orders -> customer",     "SELECT COUNT(*) FROM orders o LEFT JOIN customer u ON o.user_id=u.id WHERE o.user_id IS NOT NULL AND u.id IS NULL"),
         ("order_item -> orders",   "SELECT COUNT(*) FROM order_item i LEFT JOIN orders o ON i.order_id=o.id WHERE o.id IS NULL"),
         ("order_item -> perfumes", "SELECT COUNT(*) FROM order_item i LEFT JOIN perfumes p ON i.perfume_id=p.id WHERE p.id IS NULL"),
     ]

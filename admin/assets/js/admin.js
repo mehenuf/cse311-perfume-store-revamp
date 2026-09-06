@@ -95,7 +95,62 @@
         });
     }
 
-    function boot() { initRail(); initConfirm(); initImagePreview(); initImageArrival(); }
+    /* ---- inline price/stock editing on the catalogue table ----
+       Edits price and qty directly from the product list, without opening
+       the full edit page for a change this small. */
+    function initInlineEdit() {
+        var table = document.querySelector('[data-inline-edit-table]');
+        if (!table) return;
+
+        table.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-inline-save]');
+            if (!btn) return;
+            e.preventDefault();
+
+            var row = btn.closest('[data-inline-edit-row]');
+            var priceInput = row.querySelector('[data-inline-field="price"]');
+            var qtyInput = row.querySelector('[data-inline-field="qty"]');
+            var price = parseFloat(priceInput.value);
+            var qty = parseInt(qtyInput.value, 10);
+
+            if (isNaN(price) || price < 0 || isNaN(qty) || qty < 0) {
+                toast('Enter a valid price and stock quantity.', 'error');
+                return;
+            }
+
+            var original = btn.innerHTML;
+            btn.disabled = true;
+            btn.textContent = 'Saving';
+
+            fetch('Includes/inline-update.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: new URLSearchParams({
+                    perfume_id: row.dataset.perfumeId,
+                    price: price,
+                    qty: qty
+                }).toString(),
+                credentials: 'same-origin'
+            })
+                .then(function (r) { return r.json().catch(function () { return {}; }); })
+                .then(function (data) {
+                    if (data && data.ok) {
+                        toast('Saved.', 'success');
+                    } else {
+                        toast((data && data.message) || 'Could not save changes.', 'error');
+                    }
+                })
+                .catch(function () {
+                    toast('Could not save changes. Check your connection.', 'error');
+                })
+                .then(function () {
+                    btn.disabled = false;
+                    btn.innerHTML = original;
+                });
+        });
+    }
+
+    function boot() { initRail(); initConfirm(); initImagePreview(); initImageArrival(); initInlineEdit(); }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', boot);

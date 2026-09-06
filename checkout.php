@@ -1,6 +1,5 @@
 <?php
 session_start();
-include('authenticate.php');
 include('functions/functions.php');
 
 $pageTitle       = 'Checkout';

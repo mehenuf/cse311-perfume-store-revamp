@@ -139,6 +139,41 @@ if (!$data) {
                 </div>
             </section>
 
+            <section class="card">
+                <div class="card__head"><h2>Discount</h2></div>
+                <div class="card__body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="p-discount-percent">Percentage off</label>
+                            <input class="input" id="p-discount-percent" name="discount_percent"
+                                   type="number" min="0" max="90" step="1"
+                                   value="<?= (int) $data['discount_percent'] ?>">
+                            <span class="field__hint">The discounted price is calculated for you. Set to 0 to remove the discount.</span>
+                        </div>
+                        <div class="form-grid form-grid--2">
+                            <div class="field">
+                                <label for="p-discount-start">Starts</label>
+                                <input class="input" id="p-discount-start" name="discount_starts_at" type="datetime-local"
+                                       value="<?= e(toDatetimeLocal($data['discount_starts_at'])) ?>">
+                                <span class="field__hint">Empty starts immediately.</span>
+                            </div>
+                            <div class="field">
+                                <label for="p-discount-end">Ends</label>
+                                <input class="input" id="p-discount-end" name="discount_ends_at" type="datetime-local"
+                                       value="<?= e(toDatetimeLocal($data['discount_ends_at'])) ?>">
+                                <span class="field__hint">Empty runs until you turn it off.</span>
+                            </div>
+                        </div>
+                        <?php $pricing = perfumePricing($data); if ($pricing['active']) { ?>
+                            <p style="color:var(--danger);font-size:var(--t-xs)">
+                                Live now: <?= e(taka($pricing['original'])) ?> &rarr; <?= e(taka($pricing['final'])) ?>
+                                (-<?= $pricing['percent'] ?>%)
+                            </p>
+                        <?php } ?>
+                    </div>
+                </div>
+            </section>
+
         </div>
     </div>
 

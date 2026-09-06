@@ -23,7 +23,7 @@ list($stockText, $stockLow) = stockLabel($p['qty']);
         </h3>
         <p class="product__meta"><?= e($p['volume']) ?></p>
         <div class="product__foot">
-            <span class="product__price"><?= taka($p['price']) ?></span>
+            <?= priceMarkup($p, 'product__price') ?>
             <span class="product__stock" data-low="<?= $stockLow ? 'true' : 'false' ?>"><?= e($stockText) ?></span>
         </div>
     </div>

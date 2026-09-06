@@ -417,6 +417,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border-radius: var(--r-sharp); color: var(--fg); font-size: var(--t-sm);
     transition: border-color var(--d-1) var(--ease), box-shadow var(--d-1) var(--ease);
 }
+.input--inline { width: 6.5rem; padding: .4rem .6rem; }
 .input::placeholder, .textarea::placeholder { color: var(--fg-faint); }
 .input:focus, .textarea:focus, .select:focus, .file:focus {
     outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);

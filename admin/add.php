@@ -97,6 +97,32 @@ include('Includes/header.php');
                 </div>
             </section>
 
+            <section class="card">
+                <div class="card__head"><h2>Discount</h2></div>
+                <div class="card__body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="p-discount-percent">Percentage off</label>
+                            <input class="input" id="p-discount-percent" name="discount_percent"
+                                   type="number" min="0" max="90" step="1" placeholder="0">
+                            <span class="field__hint">The discounted price is calculated for you. Leave at 0 for no discount.</span>
+                        </div>
+                        <div class="form-grid form-grid--2">
+                            <div class="field">
+                                <label for="p-discount-start">Starts</label>
+                                <input class="input" id="p-discount-start" name="discount_starts_at" type="datetime-local">
+                                <span class="field__hint">Empty starts immediately.</span>
+                            </div>
+                            <div class="field">
+                                <label for="p-discount-end">Ends</label>
+                                <input class="input" id="p-discount-end" name="discount_ends_at" type="datetime-local">
+                                <span class="field__hint">Empty runs until you turn it off.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </div>
     </div>
 

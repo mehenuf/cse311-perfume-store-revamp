@@ -31,6 +31,9 @@ include('includes/header.php');
                 <label for="li-password">Password</label>
                 <input class="input" id="li-password" name="var_password" type="password" required
                        autocomplete="current-password" placeholder="Your password">
+                <span class="field__hint">
+                    <a href="forgot-password.php" style="color:var(--gold)">Forgot your password?</a>
+                </span>
             </div>
 
             <button class="btn btn--primary btn--lg btn--block" type="submit" name="login_btn">Log in</button>

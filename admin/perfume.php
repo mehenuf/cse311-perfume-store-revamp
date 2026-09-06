@@ -3,6 +3,7 @@ include('../middleware/adminmiddleware.php');
 $pageTitle = 'Products';
 include('Includes/header.php');
 include('../functions/myfunctions.php');
+require_once('../includes/helpers.php');
 
 $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name ASC");
 ?>
@@ -18,16 +19,25 @@ $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name AS
 </div>
 
 <section class="card">
+    <div class="card__head">
+        <div>
+            <h2>Catalogue</h2>
+            <p style="color:var(--fg-faint);font-size:var(--t-xs);margin-top:.2rem">
+                Edit price or stock directly and click Save -- no need to open the full edit page for these two.
+            </p>
+        </div>
+    </div>
     <div class="card__body card__body--flush">
         <?php if ($rows && mysqli_num_rows($rows) > 0) { ?>
             <div class="table-wrap">
-                <table class="table">
+                <table class="table" data-inline-edit-table>
                     <thead>
                         <tr>
                             <th scope="col" colspan="2">Product</th>
                             <th scope="col">Volume</th>
-                            <th scope="col" class="num">Price</th>
+                            <th scope="col" class="num">Price (Tk)</th>
                             <th scope="col" class="num">Stock</th>
+                            <th scope="col">Discount</th>
                             <th scope="col">Visibility</th>
                             <th scope="col"><span class="visually-hidden">Actions</span></th>
                         </tr>
@@ -37,8 +47,9 @@ $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name AS
                             $live = (int) $item['status'] === 1;
                             $qty  = (int) $item['qty'];
                             $qtyStyle = $qty === 0 ? 'color:var(--danger)' : ($qty <= 12 ? 'color:var(--warn)' : '');
+                            $pricing = perfumePricing($item);
                         ?>
-                            <tr>
+                            <tr data-inline-edit-row data-perfume-id="<?= (int) $item['id'] ?>">
                                 <td style="width: 84px; padding-right: 0;">
                                     <?php if (trim($item['image_path']) !== '') { ?>
                                         <img class="table__thumb" src="../images/<?= e($item['image_path']) ?>" alt="" loading="lazy">
@@ -55,14 +66,37 @@ $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name AS
                                     <?php } ?>
                                 </td>
                                 <td><?= e($item['volume']) ?></td>
-                                <td class="num"><?= taka($item['price']) ?></td>
-                                <td class="num" style="<?= $qtyStyle ?>"><?= $qty ?></td>
+                                <td class="num">
+                                    <input class="input input--inline" type="number" min="0" step="1"
+                                           value="<?= (int) $item['price'] ?>"
+                                           data-inline-field="price" aria-label="Price for <?= e($item['name']) ?>">
+                                </td>
+                                <td class="num">
+                                    <input class="input input--inline" type="number" min="0" step="1"
+                                           value="<?= $qty ?>" style="<?= $qtyStyle ?>"
+                                           data-inline-field="qty" aria-label="Stock for <?= e($item['name']) ?>">
+                                </td>
+                                <td>
+                                    <?php if ($pricing['active']) { ?>
+                                        <span class="badge" style="color:var(--danger);border-color:color-mix(in srgb, var(--danger) 45%, transparent)">
+                                            -<?= $pricing['percent'] ?>%
+                                        </span>
+                                    <?php } elseif ((int) $item['discount_percent'] > 0) { ?>
+                                        <span class="badge" title="Scheduled, not active yet or already ended">Scheduled</span>
+                                    <?php } else { ?>
+                                        <span style="color:var(--fg-faint)">&mdash;</span>
+                                    <?php } ?>
+                                </td>
                                 <td>
                                     <span class="badge <?= $live ? 'badge--live' : 'badge--hidden' ?>">
                                         <?= $live ? 'Published' : 'Hidden' ?>
                                     </span>
                                 </td>
                                 <td class="table__actions">
+                                    <button class="btn btn--ghost btn--sm" type="button" data-inline-save>
+                                        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Save</span> Save
+                                    </button>
                                     <a class="btn btn--ghost btn--sm" href="edit-perfume.php?id=<?= (int) $item['id'] ?>">Edit</a>
                                 </td>
                             </tr>

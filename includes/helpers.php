@@ -20,6 +20,102 @@ if (!function_exists('taka')) {
     }
 }
 
+if (!function_exists('perfumePricing')) {
+    /**
+     * The price actually charged for a perfume right now.
+     *
+     * $p needs price, discount_percent, discount_starts_at, discount_ends_at
+     * -- every `SELECT *` on perfumes already has them; a query that lists
+     * columns by name has to ask for these explicitly.
+     *
+     * price itself is never touched or overwritten by a discount: it is
+     * always the original price, and 'final' is computed from it fresh
+     * every time this is called, so nothing ever needs "restoring" when a
+     * discount ends.
+     *
+     * A percentage with no dates on either side reads as "on until turned
+     * off" -- the dates are an optional window, not a requirement.
+     *
+     * Returns ['original', 'final', 'percent', 'active'] -- when there is no
+     * running discount, 'final' equals 'original' and 'active' is false.
+     */
+    function perfumePricing($p)
+    {
+        $price   = (float) $p['price'];
+        $percent = isset($p['discount_percent']) ? (int) $p['discount_percent'] : 0;
+
+        $active = false;
+        if ($percent > 0) {
+            $now      = time();
+            $starts   = !empty($p['discount_starts_at']) ? strtotime($p['discount_starts_at']) : null;
+            $ends     = !empty($p['discount_ends_at'])   ? strtotime($p['discount_ends_at'])   : null;
+            $active   = ($starts === null || $starts <= $now) && ($ends === null || $ends > $now);
+        }
+
+        $final = $active ? round($price * (100 - $percent) / 100, 2) : $price;
+
+        return [
+            'original' => $price,
+            'final'    => $final,
+            'percent'  => $percent,
+            'active'   => $active,
+        ];
+    }
+}
+
+if (!function_exists('toDatetimeLocal')) {
+    /** A DB datetime as the value an <input type="datetime-local"> expects, or '' when unset. */
+    function toDatetimeLocal($value)
+    {
+        if (empty($value)) {
+            return '';
+        }
+        $ts = strtotime($value);
+        return $ts === false ? '' : date('Y-m-d\TH:i', $ts);
+    }
+}
+
+if (!function_exists('fromDatetimeLocal')) {
+    /** An <input type="datetime-local"> value back to a DB datetime, or null when empty/unparsable. */
+    function fromDatetimeLocal($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+        $ts = strtotime($value);
+        return $ts === false ? null : date('Y-m-d H:i:s', $ts);
+    }
+}
+
+if (!function_exists('priceMarkup')) {
+    /**
+     * The price block markup shared by the product card, the product
+     * detail page and the cart -- the original price struck through above
+     * the discounted one when a discount is running, or just the plain
+     * price when it isn't. $extraClass lets a caller size it differently
+     * (the detail page's price reads larger than a grid card's).
+     */
+    function priceMarkup($p, $extraClass = '')
+    {
+        $pricing = perfumePricing($p);
+        $class   = trim('price-block ' . $extraClass);
+
+        if (!$pricing['active']) {
+            return '<span class="' . e($class) . '"><span class="price-block__final">'
+                 . e(taka($pricing['final'])) . '</span></span>';
+        }
+
+        return '<span class="' . e($class) . '" data-discount>'
+             . '<span class="price-block__was">' . e(taka($pricing['original'])) . '</span>'
+             . '<span class="price-block__row">'
+             . '<span class="price-block__final">' . e(taka($pricing['final'])) . '</span>'
+             . '<span class="price-block__badge">-' . $pricing['percent'] . '%</span>'
+             . '</span>'
+             . '</span>';
+    }
+}
+
 if (!function_exists('stockLabel')) {
     /** Human stock state, plus whether it should read as a warning. */
     function stockLabel($qty)

@@ -58,8 +58,10 @@ to *Delivered*.
 - Browse 71 fragrances across 20 houses
 - View top, heart, and base notes for every fragrance
 - Persistent cart that remembers you between visits
+- **Checkout as a guest** -- no account required; add to cart and pay on delivery
 - Cash-on-delivery checkout system
 - Order tracking with a unique tracking number
+- **Password reset by email** if you forget it
 - Fully responsive design for mobile and desktop
 - Light and dark themes supported and remembered
 
@@ -70,6 +72,9 @@ to *Delivered*.
 
 - Add perfumes with image upload functionality
 - Edit prices, stock quantities, and descriptions
+- **Edit price and stock inline** from the product list, no need to open the full editor
+- **Time-boxed discounts** -- set a percentage and an optional start/end window; the
+  storefront shows the struck-through price automatically while it's running
 - Publish or unpublish items without deletion
 - Flag selected bottles as trending for the homepage
 - View all orders with complete delivery details
@@ -198,6 +203,8 @@ erDiagram
         string address
         date dob
         tinyint admin_check "1 = shop owner"
+        string reset_token_hash "set while a password reset is pending"
+        timestamp reset_token_expires
     }
     perfumes {
         int id PK
@@ -207,9 +214,12 @@ erDiagram
         string volume
         int qty "stock"
         string image_path
-        decimal price "in Taka"
+        decimal price "in Taka, the original price"
         tinyint trending "1 = on homepage"
         tinyint status "1 = visible"
+        tinyint discount_percent "0 = no discount"
+        timestamp discount_starts_at "optional"
+        timestamp discount_ends_at "optional"
     }
     cart {
         int id PK
@@ -220,7 +230,7 @@ erDiagram
     orders {
         int id PK
         string tracking_no UK
-        int user_id FK
+        int user_id FK "NULL for a guest checkout"
         string name
         string email
         string address

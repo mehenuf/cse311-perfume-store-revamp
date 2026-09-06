@@ -13,7 +13,8 @@ $isAdmin     = $isAuthed && isset($_SESSION['admin_check']) && $_SESSION['admin_
 $userName    = $isAuthed && isset($_SESSION['auth_user']['username'])
     ? $_SESSION['auth_user']['username'] : '';
 
-// Live cart count for the header badge.
+// Live cart count for the header badge -- the DB cart when signed in,
+// the guest session cart otherwise.
 $cartCount = 0;
 if ($isAuthed && isset($_SESSION['auth_user']['user_id'])) {
     $uid = (int) $_SESSION['auth_user']['user_id'];
@@ -21,6 +22,8 @@ if ($isAuthed && isset($_SESSION['auth_user']['user_id'])) {
     if ($res && ($row = mysqli_fetch_assoc($res))) {
         $cartCount = (int) $row['n'];
     }
+} elseif (!empty($_SESSION['guest_cart'])) {
+    $cartCount = array_sum($_SESSION['guest_cart']);
 }
 
 $navBrands = brandList();
@@ -109,6 +112,15 @@ function navCurrent($page, $currentPage)
                 </div>
 
             <?php } else { ?>
+                <?php if ($cartCount > 0) { ?>
+                    <!-- Only takes up room once there is something in it, so a
+                         fresh guest visitor sees exactly the row already
+                         verified to fit down to 320px. -->
+                    <a class="nav__icon" href="<?= $basePath ?>shoppingcart.php" aria-label="Your cart">
+                        <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                        <span class="nav__cart-count" data-cart-count><?= $cartCount ?></span>
+                    </a>
+                <?php } ?>
                 <a class="btn btn--quiet btn--sm nav__auth nav__auth--login" href="<?= $basePath ?>login.php">Log in</a>
                 <a class="btn btn--primary btn--sm nav__auth" href="<?= $basePath ?>register.php">
                     <span class="nav__auth-full">Create account</span>
@@ -137,6 +149,7 @@ function navCurrent($page, $currentPage)
                         <?php } ?>
                         <li><a href="<?= $basePath ?>logout.php">Sign out</a></li>
                     <?php } else { ?>
+                        <li><a href="<?= $basePath ?>shoppingcart.php">Cart<?= $cartCount ? ' (' . $cartCount . ')' : '' ?></a></li>
                         <li><a href="<?= $basePath ?>login.php">Log in</a></li>
                         <li><a href="<?= $basePath ?>register.php">Create account</a></li>
                     <?php } ?>

@@ -1,0 +1,22 @@
+-- ============================================================
+--  Perfume Store - migration: guest checkout
+--
+--  Lets an order exist with no customer account attached, so a
+--  visitor can check out without registering or logging in.
+--
+--  Run AFTER 01_schema.sql (or directly against an already-live
+--  database that was set up before this migration existed).
+--  Safe to run on a live database: it only relaxes a NOT NULL
+--  constraint, it does not touch any existing row's data, and it
+--  is safe to run more than once.
+--
+--  A guest order stores its own name/email/contacts/address/zipcode
+--  on the orders row directly (already true for every order, account
+--  or not), so user_id = NULL is a fully self-contained order with
+--  no customer row required. The foreign key to customer(id) is
+--  unaffected: MySQL never checks a foreign key against a NULL value,
+--  so it still enforces "if user_id is set, it must be a real
+--  customer" exactly as before.
+-- ============================================================
+
+ALTER TABLE orders MODIFY COLUMN user_id INT UNSIGNED NULL;

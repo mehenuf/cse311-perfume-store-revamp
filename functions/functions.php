@@ -1,5 +1,6 @@
 <?php
 require_once(__DIR__ . '/../config/dbcon.php');
+require_once(__DIR__ . '/../includes/helpers.php');
 
 
 
@@ -46,18 +47,105 @@ function getViaNameActive($table, $name){
     return mysqli_stmt_get_result($stmt);
 }
 
+/**
+ * The current cart -- a customer's DB-backed cart when logged in, or the
+ * guest session cart when not. Always a plain array of rows shaped the
+ * same way either way: cart_id, perfume_id, perfume_quantity,
+ * perfume_name, image_path, price, original_price, discount_percent,
+ * discount_active. price is always the price actually charged right now
+ * (discounted if a discount is running), so every total computed from it
+ * -- the cart summary, the order placed from it -- is correct without
+ * having to know about discounts itself; original_price/discount_percent/
+ * discount_active are there only so a template can show the struck-through
+ * price the way the product pages do.
+ */
 function displayCart() {
     global $con;
+
+    if (!isset($_SESSION['auth_user']['user_id'])) {
+        return guestCartRows();
+    }
+
     $userid = (int) $_SESSION['auth_user']['user_id'];
     $stmt = mysqli_prepare($con,
-        "SELECT c.id as cart_id, c.perfume_id as perfume_id, c.perfume_qty as perfume_quantity, p.id, p.name as perfume_name, p.image_path, p.price
+        "SELECT c.id as cart_id, c.perfume_id as perfume_id, c.perfume_qty as perfume_quantity,
+                p.name as perfume_name, p.image_path, p.price,
+                p.discount_percent, p.discount_starts_at, p.discount_ends_at
          FROM cart c, perfumes p
          WHERE c.perfume_id = p.id
          AND c.user_id = ?
          ORDER BY c.id DESC");
     mysqli_stmt_bind_param($stmt, 'i', $userid);
     mysqli_stmt_execute($stmt);
-    return mysqli_stmt_get_result($stmt);
+
+    $rows = [];
+    foreach (mysqli_stmt_get_result($stmt) as $row) {
+        $rows[] = applyCartPricing($row);
+    }
+    return $rows;
+}
+
+/**
+ * The guest session cart, joined against the live catalogue.
+ *
+ * There is no cart table row for a guest line, so cart_id doubles as the
+ * perfume_id -- that is fine because it is only ever used to identify
+ * which line to update or remove within the guest's own session cart,
+ * never as a foreign key or an ownership check across users the way the
+ * real cart_id is.
+ */
+function guestCartRows() {
+    global $con;
+    $cart = isset($_SESSION['guest_cart']) ? $_SESSION['guest_cart'] : [];
+    if (!$cart) {
+        return [];
+    }
+
+    $stmt = mysqli_prepare($con,
+        "SELECT name, image_path, price, discount_percent, discount_starts_at, discount_ends_at
+         FROM perfumes WHERE id = ? AND status = 1");
+
+    $rows = [];
+    foreach ($cart as $perfumeId => $qty) {
+        $perfumeId = (int) $perfumeId;
+        mysqli_stmt_bind_param($stmt, 'i', $perfumeId);
+        mysqli_stmt_execute($stmt);
+        $perfume = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+
+        if (!$perfume) {
+            // Unpublished or removed since it was added to this guest's cart.
+            unset($_SESSION['guest_cart'][$perfumeId]);
+            continue;
+        }
+
+        $rows[] = applyCartPricing([
+            'cart_id' => $perfumeId,
+            'perfume_id' => $perfumeId,
+            'perfume_quantity' => (int) $qty,
+            'perfume_name' => $perfume['name'],
+            'image_path' => $perfume['image_path'],
+            'price' => $perfume['price'],
+            'discount_percent' => $perfume['discount_percent'],
+            'discount_starts_at' => $perfume['discount_starts_at'],
+            'discount_ends_at' => $perfume['discount_ends_at'],
+        ]);
+    }
+    return $rows;
+}
+
+/** Resolves a cart row's raw price + discount columns down to what is charged now. */
+function applyCartPricing($row) {
+    $pricing = perfumePricing(['price' => $row['price'],
+        'discount_percent' => $row['discount_percent'] ?? 0,
+        'discount_starts_at' => $row['discount_starts_at'] ?? null,
+        'discount_ends_at' => $row['discount_ends_at'] ?? null]);
+
+    $row['original_price'] = $pricing['original'];
+    $row['price'] = $pricing['final'];
+    $row['discount_percent'] = $pricing['percent'];
+    $row['discount_active'] = $pricing['active'];
+    unset($row['discount_starts_at'], $row['discount_ends_at']);
+    return $row;
 }
 
 function getOrderHistory() {
@@ -70,12 +158,27 @@ function getOrderHistory() {
     return mysqli_stmt_get_result($stmt);
 }
 
+/**
+ * One order by tracking number, scoped so it can never cross accounts:
+ * logged in, it must belong to the session's own user_id; signed out, it
+ * must be a guest order (user_id IS NULL). A guest can never see an
+ * account's order this way, and a logged-in customer can never see a
+ * guest order or another account's order, even knowing the exact
+ * tracking number.
+ */
 function validateTrackID($tracking_no){
     global $con;
-    $userid = (int) $_SESSION['auth_user']['user_id'];
-    $stmt = mysqli_prepare($con,
-        "SELECT * FROM orders WHERE tracking_no = ? AND user_id = ?");
-    mysqli_stmt_bind_param($stmt, 'si', $tracking_no, $userid);
+
+    if (isset($_SESSION['auth_user']['user_id'])) {
+        $userid = (int) $_SESSION['auth_user']['user_id'];
+        $stmt = mysqli_prepare($con,
+            "SELECT * FROM orders WHERE tracking_no = ? AND user_id = ?");
+        mysqli_stmt_bind_param($stmt, 'si', $tracking_no, $userid);
+    } else {
+        $stmt = mysqli_prepare($con,
+            "SELECT * FROM orders WHERE tracking_no = ? AND user_id IS NULL");
+        mysqli_stmt_bind_param($stmt, 's', $tracking_no);
+    }
     mysqli_stmt_execute($stmt);
     return mysqli_stmt_get_result($stmt);
 }

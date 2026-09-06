@@ -38,7 +38,6 @@ if (!$product) {
 list($stockText, $stockLow) = stockLabel($product['qty']);
 $inStock  = (int) $product['qty'] > 0;
 $maxQty   = max(1, min(10, (int) $product['qty']));
-$isAuthed = isset($_SESSION['auth']);
 
 echo crumb([
     'Home'       => 'index.php',
@@ -63,7 +62,7 @@ echo crumb([
 
         <p style="color:var(--fg-faint);font-size:var(--t-sm);margin:0"><?= e($stockText) ?></p>
         <h1 class="detail__title" style="margin-top:var(--s-2)"><?= e($product['name']) ?></h1>
-        <p class="detail__price"><?= taka($product['price']) ?></p>
+        <?= priceMarkup($product, 'detail__price') ?>
 
         <p style="color:var(--fg-muted)"><?= e($product['description']) ?></p>
 
@@ -90,15 +89,6 @@ echo crumb([
                 This bottle is out of stock. Check back soon or browse something similar.
             </p>
             <a class="btn btn--ghost btn--lg" href="perfumes.php">Browse the collection</a>
-
-        <?php } elseif (!$isAuthed) { ?>
-            <p style="color:var(--fg-muted);font-size:var(--t-sm)">
-                Log in to add this to your cart.
-            </p>
-            <div style="display:flex;flex-wrap:wrap;gap:var(--s-3)">
-                <a class="btn btn--primary btn--lg" href="login.php">Log in</a>
-                <a class="btn btn--ghost btn--lg" href="register.php">Create account</a>
-            </div>
 
         <?php } else { ?>
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-4)">

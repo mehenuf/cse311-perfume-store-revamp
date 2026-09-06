@@ -1,6 +1,5 @@
 <?php
 session_start();
-include('authenticate.php');
 include('functions/functions.php');
 
 $pageTitle       = 'Your cart';
@@ -59,7 +58,12 @@ echo crumb(['Home' => 'index.php', 'Cart' => null]);
                             <a class="cart-line__name" href="display-perfume.php?name=<?= urlencode($line['perfume_name']) ?>">
                                 <?= e($line['perfume_name']) ?>
                             </a>
-                            <p class="cart-line__price"><?= taka($line['price']) ?> each</p>
+                            <p class="cart-line__price">
+                                <?php if ($line['discount_active']) { ?>
+                                    <span class="price-block__was"><?= taka($line['original_price']) ?></span>
+                                <?php } ?>
+                                <?= taka($line['price']) ?> each
+                            </p>
                         </div>
 
                         <div class="cart-line__controls"

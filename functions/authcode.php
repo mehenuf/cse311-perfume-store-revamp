@@ -116,6 +116,33 @@ if (isset($_POST['signup_btn'])) {
 
         $_SESSION['admin_check'] = $user_admin_check;
 
+        // Fold a guest session cart into the now-known account cart rather
+        // than losing it the moment this visitor logs in.
+        if (!empty($_SESSION['guest_cart'])) {
+            $check_stmt = mysqli_prepare($con, "SELECT id, perfume_qty FROM cart WHERE user_id = ? AND perfume_id = ?");
+            $update_stmt = mysqli_prepare($con, "UPDATE cart SET perfume_qty = ? WHERE id = ?");
+            $insert_stmt = mysqli_prepare($con, "INSERT INTO cart (user_id, perfume_id, perfume_qty) VALUES (?, ?, ?)");
+
+            foreach ($_SESSION['guest_cart'] as $guestPerfumeId => $guestQty) {
+                $guestPerfumeId = (int) $guestPerfumeId;
+                $guestQty = (int) $guestQty;
+
+                mysqli_stmt_bind_param($check_stmt, 'ii', $userid, $guestPerfumeId);
+                mysqli_stmt_execute($check_stmt);
+                $existing = mysqli_fetch_assoc(mysqli_stmt_get_result($check_stmt));
+
+                if ($existing) {
+                    $mergedQty = (int) $existing['perfume_qty'] + $guestQty;
+                    mysqli_stmt_bind_param($update_stmt, 'ii', $mergedQty, $existing['id']);
+                    mysqli_stmt_execute($update_stmt);
+                } else {
+                    mysqli_stmt_bind_param($insert_stmt, 'iii', $userid, $guestPerfumeId, $guestQty);
+                    mysqli_stmt_execute($insert_stmt);
+                }
+            }
+            unset($_SESSION['guest_cart']);
+        }
+
         if ($_SESSION['admin_check'] == 1) {
             $_SESSION['message'] = 'Welcome Admin!';
             header('Location: ../admin/index.php');

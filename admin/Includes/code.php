@@ -12,6 +12,7 @@ include(__DIR__ . '/../../middleware/adminmiddleware.php');
 
 include(__DIR__ . '/../../config/dbcon.php');
 include(__DIR__ . '/../../functions/myfunctions.php');
+require_once(__DIR__ . '/../../includes/helpers.php');
 
 /**
  * Reduce an uploaded filename to something safe to place on disk:
@@ -51,6 +52,27 @@ function isRealImage($tmpPath)
     return $info !== false && in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_WEBP], true);
 }
 
+/**
+ * The two discount fields from a request, sanitised and made mutually
+ * consistent: a percentage outside 0-90 is clamped rather than rejected
+ * (the schema's CHECK constraint would otherwise fail the whole save), and
+ * an end date that isn't strictly after the start date is dropped instead
+ * of left to violate the schema's window constraint.
+ */
+function readDiscountFields()
+{
+    $percent = isset($_POST['discount_percent']) ? (int) $_POST['discount_percent'] : 0;
+    $percent = max(0, min(90, $percent));
+
+    $starts = fromDatetimeLocal($_POST['discount_starts_at'] ?? '');
+    $ends   = fromDatetimeLocal($_POST['discount_ends_at'] ?? '');
+    if ($starts !== null && $ends !== null && $ends <= $starts) {
+        $ends = null;
+    }
+
+    return [$percent, $starts, $ends];
+}
+
 if (isset($_POST['addperfume_btn'])) {
     $name          = $_POST['name'];
     $perfume_notes = $_POST['perfume_notes'];
@@ -60,6 +82,7 @@ if (isset($_POST['addperfume_btn'])) {
     $price         = (float) $_POST['price'];
     $trending      = isset($_POST['trending']) ? 1 : 0;
     $status        = isset($_POST['status']) ? 1 : 0;
+    list($discount_percent, $discount_starts, $discount_ends) = readDiscountFields();
 
     // Absolute upload directory, so it resolves no matter what the current
     // working directory is on the host.
@@ -69,10 +92,13 @@ if (isset($_POST['addperfume_btn'])) {
         : '';
 
     $stmt = mysqli_prepare($con,
-        "INSERT INTO perfumes (name, perfume_notes, description, volume, qty, image_path, price, trending, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    mysqli_stmt_bind_param($stmt, 'ssssisdii',
-        $name, $perfume_notes, $description, $volume, $qty, $img_path, $price, $trending, $status);
+        "INSERT INTO perfumes
+            (name, perfume_notes, description, volume, qty, image_path, price, trending, status,
+             discount_percent, discount_starts_at, discount_ends_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    mysqli_stmt_bind_param($stmt, 'ssssisdiiiss',
+        $name, $perfume_notes, $description, $volume, $qty, $img_path, $price, $trending, $status,
+        $discount_percent, $discount_starts, $discount_ends);
     $add_query_run = mysqli_stmt_execute($stmt);
 
     if ($add_query_run) {
@@ -94,6 +120,7 @@ if (isset($_POST['addperfume_btn'])) {
     $old_image     = $_POST['old_image'];
     $trending      = isset($_POST['trending']) ? 1 : 0;
     $status        = isset($_POST['status']) ? 1 : 0;
+    list($discount_percent, $discount_starts, $discount_ends) = readDiscountFields();
 
     $path        = __DIR__ . '/../../images';
     $hasNewImage = isRealImage($_FILES['image_path']['tmp_name'] ?? '');
@@ -103,10 +130,12 @@ if (isset($_POST['addperfume_btn'])) {
     $stmt = mysqli_prepare($con,
         "UPDATE perfumes SET
             name = ?, perfume_notes = ?, description = ?, volume = ?,
-            image_path = ?, price = ?, qty = ?, trending = ?, status = ?
+            image_path = ?, price = ?, qty = ?, trending = ?, status = ?,
+            discount_percent = ?, discount_starts_at = ?, discount_ends_at = ?
          WHERE id = ?");
-    mysqli_stmt_bind_param($stmt, 'sssssdiiii',
-        $name, $perfume_notes, $description, $volume, $re_image, $price, $qty, $trending, $status, $get_id);
+    mysqli_stmt_bind_param($stmt, 'sssssdiiiissi',
+        $name, $perfume_notes, $description, $volume, $re_image, $price, $qty, $trending, $status,
+        $discount_percent, $discount_starts, $discount_ends, $get_id);
     $update_query_run = mysqli_stmt_execute($stmt);
 
     if ($update_query_run) {

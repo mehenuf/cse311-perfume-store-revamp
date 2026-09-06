@@ -1,14 +1,17 @@
 <?php
 session_start();
-include('authenticate.php');
 include('functions/functions.php');
 
+$isAuthed = isset($_SESSION['auth']);
 $order    = null;
 $tracking = '';
 
 if (isset($_GET['trackid'])) {
     $tracking   = $_GET['trackid'];
-    $validation = validateTrackID($tracking);          // already scoped to the session user
+    // Scoped by validateTrackID(): the session's own orders when logged
+    // in, guest-only orders (user_id IS NULL) otherwise. Either way this
+    // can only ever resolve an order that belongs to whoever is asking.
+    $validation = validateTrackID($tracking);
     if ($validation && mysqli_num_rows($validation) > 0) {
         $order = mysqli_fetch_assoc($validation);
     }
@@ -19,14 +22,18 @@ $pageDescription = 'Order details and delivery status.';
 include('includes/header.php');
 
 if (!$order) {
-    echo crumb(['Home' => 'index.php', 'Orders' => 'orders.php', 'Not found' => null]);
+    echo $isAuthed
+        ? crumb(['Home' => 'index.php', 'Orders' => 'orders.php', 'Not found' => null])
+        : crumb(['Home' => 'index.php', 'Not found' => null]);
     ?>
     <section class="section shell">
         <div class="empty">
             <span class="empty__icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></span>
             <h1 style="font-size:var(--t-h2)">We could not find that order</h1>
-            <p>That tracking number does not match any order on your account.</p>
-            <a class="btn btn--primary" href="orders.php">Back to your orders</a>
+            <p>That tracking number does not match any order<?= $isAuthed ? ' on your account' : '' ?>.</p>
+            <a class="btn btn--primary" href="<?= $isAuthed ? 'orders.php' : 'perfumes.php' ?>">
+                <?= $isAuthed ? 'Back to your orders' : 'Back to the collection' ?>
+            </a>
         </div>
     </section>
     <?php
@@ -44,11 +51,9 @@ $items = mysqli_query($con,
      JOIN perfumes p ON p.id = oi.perfume_id
      WHERE oi.order_id = " . (int) $order['id']);
 
-echo crumb([
-    'Home'   => 'index.php',
-    'Orders' => 'orders.php',
-    $order['tracking_no'] => null,
-]);
+echo $isAuthed
+    ? crumb(['Home' => 'index.php', 'Orders' => 'orders.php', $order['tracking_no'] => null])
+    : crumb(['Home' => 'index.php', $order['tracking_no'] => null]);
 ?>
 
 <section class="section shell">
@@ -135,9 +140,21 @@ echo crumb([
                 </p>
             <?php } ?>
 
-            <a class="btn btn--ghost btn--block" href="orders.php" style="margin-top:var(--s-5)">
-                Back to your orders
-            </a>
+            <?php if ($isAuthed) { ?>
+                <a class="btn btn--ghost btn--block" href="orders.php" style="margin-top:var(--s-5)">
+                    Back to your orders
+                </a>
+            <?php } else { ?>
+                <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--fg-muted);font-size:var(--t-sm)">
+                    You checked out as a guest, so this order will not appear on any account.
+                    Save the tracking number above to check its status later, or
+                    <a href="register.php" style="color:var(--gold);font-weight:600">create an account</a>
+                    before your next order to keep a running history.
+                </p>
+                <a class="btn btn--ghost btn--block" href="perfumes.php" style="margin-top:var(--s-4)">
+                    Keep shopping
+                </a>
+            <?php } ?>
         </aside>
 
     </div>

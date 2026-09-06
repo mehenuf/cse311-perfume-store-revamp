@@ -278,3 +278,4 @@ tests/.tmp_*.sqlite-shm
 # User requested ignoring this specific summary log
 docs/catalog_expansion_summary.md
 docs/session_memory_log.md
+docs/QA_Report.md

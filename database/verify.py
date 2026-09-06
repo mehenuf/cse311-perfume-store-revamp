@@ -69,6 +69,8 @@ def main():
                 m7 = re.sub(r"ALTER TABLE[^;]+;", "", io.open(os.path.join(HERE, "mysql", "07_migration_more_perfumes.sql"), encoding="utf-8").read())
                 m7 = m7.replace("INSERT IGNORE INTO", "INSERT OR IGNORE INTO")
                 db.executescript(m7)
+            if os.path.isfile(os.path.join(HERE, "mysql", "08_migration_fix_mismatched_images.sql")):
+                db.executescript(io.open(os.path.join(HERE, "mysql", "08_migration_fix_mismatched_images.sql"), encoding="utf-8").read())
             total = db.execute("SELECT COUNT(*) FROM perfumes").fetchone()[0]
             check("expansion seed applies on top of the base seed (%d products)" % total, True)
         except Exception as e:
@@ -181,6 +183,28 @@ def main():
             if house not in name.lower():
                 wrong.append("%s on %s" % (img, name))
     check("no product shows another house's bottle", not wrong, "; ".join(wrong))
+
+    # A filename-identity check (above) cannot catch the same picture being
+    # copied byte-for-byte into several *differently named* files -- exactly
+    # how the migration-07 image incident slipped past every prior check.
+    # Hash every referenced image and flag any group of 2+ distinct
+    # filenames sharing identical content, except the small set of files
+    # deliberately shared as generic editorial stock photography (the
+    # five st_*.jpg placeholders used for products with no real photo yet).
+    import hashlib
+    INTENTIONALLY_SHARED = set(BRANDED) | {"st_amber_bottles_bokeh.jpg"}
+    by_hash = {}
+    for p in named:
+        full = os.path.join(IMAGES, p)
+        if not os.path.isfile(full):
+            continue
+        with open(full, "rb") as fh:
+            digest = hashlib.md5(fh.read()).hexdigest()
+        by_hash.setdefault(digest, set()).add(p)
+    dup_groups = [sorted(files) for files in by_hash.values()
+                  if len(files) > 1 and not files <= INTENTIONALLY_SHARED]
+    check("no two differently-named images are byte-identical", not dup_groups,
+          "duplicate content: %s" % dup_groups)
 
     unused = sorted(set(os.listdir(IMAGES)) - {r[0] for r in db.execute("SELECT image_path FROM perfumes")})
     check("no image file is left without a catalogue row", not unused, "unused: %s" % unused)

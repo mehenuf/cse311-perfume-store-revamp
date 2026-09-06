@@ -36,4 +36,29 @@ return [
     // Set to '1' only while debugging. It prints the real connection error,
     // which can leak the hostname and username, so turn it off again after.
     'APP_DEBUG' => '0',
+
+    // --- Outgoing email, for "Forgot your password?" ----------------------
+    // Leave all of these unset to use PHP's built-in mail() instead. That
+    // works on a properly configured VPS, Render/Koyeb, or XAMPP with a
+    // local mail setup -- but NOT on InfinityFree, which blocks mail()
+    // entirely to stop spam abuse. Set SMTP_HOST (and the rest below) to
+    // send through a real relay instead; any of them work the same way:
+    //
+    //   Brevo (recommended -- free, 300 emails/day, no credit card):
+    //     'SMTP_HOST' => 'smtp-relay.brevo.com',
+    //     'SMTP_PORT' => '587',
+    //     'SMTP_USER' => 'your-brevo-login-email@example.com',
+    //     'SMTP_PASS' => 'your-brevo-smtp-key',      // NOT your account password -- see DEPLOYMENT.md
+    //     'SMTP_FROM' => 'your-brevo-login-email@example.com',
+    //
+    //   Gmail (a personal account, low volume only):
+    //     'SMTP_HOST' => 'smtp.gmail.com',
+    //     'SMTP_PORT' => '587',
+    //     'SMTP_USER' => 'you@gmail.com',
+    //     'SMTP_PASS' => 'your-16-character-app-password',   // not your normal password
+    //     'SMTP_FROM' => 'you@gmail.com',
+    //
+    // 'SMTP_SECURE' defaults to 'tls' (STARTTLS on port 587, what every
+    // provider above uses). Only set it to 'ssl' if your relay's docs
+    // specifically say to connect on port 465 instead.
 ];

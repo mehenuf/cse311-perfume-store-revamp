@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+require_once('../includes/mailer.php');
 
 if (!isset($_POST['request_reset_btn'])) {
     header('Location: ../forgot-password.php');
@@ -48,12 +49,10 @@ if ($email !== '') {
               . "Someone (hopefully you) asked to reset the password on your Perfume Store account.\n\n"
               . "Reset it here -- this link works for one hour:\n" . $resetUrl . "\n\n"
               . "If you didn't request this, you can ignore this email; your password will not change.\n";
-        $headers = "From: no-reply@" . $host . "\r\n";
-
-        // mail() has no reliable way to report real delivery failure here,
-        // and per the note above the visitor sees the same message either
-        // way -- this is a best-effort send, not a guarantee.
-        @mail($user['email'], $subject, $body, $headers);
+        // Neither delivery path has a reliable way to report real failure
+        // back to a visitor, and per the note above they see the same
+        // message either way -- this is a best-effort send, not a guarantee.
+        sendAppEmail($user['email'], $subject, $body);
     }
 }
 

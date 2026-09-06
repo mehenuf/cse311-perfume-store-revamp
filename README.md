@@ -160,6 +160,12 @@ The admin panel is at `/admin` once you're logged in as the shop owner.
 
 > Note: **Change these before showing anyone.** See [Security](#security-before-you-go-public).
 
+> **"Forgot your password?" needs somewhere to send email from.** XAMPP doesn't send
+> real mail out of the box, so a password reset request will "succeed" on screen but
+> the email won't arrive locally unless you configure one of the `SMTP_*` settings in
+> `config/env.example.php`. Everything else works without it. See `DEPLOYMENT.md`,
+> Part 4a, for setting up a free SMTP relay on a live deployment.
+
 ---
 
 ## Putting It Online For Free

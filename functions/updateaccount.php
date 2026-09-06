@@ -54,7 +54,9 @@ mysqli_stmt_bind_param($update_stmt, 'ssssi', $name, $email, $contacts, $address
 if (mysqli_stmt_execute($update_stmt)) {
     $_SESSION['auth_user']['email'] = $email;
     $_SESSION['message'] = 'Your account details have been updated.';
-} else {
-    $_SESSION['message'] = 'Something went wrong. Please try again.';
+    header('Location: ../account-saved.php');
+    exit;
 }
+
+$_SESSION['message'] = 'Something went wrong. Please try again.';
 header('Location: ../account.php');

@@ -65,6 +65,10 @@ def main():
                      io.open(exp_path, encoding="utf-8").read())
         try:
             db.executescript(exp)
+            if os.path.isfile(os.path.join(HERE, "mysql", "07_migration_more_perfumes.sql")):
+                m7 = re.sub(r"ALTER TABLE[^;]+;", "", io.open(os.path.join(HERE, "mysql", "07_migration_more_perfumes.sql"), encoding="utf-8").read())
+                m7 = m7.replace("INSERT IGNORE INTO", "INSERT OR IGNORE INTO")
+                db.executescript(m7)
             total = db.execute("SELECT COUNT(*) FROM perfumes").fetchone()[0]
             check("expansion seed applies on top of the base seed (%d products)" % total, True)
         except Exception as e:

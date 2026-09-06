@@ -26,3 +26,19 @@
 RedirectMatch 404 ^/config/
 RedirectMatch 404 ^/database/
 RedirectMatch 404 ^/tools/
+
+# The regression suite. It has no purpose being reachable at all -- unlike
+# the app's own PHP, tests/run.php spawns its own PHP subprocesses, which is
+# not something any visitor should ever be able to trigger.
+RedirectMatch 404 ^/tests/
+
+# Version control and local dev-tool state. Never meant to leave a developer's
+# machine, but an exposed .git/ specifically is one of the most commonly
+# scanned-for vulnerabilities on the web -- it can hand out full source and
+# commit history. This pattern also catches .gitignore/.gitattributes, which
+# is harmless. Deliberately does NOT match .well-known/, which has to stay
+# reachable for domain verification and certificate issuance.
+RedirectMatch 404 ^/\.git
+RedirectMatch 404 ^/\.claude/
+RedirectMatch 404 ^/\.cursor/
+RedirectMatch 404 ^/\.impeccable/

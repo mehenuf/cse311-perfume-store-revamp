@@ -382,7 +382,19 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     border-top: 1px solid transparent; background: var(--ink-raised);
 }
 .nav__drawer[data-open='true'] { grid-template-rows: 1fr; border-top-color: var(--line); }
-.nav__drawer > div { overflow: hidden; }
+/* .nav is position:sticky, so an open drawer taller than the viewport (the
+   full houses list makes this the common case, not the exception) would
+   otherwise pin the whole screen: the page keeps scrolling underneath, but
+   nothing visible changes until the entire sticky nav+drawer has scrolled
+   past, which reads as "scrolling did nothing" for that whole distance.
+   Capping the drawer to the viewport and letting it scroll internally means
+   a scroll gesture over the drawer moves the drawer's own list instead, and
+   the outer page is never blocked by it. overflow-y (not overflow:hidden)
+   still satisfies the min-height:0 the 0fr/1fr collapse trick needs. */
+.nav__drawer > div {
+    overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    max-height: calc(100dvh - var(--nav-h));
+}
 @media (min-width: 1080px) { .nav__drawer { display: none; } }
 .nav__drawer-inner { padding-block: var(--s-5) var(--s-6); }
 .nav__drawer-inner ul { list-style: none; padding: 0; margin: 0; }
@@ -670,6 +682,13 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 }
 .input::placeholder, .textarea::placeholder { color: var(--fg-faint); }
 .input:focus, .textarea:focus, .select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+/* A field the visitor can see but never edit (e.g. account settings'
+   username/date of birth) -- recessed and muted like a value already
+   settled, not a blank one waiting to be filled in. */
+.input:disabled, .textarea:disabled {
+    background: var(--ink-sunken); border-color: var(--line); color: var(--fg-faint);
+    cursor: not-allowed;
+}
 .textarea { resize: vertical; min-height: 104px; line-height: 1.6; }
 
 .form-grid { display: grid; gap: var(--s-5); }

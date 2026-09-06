@@ -19,6 +19,33 @@ function getAllTrending($table){
     ORDER BY name ASC;";
     return $query_run = mysqli_query($con, $query);
 }
+
+/**
+ * Published perfumes with a currently-active discount. "Active" is computed
+ * from discount_starts_at/discount_ends_at against the database's own clock
+ * on every call, the same window perfumePricing() checks in PHP -- so this
+ * list is always correct the instant a discount starts or ends, with no
+ * separate flag to keep in sync and no scheduled job required to do it
+ * (useful on hosts, like a typical free plan, with no cron support).
+ */
+function getActiveDiscounts($table){
+    global $con;
+    // The current time is computed here and bound as a parameter, the same
+    // way forgotpassword.php/resetpassword.php check a token's expiry,
+    // rather than relying on the database's own NOW() -- one clock to
+    // reason about instead of two, and it keeps this portable to a database
+    // that has no NOW() of its own.
+    $now = date('Y-m-d H:i:s');
+    $stmt = mysqli_prepare($con, "SELECT * FROM $table
+        WHERE status = 1
+        AND discount_percent > 0
+        AND (discount_starts_at IS NULL OR discount_starts_at <= ?)
+        AND (discount_ends_at IS NULL OR discount_ends_at > ?)
+        ORDER BY discount_percent DESC, name ASC");
+    mysqli_stmt_bind_param($stmt, 'ss', $now, $now);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt);
+}
 function getData($table){
     global $con;
     $query = "SELECT * FROM $table;";

@@ -52,6 +52,7 @@ function navCurrent($page, $currentPage)
         <ul class="nav__links">
             <li><a class="nav__link" href="<?= $basePath ?>index.php"<?= navCurrent('index.php', $currentPage) ?>>Home</a></li>
             <li><a class="nav__link" href="<?= $basePath ?>perfumes.php"<?= navCurrent('perfumes.php', $currentPage) ?>>Collection</a></li>
+            <li><a class="nav__link" href="<?= $basePath ?>discounts.php"<?= navCurrent('discounts.php', $currentPage) ?>>On Sale</a></li>
 
             <li class="nav__group" data-nav-group data-open="false">
                 <a class="nav__link" href="<?= $basePath ?>perfumes.php" data-nav-trigger
@@ -102,6 +103,7 @@ function navCurrent($page, $currentPage)
                         <li class="nav__menu-head">Signed in as <b><?= e($userName) ?></b></li>
                         <li><a href="<?= $basePath ?>orders.php"><i class="fa-solid fa-receipt" aria-hidden="true"></i> My orders</a></li>
                         <li><a href="<?= $basePath ?>shoppingcart.php"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> My cart<?= $cartCount ? ' (' . $cartCount . ')' : '' ?></a></li>
+                        <li><a href="<?= $basePath ?>account.php"><i class="fa-solid fa-user-pen" aria-hidden="true"></i> Account settings</a></li>
                         <?php if ($isAdmin) { ?>
                             <li class="nav__menu-sep"></li>
                             <li><a href="<?= $basePath ?>admin/index.php"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Admin dashboard</a></li>
@@ -141,9 +143,11 @@ function navCurrent($page, $currentPage)
                 <ul>
                     <li><a href="<?= $basePath ?>index.php">Home</a></li>
                     <li><a href="<?= $basePath ?>perfumes.php">Collection</a></li>
+                    <li><a href="<?= $basePath ?>discounts.php">On Sale</a></li>
                     <?php if ($isAuthed) { ?>
                         <li><a href="<?= $basePath ?>shoppingcart.php">Cart<?= $cartCount ? ' (' . $cartCount . ')' : '' ?></a></li>
                         <li><a href="<?= $basePath ?>orders.php">My orders</a></li>
+                        <li><a href="<?= $basePath ?>account.php">Account settings</a></li>
                         <?php if ($isAdmin) { ?>
                             <li><a href="<?= $basePath ?>admin/index.php">Admin dashboard</a></li>
                         <?php } ?>

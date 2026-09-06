@@ -77,6 +77,7 @@ pnpm-lock.yaml
 # --------------------------------------------------------------
 .vscode/
 !.vscode/extensions.json
+.cursor/
 .idea/
 *.iml
 *.sublime-project
@@ -270,3 +271,6 @@ images/*.uploading
 #     for a run that crashed before it could.
 # ---------------------------------------------------------------
 tests/.tmp_*.sqlite
+tests/.tmp_*.sqlite-journal
+tests/.tmp_*.sqlite-wal
+tests/.tmp_*.sqlite-shm

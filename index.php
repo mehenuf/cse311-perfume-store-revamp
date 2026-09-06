@@ -8,6 +8,7 @@ $pageDescription = 'Designer and niche fragrance, curated and delivered across B
                  . 'Dior, Chanel, Tom Ford, Mancera, Lattafa and Hugo Boss.';
 
 $trending = getAllTrending('perfumes');
+$onSale   = getActiveDiscounts('perfumes');
 
 // Four bottles for the hero mosaic, and real counts for the figures below.
 $heroShots = mysqli_query($con,
@@ -93,6 +94,43 @@ include('includes/header.php');
         <?php } ?>
     </div>
 </section>
+
+<?php if ($onSale && mysqli_num_rows($onSale) > 0) { ?>
+<!-- On sale: same rail treatment as Trending, only shown while something
+     actually has an active discount -- an empty promo rail reads as broken,
+     unlike Trending's empty state, which is a normal "nothing curated yet".
+     Deliberately NOT sunken, unlike Trending right above it: two sunken
+     sections back to back would merge into one background band with no
+     seam between them. Staying plain here also tells the two rails apart
+     at a glance, since their layout is otherwise identical. -->
+<section class="section">
+    <div class="shell">
+        <div class="section-head">
+            <div>
+                <h2>On sale now</h2>
+                <p>Time-boxed prices on bottles moving fast -- while the discount lasts.</p>
+            </div>
+            <div class="rail-nav">
+                <button class="rail-btn" type="button" data-rail-prev="sale-rail" aria-label="Scroll left">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </button>
+                <button class="rail-btn" type="button" data-rail-next="sale-rail" aria-label="Scroll right">
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="shell">
+        <div class="rail" id="sale-rail" data-rail data-rail-autoplay tabindex="0" aria-label="Discounted fragrances">
+            <?php foreach ($onSale as $p) { include('includes/product-card.php'); } ?>
+        </div>
+        <p style="margin-top:var(--s-5)">
+            <a class="btn btn--ghost" href="discounts.php">See all on sale</a>
+        </p>
+    </div>
+</section>
+<?php } ?>
 
 <!-- Houses: image-backed tiles, one cell per house -->
 <section class="section shell" id="houses">

@@ -191,7 +191,7 @@ are in **`DEPLOYMENT.md`**.
 Five tables. A customer has a cart and places orders; each order is made of order items;
 every cart line and order item points at a perfume.
 
-![Database schema diagram](docs/screenshots/schema.svg)
+![Database ERD](docs/screenshots/ERD.svg)
 
 **Order status** goes `0` Processing → `1` Completed → `2` Shipped → `3` Delivered,
 with `4` Cancelled.

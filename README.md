@@ -148,7 +148,7 @@ That's it. No config needed — the app defaults to XAMPP's standard settings.
 
 | User Role | Username | Password |
 |---|---|---|
-| Shop Owner | `shopadmin` | `admin123` |
+| Shop Owner | `will be provided upon request to only reviewers` | `*******` |
 | Customer | `arif` | `arif1234` |
 
 The admin panel is at `/admin` once you're logged in as the shop owner.

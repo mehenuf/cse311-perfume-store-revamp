@@ -16,10 +16,14 @@
  *   $collectionShowFeaturedFilter bool  hide the "Featured" chip on a page
  *                                       where every row already is one
  *                                       (default true)
+ *   $collectionShowGenderFilter   bool  hide the For/gender chip group on a
+ *                                       page that is already gender-scoped,
+ *                                       e.g. for-him.php (default true)
  */
 $basePath = isset($basePath) ? $basePath : '';
 $showSaleFilter     = $collectionShowSaleFilter ?? true;
 $showFeaturedFilter = $collectionShowFeaturedFilter ?? true;
+$showGenderFilter   = $collectionShowGenderFilter ?? true;
 
 // Pulled into a plain array once, rather than iterated as a mysqli_result,
 // so the price/brand bounds below and the card grid loop can both read it
@@ -141,27 +145,29 @@ echo crumb($collectionCrumbs);
                     </fieldset>
                 <?php } ?>
 
-                <fieldset class="filter-group">
-                    <legend class="filter-group__title">For</legend>
-                    <div class="chip-row" role="radiogroup" aria-label="Gender">
-                        <label class="chip chip--radio">
-                            <input type="radio" name="cf-gender-<?= $uid ?>" value="all" checked
-                                   class="visually-hidden" data-filter-gender> All
-                        </label>
-                        <label class="chip chip--radio">
-                            <input type="radio" name="cf-gender-<?= $uid ?>" value="men"
-                                   class="visually-hidden" data-filter-gender> Men
-                        </label>
-                        <label class="chip chip--radio">
-                            <input type="radio" name="cf-gender-<?= $uid ?>" value="women"
-                                   class="visually-hidden" data-filter-gender> Women
-                        </label>
-                        <label class="chip chip--radio">
-                            <input type="radio" name="cf-gender-<?= $uid ?>" value="unisex"
-                                   class="visually-hidden" data-filter-gender> Unisex
-                        </label>
-                    </div>
-                </fieldset>
+                <?php if ($showGenderFilter) { ?>
+                    <fieldset class="filter-group">
+                        <legend class="filter-group__title">For</legend>
+                        <div class="chip-row" role="radiogroup" aria-label="Gender">
+                            <label class="chip chip--radio">
+                                <input type="radio" name="cf-gender-<?= $uid ?>" value="all" checked
+                                       class="visually-hidden" data-filter-gender> All
+                            </label>
+                            <label class="chip chip--radio">
+                                <input type="radio" name="cf-gender-<?= $uid ?>" value="men"
+                                       class="visually-hidden" data-filter-gender> Men
+                            </label>
+                            <label class="chip chip--radio">
+                                <input type="radio" name="cf-gender-<?= $uid ?>" value="women"
+                                       class="visually-hidden" data-filter-gender> Women
+                            </label>
+                            <label class="chip chip--radio">
+                                <input type="radio" name="cf-gender-<?= $uid ?>" value="unisex"
+                                       class="visually-hidden" data-filter-gender> Unisex
+                            </label>
+                        </div>
+                    </fieldset>
+                <?php } ?>
 
                 <fieldset class="filter-group">
                     <legend class="filter-group__title">Availability</legend>

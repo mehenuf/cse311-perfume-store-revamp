@@ -56,8 +56,11 @@ function navCurrent($page, $currentPage)
 
             <li class="nav__group" data-nav-group data-open="false">
                 <a class="nav__link" href="<?= $basePath ?>perfumes.php" data-nav-trigger
-                   aria-expanded="false" aria-haspopup="true">Houses</a>
+                   aria-expanded="false" aria-haspopup="true">Shop</a>
                 <ul class="nav__menu nav__menu--cols">
+                    <li><a href="<?= $basePath ?>for-him.php"><i class="fa-solid fa-mars" aria-hidden="true"></i> For him</a></li>
+                    <li><a href="<?= $basePath ?>for-her.php"><i class="fa-solid fa-venus" aria-hidden="true"></i> For her</a></li>
+                    <li class="nav__menu-sep"></li>
                     <?php foreach ($navBrands as $slug => $b) { ?>
                         <li><a href="<?= $basePath ?>brands/<?= $slug ?>.php"><?= e($b['label']) ?></a></li>
                     <?php } ?>
@@ -143,6 +146,8 @@ function navCurrent($page, $currentPage)
                 <ul>
                     <li><a href="<?= $basePath ?>index.php">Home</a></li>
                     <li><a href="<?= $basePath ?>perfumes.php">Collection</a></li>
+                    <li><a href="<?= $basePath ?>for-him.php">For him</a></li>
+                    <li><a href="<?= $basePath ?>for-her.php">For her</a></li>
                     <li><a href="<?= $basePath ?>discounts.php">On Sale</a></li>
                     <?php if ($isAuthed) { ?>
                         <li><a href="<?= $basePath ?>shoppingcart.php">Cart<?= $cartCount ? ' (' . $cartCount . ')' : '' ?></a></li>
@@ -158,7 +163,7 @@ function navCurrent($page, $currentPage)
                         <li><a href="<?= $basePath ?>register.php">Create account</a></li>
                     <?php } ?>
                 </ul>
-                <p class="nav__drawer-label">Houses</p>
+                <p class="nav__drawer-label">Shop by house</p>
                 <ul>
                     <?php foreach ($navBrands as $slug => $b) { ?>
                         <li><a href="<?= $basePath ?>brands/<?= $slug ?>.php"><?= e($b['label']) ?></a></li>

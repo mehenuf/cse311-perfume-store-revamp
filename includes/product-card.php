@@ -30,7 +30,7 @@ $pricing = perfumePricing($p);
                 <?= e($p['name']) ?>
             </a>
         </h3>
-        <p class="product__meta"><?= e($p['volume']) ?></p>
+        <p class="product__meta"><?= e($p['volume']) ?> &middot; <?= e(genderLabel($p['gender'] ?? 'unisex')) ?></p>
         <div class="product__foot">
             <?= priceMarkup($p, 'product__price') ?>
             <span class="product__stock" data-low="<?= $stockLow ? 'true' : 'false' ?>"><?= e($stockText) ?></span>

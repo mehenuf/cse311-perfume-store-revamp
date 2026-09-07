@@ -1082,6 +1082,10 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     margin: var(--s-2) var(--s-5);
     background: var(--line);
 }
+/* Inside the two-column houses grid, a plain grid item would only ever
+   fill one column's width -- span both so it reads as a full divider
+   between the For him/For her shortcuts and the alphabetical house list. */
+.nav__menu--cols .nav__menu-sep { grid-column: 1 / -1; }
 
 .nav__menu a i { width: 15px; margin-inline-end: .35rem; opacity: .7; }
 

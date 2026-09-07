@@ -21,6 +21,23 @@ function getAllTrending($table){
 }
 
 /**
+ * Published perfumes marketed for a given gender, for the nav's "For Him" /
+ * "For Her" shortcuts. Each also includes 'unisex' rows -- a unisex bottle
+ * genuinely suits either shelf, and without it "For Her" alone would be a
+ * thin 19 products against the catalogue's 79 men's + 30 unisex.
+ */
+function getByGender($table, $gender)
+{
+    global $con;
+    $stmt = mysqli_prepare($con, "SELECT * FROM $table
+        WHERE status = 1 AND gender IN (?, 'unisex')
+        ORDER BY name ASC");
+    mysqli_stmt_bind_param($stmt, 's', $gender);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt);
+}
+
+/**
  * Published perfumes with a currently-active discount. "Active" is computed
  * from discount_starts_at/discount_ends_at against the database's own clock
  * on every call, the same window perfumePricing() checks in PHP -- so this

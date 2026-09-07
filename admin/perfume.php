@@ -63,6 +63,7 @@ $justUpdatedId = isset($_GET['updated']) ? (int) $_GET['updated'] : 0;
                                 </td>
                                 <td>
                                     <p class="table__title"><?= e($item['name']) ?></p>
+                                    <span class="badge"><?= e(genderLabel($item['gender'] ?? 'unisex')) ?></span>
                                     <?php if ((int) $item['trending'] === 1) { ?>
                                         <span class="badge badge--gold">Featured</span>
                                     <?php } ?>

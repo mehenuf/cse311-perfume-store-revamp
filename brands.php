@@ -7,7 +7,7 @@ $pageTitle       = 'All houses';
 $pageDescription = 'Every fragrance house carried at Perfume Store, from designer signatures to niche releases.';
 include('includes/header.php');
 
-$houses = brandList();
+$houses = brandListAlphabetical();
 ?>
 
 <?= crumb(['Home' => 'index.php', 'Houses' => null]) ?>

@@ -84,6 +84,17 @@ if (!$data) {
                                value="<?= (int) $data['qty'] ?>">
                     </div>
 
+                    <div class="field">
+                        <label for="p-gender">Marketed for</label>
+                        <?php $gender = $data['gender'] ?? 'unisex'; ?>
+                        <select class="select" id="p-gender" name="gender">
+                            <option value="unisex" <?= $gender === 'unisex' ? 'selected' : '' ?>>Unisex</option>
+                            <option value="men" <?= $gender === 'men' ? 'selected' : '' ?>>Men</option>
+                            <option value="women" <?= $gender === 'women' ? 'selected' : '' ?>>Women</option>
+                        </select>
+                        <span class="field__hint">Drives the collection page's gender filter.</span>
+                    </div>
+
                 </div>
             </div>
         </section>

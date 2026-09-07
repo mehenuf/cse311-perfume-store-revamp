@@ -625,40 +625,119 @@
     }
 
     /* ---------------------------------------------------------------------
-       Collection filters — search, sort and a couple of toggle chips above
-       a card grid (the full collection, a brand page, on-sale, featured).
-       Everything the filter needs is already in the DOM as data attributes
-       on each .product card, so this only shows/hides and reorders nodes
-       already rendered server-side -- no re-fetching, works with JS off
-       too (the grid just shows the server's default order, unfiltered).
+       Collection filters — a sidebar of grouped controls beside a card grid
+       (the full collection, a brand page, on-sale, featured): free-text
+       search, a price range, brand, gender, and availability, plus a sort
+       control over the grid itself. Everything a filter needs is already in
+       the DOM as data attributes on each .product card, so this only
+       shows/hides and reorders nodes already rendered server-side -- no
+       re-fetching, and it works with JS off too (the grid just shows the
+       server's default order, unfiltered, with the sidebar visible and
+       inert).
        --------------------------------------------------------------------- */
+    function initPriceRange(root, onChange) {
+        var group = root.querySelector('[data-price-range]');
+        if (!group) return null;
+
+        var floor = parseInt(group.dataset.priceFloor, 10) || 0;
+        var ceil = parseInt(group.dataset.priceCeil, 10) || 0;
+        var minRange = group.querySelector('[data-price-min-range]');
+        var maxRange = group.querySelector('[data-price-max-range]');
+        var minNumber = group.querySelector('[data-price-min-number]');
+        var maxNumber = group.querySelector('[data-price-max-number]');
+        var fill = group.querySelector('[data-price-fill]');
+        if (!minRange || !maxRange) return null;
+
+        var state = { min: floor, max: ceil };
+
+        function clamp(v) { return Math.min(Math.max(v, floor), ceil); }
+
+        function render() {
+            minRange.value = state.min;
+            maxRange.value = state.max;
+            if (minNumber) minNumber.value = state.min;
+            if (maxNumber) maxNumber.value = state.max;
+            if (fill && ceil > floor) {
+                var left = ((state.min - floor) / (ceil - floor)) * 100;
+                var right = ((state.max - floor) / (ceil - floor)) * 100;
+                fill.style.left = left + '%';
+                fill.style.right = (100 - right) + '%';
+            }
+        }
+
+        function setMin(v, notify) {
+            state.min = Math.min(clamp(v), state.max);
+            render();
+            if (notify !== false) onChange();
+        }
+        function setMax(v, notify) {
+            state.max = Math.max(clamp(v), state.min);
+            render();
+            if (notify !== false) onChange();
+        }
+
+        minRange.addEventListener('input', function () { setMin(parseInt(minRange.value, 10)); });
+        maxRange.addEventListener('input', function () { setMax(parseInt(maxRange.value, 10)); });
+        if (minNumber) {
+            minNumber.addEventListener('change', function () { setMin(parseInt(minNumber.value, 10) || floor); });
+        }
+        if (maxNumber) {
+            maxNumber.addEventListener('change', function () { setMax(parseInt(maxNumber.value, 10) || ceil); });
+        }
+
+        render();
+
+        return {
+            get: function () { return state; },
+            reset: function () { state = { min: floor, max: ceil }; render(); },
+            isActive: function () { return state.min > floor || state.max < ceil; }
+        };
+    }
+
     function initCollectionFilters() {
-        document.querySelectorAll('[data-collection-filters]').forEach(function (bar) {
-            var section = bar.closest('section') || document;
-            var grid = section.querySelector('[data-collection-grid]');
-            if (!grid) return;
-            var emptyState = section.querySelector('[data-collection-empty]');
-            var countEl = section.querySelector('[data-collection-count]');
-            var searchInput = bar.querySelector('[data-filter-search]');
-            var sortSelect = bar.querySelector('[data-filter-sort]');
-            var chips = Array.prototype.slice.call(bar.querySelectorAll('[data-filter-toggle]'));
-            var resetBtns = section.querySelectorAll('[data-filter-reset]');
+        document.querySelectorAll('[data-collection-filters]').forEach(function (root) {
+            var panel = root.querySelector('[data-filters-panel]');
+            var toggle = root.querySelector('[data-filters-toggle]');
+            var grid = root.querySelector('[data-collection-grid]');
+            if (!panel || !grid) return;
+
+            var emptyState = root.querySelector('[data-collection-empty]');
+            var countEl = root.querySelector('[data-collection-count]');
+            var searchInput = panel.querySelector('[data-filter-search]');
+            var sortSelect = root.querySelector('[data-filter-sort]');
+            var chips = Array.prototype.slice.call(panel.querySelectorAll('[data-filter-toggle]'));
+            var genderInputs = Array.prototype.slice.call(panel.querySelectorAll('[data-filter-gender]'));
+            var brandInputs = Array.prototype.slice.call(panel.querySelectorAll('[data-filter-brand]'));
+            var resetBtns = root.querySelectorAll('[data-filter-reset]');
             var cards = Array.prototype.slice.call(grid.querySelectorAll('[data-product]'));
             var originalOrder = cards.slice();
 
-            var state = { search: '', sort: 'default' };
+            var state = { search: '', sort: 'default', gender: 'all' };
             chips.forEach(function (chip) { state[chip.dataset.filterToggle] = false; });
+
+            var priceRange = initPriceRange(panel, apply);
+
+            function selectedBrands() {
+                return brandInputs.filter(function (i) { return i.checked; }).map(function (i) { return i.value; });
+            }
 
             function apply() {
                 var term = state.search.trim().toLowerCase();
+                var brands = selectedBrands();
+                var price = priceRange ? priceRange.get() : null;
                 var visible = 0;
 
                 cards.forEach(function (card) {
+                    var cardPrice = parseFloat(card.dataset.price);
                     var matches = (!term
                             || card.dataset.name.indexOf(term) !== -1
                             || (card.dataset.notes || '').indexOf(term) !== -1)
                         && (!state.stock || card.dataset.inStock === '1')
-                        && (!state.sale || card.dataset.onSale === '1');
+                        && (!state.sale || card.dataset.onSale === '1')
+                        && (!state.featured || card.dataset.featured === '1')
+                        && (state.gender === 'all' || card.dataset.gender === state.gender)
+                        && (brands.length === 0 || brands.indexOf(card.dataset.brand) !== -1)
+                        && (!price || (cardPrice >= price.min && cardPrice <= price.max));
                     card.hidden = !matches;
                     if (matches) visible++;
                 });
@@ -679,7 +758,8 @@
                 if (emptyState) emptyState.hidden = visible !== 0;
                 grid.hidden = visible === 0;
 
-                var isFiltered = term !== '' || state.sort !== 'default'
+                var isFiltered = term !== '' || state.sort !== 'default' || state.gender !== 'all'
+                    || brands.length > 0 || (priceRange && priceRange.isActive())
                     || chips.some(function (chip) { return state[chip.dataset.filterToggle]; });
                 resetBtns.forEach(function (btn) { btn.hidden = !isFiltered; });
             }
@@ -703,15 +783,40 @@
                     apply();
                 });
             });
+            genderInputs.forEach(function (input) {
+                input.addEventListener('change', function () {
+                    if (input.checked) { state.gender = input.value; apply(); }
+                });
+            });
+            brandInputs.forEach(function (input) {
+                input.addEventListener('change', apply);
+            });
             resetBtns.forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    state.search = ''; state.sort = 'default';
+                    state.search = ''; state.sort = 'default'; state.gender = 'all';
                     chips.forEach(function (chip) { state[chip.dataset.filterToggle] = false; chip.setAttribute('aria-pressed', 'false'); });
+                    genderInputs.forEach(function (input) { input.checked = input.value === 'all'; });
+                    brandInputs.forEach(function (input) { input.checked = false; });
+                    if (priceRange) priceRange.reset();
                     if (searchInput) searchInput.value = '';
                     if (sortSelect) sortSelect.value = 'default';
                     apply();
                 });
             });
+
+            // Mobile: the sidebar starts collapsed behind a "Filters" button.
+            // Desktop CSS forces the panel visible regardless of this state,
+            // so this only ever matters below the sidebar breakpoint.
+            if (toggle) {
+                if (window.matchMedia('(max-width: 899px)').matches) {
+                    panel.hidden = true;
+                }
+                toggle.addEventListener('click', function () {
+                    var open = toggle.getAttribute('aria-expanded') === 'true';
+                    toggle.setAttribute('aria-expanded', String(!open));
+                    panel.hidden = open;
+                });
+            }
         });
     }
 

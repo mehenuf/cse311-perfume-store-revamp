@@ -1,7 +1,7 @@
 <?php
 /** Storefront footer. Expects $basePath ('' at root, '../' one level down). */
 $basePath   = isset($basePath) ? $basePath : '';
-$footBrands = array_slice(brandList(), 0, 8, true);
+$footBrands = array_slice(brandListAlphabetical(), 0, 4, true);
 ?>
 <footer class="footer">
     <div class="shell">
@@ -39,7 +39,7 @@ $footBrands = array_slice(brandList(), 0, 8, true);
                     <?php foreach ($footBrands as $slug => $b) { ?>
                         <li><a href="<?= $basePath ?>brands/<?= $slug ?>.php"><?= e($b['label']) ?></a></li>
                     <?php } ?>
-                    <li><a href="<?= $basePath ?>perfumes.php">All houses</a></li>
+                    <li><a href="<?= $basePath ?>brands.php">All houses</a></li>
                 </ul>
             </div>
 

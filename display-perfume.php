@@ -79,6 +79,10 @@ echo crumb([
                 <dd><?= e($product['volume']) ?></dd>
             </div>
             <div>
+                <dt>For</dt>
+                <dd><?= e(genderLabel($product['gender'] ?? 'unisex')) ?></dd>
+            </div>
+            <div>
                 <dt>Availability</dt>
                 <dd><?= $inStock ? (int) $product['qty'] . ' in stock' : 'Sold out' ?></dd>
             </div>

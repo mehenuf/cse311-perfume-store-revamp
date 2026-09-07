@@ -14,11 +14,26 @@ if (!file_exists($dbPath) || (isset($_GET['__reseed']))) {
     $schema = file_get_contents(__DIR__ . '/schema.sql');
     $pdo = shim_boot($dbPath, $schema);
 
-    $seed = file_get_contents(dirname(__DIR__, 2) . '/database/_seed_body.sql');
-    // Strip comments, split on ; -- good enough for this dialect-neutral seed file.
-    $seed = preg_replace('/^--.*$/m', '', $seed);
-    foreach (array_filter(array_map('trim', explode(';', $seed))) as $stmt) {
-        $pdo->exec($stmt);
+    $dbDir = dirname(__DIR__, 2) . '/database';
+    // The base seed (39 products) plus both catalogue-expansion migrations
+    // (ids 40-128), so local filter testing sees the real 20-house spread
+    // instead of just the first 39 rows. MySQL-only syntax (INSERT IGNORE,
+    // ALTER TABLE ... AUTO_INCREMENT) is normalised for SQLite.
+    $sources = [
+        $dbDir . '/_seed_body.sql',
+        $dbDir . '/mysql/03_seed_expansion.sql',
+        $dbDir . '/mysql/07_migration_more_perfumes.sql',
+    ];
+    foreach ($sources as $file) {
+        $sql = file_get_contents($file);
+        $sql = preg_replace('/^--.*$/m', '', $sql);
+        $sql = str_ireplace('INSERT IGNORE INTO', 'INSERT OR IGNORE INTO', $sql);
+        foreach (array_filter(array_map('trim', explode(';', $sql))) as $stmt) {
+            if (stripos($stmt, 'ALTER TABLE') === 0) {
+                continue; // AUTO_INCREMENT resync -- meaningless once autoincrement rowids already cover it
+            }
+            $pdo->exec($stmt);
+        }
     }
 } else {
     $pdo = new PDO('sqlite:' . $dbPath);

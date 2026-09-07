@@ -53,6 +53,16 @@ include('Includes/header.php');
                         <input class="input" id="p-qty" name="qty" type="number" min="0" step="1" required placeholder="24">
                     </div>
 
+                    <div class="field">
+                        <label for="p-gender">Marketed for</label>
+                        <select class="select" id="p-gender" name="gender">
+                            <option value="unisex" selected>Unisex</option>
+                            <option value="men">Men</option>
+                            <option value="women">Women</option>
+                        </select>
+                        <span class="field__hint">Drives the collection page's gender filter.</span>
+                    </div>
+
                 </div>
             </div>
         </section>

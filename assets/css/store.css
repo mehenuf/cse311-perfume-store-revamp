@@ -490,21 +490,51 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .hero__plate:nth-child(3) { grid-column: 5 / 7; grid-row: 4 / 7; border-color: var(--line-gold); }
 
 /* --------------------------------------------------------------------------
-   6a. Collection filter bar — search, sort and a couple of toggle chips
-       above a card grid. Client-side only: it shows/hides and reorders the
-       cards already in the DOM, so it works identically on the full
+   6a. Collection filters — a sidebar of grouped controls beside the grid:
+       search, price range, brand, gender, availability, plus a sort control
+       over the grid itself. Client-side only: it shows/hides and reorders
+       the cards already in the DOM, so it works identically on the full
        collection, a brand page, the sale page and the featured page.
    -------------------------------------------------------------------------- */
-.filter-bar { display: grid; gap: var(--s-4); margin-bottom: var(--s-6); }
-.filter-bar__row { display: grid; gap: var(--s-3); }
-@media (min-width: 640px) { .filter-bar__row { grid-template-columns: 1fr 14rem; } }
-.filter-bar__search { position: relative; }
-.filter-bar__search .input { padding-inline-start: 2.6rem; }
-.filter-bar__search svg {
+.collection-layout { display: grid; gap: var(--s-6); }
+@media (min-width: 900px) {
+    .collection-layout { grid-template-columns: 15.5rem minmax(0, 1fr); align-items: start; gap: var(--s-8); }
+}
+
+.filters-toggle { margin-bottom: var(--s-5); }
+@media (min-width: 900px) { .filters-toggle { display: none; } }
+
+.filters-panel {
+    display: grid; gap: 0;
+    padding: var(--s-5); background: var(--surface); border: 1px solid var(--line);
+}
+/* [hidden] here is genuinely meant to hide the panel below the sidebar
+   breakpoint (the mobile "Filters" toggle drives it) -- restore that after
+   .filters-panel's own `display: grid` would otherwise win over the
+   browser default, then cancel it again at the width where the panel is
+   a permanent sidebar rather than a collapsible drawer. */
+.filters-panel[hidden] { display: none; }
+@media (min-width: 900px) {
+    .filters-panel { position: sticky; top: calc(var(--nav-h) + var(--s-6)); padding: 0; background: transparent; border: none; }
+    .filters-panel[hidden] { display: grid; }
+}
+
+.filters-panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding-bottom: var(--s-5); }
+.filters-panel__head h2 { font-size: var(--t-body); font-weight: 500; }
+
+.filter-group { display: grid; gap: var(--s-3); border: none; padding: var(--s-5) 0; margin: 0; border-top: 1px solid var(--line); }
+.filters-panel__head + .filter-group { padding-top: 0; border-top: none; }
+.filter-group__title { font-size: var(--t-micro); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); padding: 0; }
+
+.filter-search { position: relative; }
+.filter-search .input { padding-inline-start: 2.6rem; }
+.filter-search svg {
     position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
     width: 1rem; height: 1rem; color: var(--fg-faint); pointer-events: none;
 }
-.filter-bar__chips { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.sort-field { min-width: 12rem; }
 
 .chip {
     display: inline-flex; align-items: center; gap: var(--s-2);
@@ -522,6 +552,55 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .chip--reset { border-style: dashed; color: var(--fg-faint); }
 .chip--reset:hover { color: var(--danger); border-color: var(--danger); }
 .chip[hidden] { display: none; }
+
+/* Gender is a single choice, so its chips are radio inputs under the hood
+   (a real radiogroup for assistive tech) with the input itself visually
+   hidden and the label doing the chip styling. :has() reads the hidden
+   input's checked state straight from the label -- no JS needed just to
+   keep the pressed look in sync. */
+.chip--radio { position: relative; }
+.chip--radio:has(input:checked) {
+    background: color-mix(in srgb, var(--gold) 14%, transparent);
+    border-color: var(--gold); color: var(--gold);
+}
+.chip--radio:has(input:focus-visible) { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.filter-checklist { display: grid; gap: var(--s-2); max-height: 13rem; overflow-y: auto; padding-right: var(--s-2); }
+.filter-checkbox { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-sm); color: var(--fg-muted); cursor: pointer; }
+.filter-checkbox:hover { color: var(--fg); }
+.filter-checkbox input { accent-color: var(--gold); width: 15px; height: 15px; flex-shrink: 0; }
+
+.price-inputs { display: flex; align-items: center; gap: var(--s-2); }
+.price-inputs__field { text-align: center; padding-inline: var(--s-2); }
+.price-inputs__sep { color: var(--fg-faint); flex-shrink: 0; }
+
+.price-slider { position: relative; height: 1.5rem; display: flex; align-items: center; }
+.price-slider__track { position: absolute; left: 0; right: 0; height: 3px; background: var(--line-strong); border-radius: var(--r-pill); }
+.price-slider__fill { position: absolute; height: 3px; background: var(--gold); border-radius: var(--r-pill); }
+.price-slider__input {
+    position: absolute; left: 0; right: 0; width: 100%; margin: 0;
+    background: transparent; -webkit-appearance: none; appearance: none; pointer-events: none;
+}
+.price-slider__input::-webkit-slider-runnable-track { background: transparent; -webkit-appearance: none; }
+.price-slider__input::-moz-range-track { background: transparent; }
+.price-slider__input::-webkit-slider-thumb {
+    -webkit-appearance: none; pointer-events: auto;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--gold); border: 2px solid var(--ink-raised);
+    box-shadow: var(--shadow-1); cursor: pointer;
+}
+.price-slider__input::-moz-range-thumb {
+    pointer-events: auto; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--gold); border: 2px solid var(--ink-raised); box-shadow: var(--shadow-1); cursor: pointer;
+}
+.price-slider__input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--gold); outline-offset: 2px; }
+.price-slider__input:focus-visible::-moz-range-thumb { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* The two thumbs share one track and can end up at the same spot (a
+   one-point range, or both pushed to an edge). Whichever one the visitor
+   is actually touching rises above its sibling so it stays grabbable. */
+.price-slider__input:focus, .price-slider__input:active { z-index: 1; }
+
+.collection-main__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-4); margin-bottom: var(--s-6); }
 
 /* --------------------------------------------------------------------------
    7. Product card — a hairline grid, not floating cards

@@ -11,7 +11,10 @@ $pricing = perfumePricing($p);
          data-notes="<?= e(strtolower($p['perfume_notes'] ?? '')) ?>"
          data-price="<?= (float) $pricing['final'] ?>"
          data-in-stock="<?= (int) $p['qty'] > 0 ? '1' : '0' ?>"
-         data-on-sale="<?= $pricing['active'] ? '1' : '0' ?>">
+         data-on-sale="<?= $pricing['active'] ? '1' : '0' ?>"
+         data-featured="<?= (int) ($p['trending'] ?? 0) === 1 ? '1' : '0' ?>"
+         data-gender="<?= e($p['gender'] ?? 'unisex') ?>"
+         data-brand="<?= e(brandSlugOf($p['name']) ?? '') ?>">
     <div class="product__media">
         <?php if (trim($p['image_path']) !== '') { ?>
             <img src="<?= $basePath ?>images/<?= e($p['image_path']) ?>"

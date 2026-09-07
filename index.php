@@ -194,26 +194,6 @@ include('includes/header.php');
     </div>
 </section>
 
-<!-- Full catalogue entry point -->
-<section class="section shell">
-    <div class="section-head">
-        <div>
-            <h2>The full shelf</h2>
-            <p>Everything currently in stock, from the entry-level workhorses to the niche heavyweights.</p>
-        </div>
-        <a class="btn btn--ghost" href="perfumes.php">See all <?= $publishedCount ?></a>
-    </div>
-
-    <?php
-    $shelf = mysqli_query($con,
-        "SELECT * FROM perfumes WHERE status = 1 ORDER BY price DESC LIMIT 8");
-    if ($shelf && mysqli_num_rows($shelf) > 0) { ?>
-        <div class="card-grid card-grid--4">
-            <?php foreach ($shelf as $p) { include('includes/product-card.php'); } ?>
-        </div>
-    <?php } ?>
-</section>
-
 <?php
 include('includes/outro.php');
 include('includes/footer.php');

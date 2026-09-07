@@ -73,6 +73,13 @@ function readDiscountFields()
     return [$percent, $starts, $ends];
 }
 
+/** The gender field, constrained to the same set as the schema's CHECK constraint. */
+function readGenderField()
+{
+    $gender = $_POST['gender'] ?? 'unisex';
+    return in_array($gender, ['men', 'women', 'unisex'], true) ? $gender : 'unisex';
+}
+
 if (isset($_POST['addperfume_btn'])) {
     $name          = $_POST['name'];
     $perfume_notes = $_POST['perfume_notes'];
@@ -83,6 +90,7 @@ if (isset($_POST['addperfume_btn'])) {
     $trending      = isset($_POST['trending']) ? 1 : 0;
     $status        = isset($_POST['status']) ? 1 : 0;
     list($discount_percent, $discount_starts, $discount_ends) = readDiscountFields();
+    $gender = readGenderField();
 
     // Absolute upload directory, so it resolves no matter what the current
     // working directory is on the host.
@@ -94,11 +102,11 @@ if (isset($_POST['addperfume_btn'])) {
     $stmt = mysqli_prepare($con,
         "INSERT INTO perfumes
             (name, perfume_notes, description, volume, qty, image_path, price, trending, status,
-             discount_percent, discount_starts_at, discount_ends_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    mysqli_stmt_bind_param($stmt, 'ssssisdiiiss',
+             discount_percent, discount_starts_at, discount_ends_at, gender)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    mysqli_stmt_bind_param($stmt, 'ssssisdiiisss',
         $name, $perfume_notes, $description, $volume, $qty, $img_path, $price, $trending, $status,
-        $discount_percent, $discount_starts, $discount_ends);
+        $discount_percent, $discount_starts, $discount_ends, $gender);
     $add_query_run = mysqli_stmt_execute($stmt);
 
     if ($add_query_run) {
@@ -121,6 +129,7 @@ if (isset($_POST['addperfume_btn'])) {
     $trending      = isset($_POST['trending']) ? 1 : 0;
     $status        = isset($_POST['status']) ? 1 : 0;
     list($discount_percent, $discount_starts, $discount_ends) = readDiscountFields();
+    $gender = readGenderField();
 
     $path        = __DIR__ . '/../../images';
     $hasNewImage = isRealImage($_FILES['image_path']['tmp_name'] ?? '');
@@ -131,11 +140,11 @@ if (isset($_POST['addperfume_btn'])) {
         "UPDATE perfumes SET
             name = ?, perfume_notes = ?, description = ?, volume = ?,
             image_path = ?, price = ?, qty = ?, trending = ?, status = ?,
-            discount_percent = ?, discount_starts_at = ?, discount_ends_at = ?
+            discount_percent = ?, discount_starts_at = ?, discount_ends_at = ?, gender = ?
          WHERE id = ?");
-    mysqli_stmt_bind_param($stmt, 'sssssdiiiissi',
+    mysqli_stmt_bind_param($stmt, 'sssssdiiiisssi',
         $name, $perfume_notes, $description, $volume, $re_image, $price, $qty, $trending, $status,
-        $discount_percent, $discount_starts, $discount_ends, $get_id);
+        $discount_percent, $discount_starts, $discount_ends, $gender, $get_id);
     $update_query_run = mysqli_stmt_execute($stmt);
 
     if ($update_query_run) {

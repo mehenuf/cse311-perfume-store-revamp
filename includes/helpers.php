@@ -247,6 +247,27 @@ if (!function_exists('brandList')) {
     }
 }
 
+if (!function_exists('brandListAlphabetical')) {
+    /**
+     * brandList(), sorted by label rather than by curation order.
+     *
+     * brandList() itself stays in curation order on purpose -- the
+     * homepage's 6-tile teaser deliberately leads with the best-known
+     * houses. Every actual *directory* of houses (the nav's Houses menu,
+     * its mobile drawer, the footer, and the all-houses page) is something
+     * a visitor scans to find one name, which alphabetical order serves
+     * far better than "whichever six were picked for the homepage".
+     */
+    function brandListAlphabetical()
+    {
+        $all = brandList();
+        uasort($all, function ($a, $b) {
+            return strcasecmp($a['label'], $b['label']);
+        });
+        return $all;
+    }
+}
+
 if (!function_exists('brandBySlug')) {
     /** One brand, or null when the slug is unknown. */
     function brandBySlug($slug)
@@ -272,6 +293,35 @@ if (!function_exists('houseOf')) {
         }
         $first = strtok($productName, ' ');
         return $first !== false ? $first : $productName;
+    }
+}
+
+if (!function_exists('brandSlugOf')) {
+    /**
+     * The registry slug a product belongs to (e.g. 'dior'), or null when no
+     * pattern matches. Same matching rule as houseOf(), just returning the
+     * key instead of the label -- used to tag each product card with its
+     * house for the collection filter's brand checklist.
+     */
+    function brandSlugOf($productName)
+    {
+        $needle = ' ' . strtolower($productName) . ' ';
+        foreach (brandList() as $slug => $brand) {
+            $pattern = str_replace('%', '', strtolower($brand['pattern']));
+            if ($pattern !== '' && strpos($needle, $pattern) !== false) {
+                return $slug;
+            }
+        }
+        return null;
+    }
+}
+
+if (!function_exists('genderLabel')) {
+    /** The display label for a perfumes.gender value, falling back safely. */
+    function genderLabel($gender)
+    {
+        $map = ['men' => 'Men', 'women' => 'Women', 'unisex' => 'Unisex'];
+        return isset($map[$gender]) ? $map[$gender] : 'Unisex';
     }
 }
 

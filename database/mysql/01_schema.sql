@@ -64,6 +64,10 @@ CREATE TABLE perfumes (
     discount_percent   TINYINT UNSIGNED NOT NULL DEFAULT 0,
     discount_starts_at TIMESTAMP            NULL,
     discount_ends_at   TIMESTAMP            NULL,
+    -- Who the product is marketed for -- the collection page's gender
+    -- filter reads this directly. 'unisex' is the safe default for a
+    -- product added without picking one.
+    gender        VARCHAR(10)    NOT NULL DEFAULT 'unisex',
     created_at    TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT pk_perfumes       PRIMARY KEY (id),
@@ -72,7 +76,8 @@ CREATE TABLE perfumes (
     CONSTRAINT ck_perfumes_discount_percent CHECK (discount_percent BETWEEN 0 AND 90),
     CONSTRAINT ck_perfumes_discount_window CHECK (
         discount_ends_at IS NULL OR discount_starts_at IS NULL OR discount_ends_at > discount_starts_at
-    )
+    ),
+    CONSTRAINT ck_perfumes_gender CHECK (gender IN ('men', 'women', 'unisex'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_perfumes_status   ON perfumes (status);

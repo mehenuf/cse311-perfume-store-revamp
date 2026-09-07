@@ -25,7 +25,8 @@ CREATE TABLE perfumes (
     status        INTEGER NOT NULL DEFAULT 1,
     discount_percent   INTEGER NOT NULL DEFAULT 0,
     discount_starts_at TIMESTAMP,
-    discount_ends_at   TIMESTAMP
+    discount_ends_at   TIMESTAMP,
+    gender             VARCHAR(10) NOT NULL DEFAULT 'unisex'
 );
 
 CREATE TABLE cart (

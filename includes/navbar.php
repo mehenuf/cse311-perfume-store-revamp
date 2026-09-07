@@ -26,7 +26,7 @@ if ($isAuthed && isset($_SESSION['auth_user']['user_id'])) {
     $cartCount = array_sum($_SESSION['guest_cart']);
 }
 
-$navBrands = brandList();
+$navBrands = brandListAlphabetical();
 
 /** Marks the active link for both styling and assistive tech. */
 function navCurrent($page, $currentPage)

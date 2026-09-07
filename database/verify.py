@@ -71,6 +71,8 @@ def main():
                 db.executescript(m7)
             if os.path.isfile(os.path.join(HERE, "mysql", "08_migration_fix_mismatched_images.sql")):
                 db.executescript(io.open(os.path.join(HERE, "mysql", "08_migration_fix_mismatched_images.sql"), encoding="utf-8").read())
+            if os.path.isfile(os.path.join(HERE, "mysql", "09_migration_restore_images.sql")):
+                db.executescript(io.open(os.path.join(HERE, "mysql", "09_migration_restore_images.sql"), encoding="utf-8").read())
             total = db.execute("SELECT COUNT(*) FROM perfumes").fetchone()[0]
             check("expansion seed applies on top of the base seed (%d products)" % total, True)
         except Exception as e:

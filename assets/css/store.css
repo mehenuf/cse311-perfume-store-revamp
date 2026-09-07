@@ -677,6 +677,11 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .rail[data-dragging='true'] { cursor: grabbing; scroll-snap-type: none; }
 .rail[data-dragging='true'] * { pointer-events: none; }
 
+/* Pairs a rail's "See all" link with its prev/next arrows in one header
+   slot, so every homepage section reads the same way: title and lede on
+   the left, the way to see more on the right, at the same baseline. */
+.section-head__actions { display: flex; align-items: center; gap: var(--s-4); }
+
 .rail-nav { display: none; gap: var(--s-2); }
 @media (min-width: 768px) { .rail-nav { display: flex; } }
 .rail-btn {

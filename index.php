@@ -68,14 +68,19 @@ include('includes/header.php');
                 <h2>Moving fastest right now</h2>
                 <p>The bottles our customers keep coming back for.</p>
             </div>
-            <div class="rail-nav">
-                <button class="rail-btn" type="button" data-rail-prev="trending-rail" aria-label="Scroll left">
-                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                </button>
-                <button class="rail-btn" type="button" data-rail-next="trending-rail" aria-label="Scroll right">
-                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                </button>
-            </div>
+            <?php if ($trending && mysqli_num_rows($trending) > 0) { ?>
+                <div class="section-head__actions">
+                    <a class="btn btn--ghost" href="featured.php">See all featured</a>
+                    <div class="rail-nav">
+                        <button class="rail-btn" type="button" data-rail-prev="trending-rail" aria-label="Scroll left">
+                            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                        </button>
+                        <button class="rail-btn" type="button" data-rail-next="trending-rail" aria-label="Scroll right">
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            <?php } ?>
         </div>
     </div>
 
@@ -84,9 +89,6 @@ include('includes/header.php');
             <div class="rail" id="trending-rail" data-rail data-rail-autoplay tabindex="0" aria-label="Trending fragrances">
                 <?php foreach ($trending as $p) { include('includes/product-card.php'); } ?>
             </div>
-            <p style="margin-top:var(--s-5)">
-                <a class="btn btn--ghost" href="featured.php">See all featured</a>
-            </p>
         <?php } else { ?>
             <div class="empty">
                 <span class="empty__icon"><i class="fa-solid fa-wind" aria-hidden="true"></i></span>
@@ -113,13 +115,16 @@ include('includes/header.php');
                 <h2>On sale now</h2>
                 <p>Time-boxed prices on bottles moving fast -- while the discount lasts.</p>
             </div>
-            <div class="rail-nav">
-                <button class="rail-btn" type="button" data-rail-prev="sale-rail" aria-label="Scroll left">
-                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                </button>
-                <button class="rail-btn" type="button" data-rail-next="sale-rail" aria-label="Scroll right">
-                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                </button>
+            <div class="section-head__actions">
+                <a class="btn btn--ghost" href="discounts.php">See all on sale</a>
+                <div class="rail-nav">
+                    <button class="rail-btn" type="button" data-rail-prev="sale-rail" aria-label="Scroll left">
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    </button>
+                    <button class="rail-btn" type="button" data-rail-next="sale-rail" aria-label="Scroll right">
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -128,9 +133,6 @@ include('includes/header.php');
         <div class="rail" id="sale-rail" data-rail data-rail-autoplay tabindex="0" aria-label="Discounted fragrances">
             <?php foreach ($onSale as $p) { include('includes/product-card.php'); } ?>
         </div>
-        <p style="margin-top:var(--s-5)">
-            <a class="btn btn--ghost" href="discounts.php">See all on sale</a>
-        </p>
     </div>
 </section>
 <?php } ?>

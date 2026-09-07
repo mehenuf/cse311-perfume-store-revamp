@@ -10,15 +10,15 @@ include('includes/header.php');
 $houses = brandListAlphabetical();
 ?>
 
-<?= crumb(['Home' => 'index.php', 'Houses' => null]) ?>
+<?= crumb(['Home' => 'index.php', 'All houses' => null]) ?>
 
 <section class="section shell">
     <header class="section-head">
         <div>
-            <h1 style="font-size:var(--t-h1)">Houses worth knowing</h1>
-            <p>From the reference designer signatures to the niche bottles that outlast them.</p>
+            <h1 style="font-size:var(--t-h1)">All houses</h1>
+            <p>Every fragrance house we carry, from the reference designer signatures to the niche bottles that outlast them.</p>
         </div>
-        <p style="color:var(--fg-faint);font-size:var(--t-sm);margin:0"><?= count($houses) ?> houses</p>
+        <p class="section-head__count"><?= count($houses) ?> houses</p>
     </header>
 
     <div class="brand-grid brand-grid--all">

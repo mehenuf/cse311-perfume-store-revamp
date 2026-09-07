@@ -7,7 +7,7 @@ $pageDescription = 'Fragrances for him at Perfume Store, from designer signature
 include('includes/header.php');
 
 $collectionTitle  = 'For him';
-$collectionLede   = "Men's fragrances, plus every unisex bottle in the catalogue -- it suits this shelf too.";
+$collectionLede   = 'Designer and niche fragrance for him, plus the unisex bottles that wear just as well.';
 $collectionCrumbs = ['Home' => 'index.php', 'For him' => null];
 $collectionRows   = getByGender('perfumes', 'men');
 $collectionShowGenderFilter = false; // the page is already the gender filter

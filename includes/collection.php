@@ -89,7 +89,7 @@ echo crumb($collectionCrumbs);
             <aside class="filters-panel" id="filters-panel-<?= $uid ?>" data-filters-panel>
                 <div class="filters-panel__head">
                     <h2>Filters</h2>
-                    <button type="button" class="chip chip--reset" data-filter-reset hidden>Clear all</button>
+                    <button type="button" class="chip chip--reset" data-filter-reset hidden>Clear filters</button>
                 </div>
 
                 <div class="filter-group">

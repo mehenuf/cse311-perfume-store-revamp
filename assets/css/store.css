@@ -490,6 +490,40 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .hero__plate:nth-child(3) { grid-column: 5 / 7; grid-row: 4 / 7; border-color: var(--line-gold); }
 
 /* --------------------------------------------------------------------------
+   6a. Collection filter bar — search, sort and a couple of toggle chips
+       above a card grid. Client-side only: it shows/hides and reorders the
+       cards already in the DOM, so it works identically on the full
+       collection, a brand page, the sale page and the featured page.
+   -------------------------------------------------------------------------- */
+.filter-bar { display: grid; gap: var(--s-4); margin-bottom: var(--s-6); }
+.filter-bar__row { display: grid; gap: var(--s-3); }
+@media (min-width: 640px) { .filter-bar__row { grid-template-columns: 1fr 14rem; } }
+.filter-bar__search { position: relative; }
+.filter-bar__search .input { padding-inline-start: 2.6rem; }
+.filter-bar__search svg {
+    position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+    width: 1rem; height: 1rem; color: var(--fg-faint); pointer-events: none;
+}
+.filter-bar__chips { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; }
+
+.chip {
+    display: inline-flex; align-items: center; gap: var(--s-2);
+    padding: .5rem 1rem;
+    background: transparent; border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+    color: var(--fg-muted); font-size: var(--t-xs); font-weight: 500; letter-spacing: .02em;
+    cursor: pointer; white-space: nowrap;
+    transition: border-color var(--d-1) var(--ease), color var(--d-1) var(--ease), background var(--d-1) var(--ease);
+}
+.chip:hover { border-color: var(--gold); color: var(--fg); }
+.chip[aria-pressed='true'] {
+    background: color-mix(in srgb, var(--gold) 14%, transparent);
+    border-color: var(--gold); color: var(--gold);
+}
+.chip--reset { border-style: dashed; color: var(--fg-faint); }
+.chip--reset:hover { color: var(--danger); border-color: var(--danger); }
+.chip[hidden] { display: none; }
+
+/* --------------------------------------------------------------------------
    7. Product card — a hairline grid, not floating cards
    -------------------------------------------------------------------------- */
 .card-grid {
@@ -505,6 +539,11 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     background: var(--ink); transition: background var(--d-2) var(--ease);
 }
 .product:hover { background: var(--surface); }
+/* .product's own display:flex would otherwise win over the browser's
+   default [hidden]{display:none} -- author styles always beat the
+   user-agent stylesheet, regardless of specificity. Filtered-out cards
+   need this to actually disappear rather than render as an empty flex box. */
+.product[hidden], .card-grid[hidden] { display: none; }
 
 .product__media { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--ink-sunken); }
 .product__media img {
@@ -585,7 +624,11 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     transition: border-color var(--d-2) var(--ease);
 }
 @media (min-width: 1024px) {
-    .brand-tile:nth-child(1), .brand-tile:nth-child(6) { grid-column: span 2; }
+    /* Feature tiles 1 and 6 only in the homepage's fixed 6-up teaser --
+       the full house directory (.brand-grid--all) has no natural "middle",
+       so every tile there stays the same size. */
+    .brand-grid:not(.brand-grid--all) .brand-tile:nth-child(1),
+    .brand-grid:not(.brand-grid--all) .brand-tile:nth-child(6) { grid-column: span 2; }
     .brand-tile { min-height: 264px; }
 }
 .brand-tile:hover { border-color: var(--line-gold); }
@@ -776,6 +819,7 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     display: grid; justify-items: center; gap: var(--s-5); text-align: center;
     padding: var(--s-9) var(--s-5); border: 1px solid var(--line); background: var(--surface);
 }
+.empty[hidden] { display: none; }
 .empty__icon {
     width: 56px; height: 56px; display: grid; place-items: center;
     border: 1px solid var(--line-gold); border-radius: var(--r-pill); color: var(--gold);

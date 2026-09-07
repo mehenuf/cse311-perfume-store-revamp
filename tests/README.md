@@ -35,6 +35,25 @@ launch. What this suite is good at catching:
   whether or not the specific payload is exploitable
 - cross-user access on cart rows (IDOR)
 
+## Previewing the whole app without MySQL
+
+`support/localserver_bootstrap.php` reuses the same shim to run the *entire*
+site -- storefront and admin -- against a throwaway SQLite database, seeded
+from `database/_seed_body.sql`. Useful for a quick visual pass when a real
+MySQL server isn't handy:
+
+```
+php -d auto_prepend_file=tests/support/localserver_bootstrap.php -S localhost:8000
+```
+
+If your PHP build loads the real `mysqli` extension, it will conflict with
+the shim's `mysqli_*` function definitions ("Cannot redeclare"); run with an
+ini that has `extension=mysqli` disabled. Log in with any seed account, e.g.
+`mehenuf` / `admin123` (admin) or `arif` / `arif1234` (customer). This is a
+dev convenience only, like `tools/build_preview.py` -- not part of the
+deployed app, and not a substitute for the real MySQL pass in the top-level
+`README.md`.
+
 ## Adding a scenario
 
 Copy the shape of an existing file in `scenarios/`: boot a fresh SQLite

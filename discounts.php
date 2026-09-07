@@ -10,6 +10,7 @@ $collectionTitle  = 'On sale now';
 $collectionLede   = 'Time-boxed prices on bottles moving fast -- while the discount lasts.';
 $collectionCrumbs = ['Home' => 'index.php', 'On sale' => null];
 $collectionRows   = getActiveDiscounts('perfumes');
+$collectionShowSaleFilter = false; // every row here is already on sale
 
 include('includes/collection.php');
 include('includes/outro.php');

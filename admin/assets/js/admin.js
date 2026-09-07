@@ -150,7 +150,39 @@
         });
     }
 
-    function boot() { initRail(); initConfirm(); initImagePreview(); initImageArrival(); initInlineEdit(); }
+    /* ---- landing back on the list after an edit ----
+       code.php redirects a saved edit to perfume.php?updated=<id>#perfume-<id>.
+       The row already carries data-just-updated (server-rendered, so it works
+       with JS disabled too) which drives the CSS wash animation; this just
+       scrolls it into view under the sticky header and then drops the
+       ?updated= param so a later refresh doesn't replay the highlight. */
+    function initJustUpdated() {
+        var row = document.querySelector('[data-just-updated]');
+        if (!row) return;
+        row.scrollIntoView({ block: 'center', behavior: 'auto' });
+        window.setTimeout(function () { row.removeAttribute('data-just-updated'); }, 2500);
+        if (window.history && window.history.replaceState) {
+            var url = new URL(window.location.href);
+            url.searchParams.delete('updated');
+            window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+        }
+    }
+
+    /* ---- sticky actions column: show the seam only once there is
+       something actually scrolled under it, not all the time ---- */
+    function initStickyActionsSeam() {
+        var wraps = document.querySelectorAll('.table-wrap');
+        wraps.forEach(function (wrap) {
+            function update() { wrap.dataset.scrolled = String(wrap.scrollLeft > 1); }
+            wrap.addEventListener('scroll', update, { passive: true });
+            update();
+        });
+    }
+
+    function boot() {
+        initRail(); initConfirm(); initImagePreview(); initImageArrival(); initInlineEdit();
+        initJustUpdated(); initStickyActionsSeam();
+    }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', boot);

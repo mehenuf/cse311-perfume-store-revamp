@@ -84,6 +84,9 @@ include('includes/header.php');
             <div class="rail" id="trending-rail" data-rail data-rail-autoplay tabindex="0" aria-label="Trending fragrances">
                 <?php foreach ($trending as $p) { include('includes/product-card.php'); } ?>
             </div>
+            <p style="margin-top:var(--s-5)">
+                <a class="btn btn--ghost" href="featured.php">See all featured</a>
+            </p>
         <?php } else { ?>
             <div class="empty">
                 <span class="empty__icon"><i class="fa-solid fa-wind" aria-hidden="true"></i></span>
@@ -139,6 +142,7 @@ include('includes/header.php');
             <h2>Houses worth knowing</h2>
             <p>From the reference designer signatures to the niche bottles that outlast them.</p>
         </div>
+        <a class="btn btn--ghost" href="brands.php">See all houses</a>
     </div>
 
     <div class="brand-grid">

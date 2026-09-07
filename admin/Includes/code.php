@@ -146,7 +146,7 @@ if (isset($_POST['addperfume_btn'])) {
                 unlink($path . '/' . $old_image);
             }
         }
-        redirect("../edit-perfume.php?id=$get_id", "The edit was saved successfully");
+        redirect("../perfume.php?updated=$get_id#perfume-$get_id", "The edit was saved successfully");
     } else {
         redirect("../edit-perfume.php?id=$get_id", "An error was occured!");
     }

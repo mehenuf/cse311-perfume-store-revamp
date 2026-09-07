@@ -6,6 +6,7 @@ include('../functions/myfunctions.php');
 require_once('../includes/helpers.php');
 
 $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name ASC");
+$justUpdatedId = isset($_GET['updated']) ? (int) $_GET['updated'] : 0;
 ?>
 
 <div class="page-head">
@@ -39,7 +40,7 @@ $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name AS
                             <th scope="col" class="num">Stock</th>
                             <th scope="col">Discount</th>
                             <th scope="col">Visibility</th>
-                            <th scope="col"><span class="visually-hidden">Actions</span></th>
+                            <th scope="col" class="table__actions-head"><span class="visually-hidden">Actions</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,7 +50,8 @@ $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name AS
                             $qtyStyle = $qty === 0 ? 'color:var(--danger)' : ($qty <= 12 ? 'color:var(--warn)' : '');
                             $pricing = perfumePricing($item);
                         ?>
-                            <tr data-inline-edit-row data-perfume-id="<?= (int) $item['id'] ?>">
+                            <tr id="perfume-<?= (int) $item['id'] ?>" data-inline-edit-row data-perfume-id="<?= (int) $item['id'] ?>"
+                                <?= $justUpdatedId === (int) $item['id'] ? 'data-just-updated' : '' ?>>
                                 <td style="width: 84px; padding-right: 0;">
                                     <?php if (trim($item['image_path']) !== '') { ?>
                                         <img class="table__thumb" src="../images/<?= e($item['image_path']) ?>" alt="" loading="lazy">
@@ -93,11 +95,12 @@ $rows = mysqli_query($con, "SELECT * FROM perfumes ORDER BY status DESC, name AS
                                     </span>
                                 </td>
                                 <td class="table__actions">
-                                    <button class="btn btn--ghost btn--sm" type="button" data-inline-save>
-                                        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Save</span> Save
-                                    </button>
-                                    <a class="btn btn--ghost btn--sm" href="edit-perfume.php?id=<?= (int) $item['id'] ?>">Edit</a>
+                                    <div class="table__actions-inner">
+                                        <button class="btn btn--ghost btn--sm" type="button" data-inline-save>
+                                            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save
+                                        </button>
+                                        <a class="btn btn--ghost btn--sm" href="edit-perfume.php?id=<?= (int) $item['id'] ?>">Edit</a>
+                                    </div>
                                 </td>
                             </tr>
                         <?php } ?>

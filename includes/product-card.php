@@ -4,8 +4,14 @@
  * The whole card is the link target; the price and stock stay readable.
  */
 list($stockText, $stockLow) = stockLabel($p['qty']);
+$pricing = perfumePricing($p);
 ?>
-<article class="product" data-product data-reveal="rise">
+<article class="product" data-product data-reveal="rise"
+         data-name="<?= e(strtolower($p['name'])) ?>"
+         data-notes="<?= e(strtolower($p['perfume_notes'] ?? '')) ?>"
+         data-price="<?= (float) $pricing['final'] ?>"
+         data-in-stock="<?= (int) $p['qty'] > 0 ? '1' : '0' ?>"
+         data-on-sale="<?= $pricing['active'] ? '1' : '0' ?>">
     <div class="product__media">
         <?php if (trim($p['image_path']) !== '') { ?>
             <img src="<?= $basePath ?>images/<?= e($p['image_path']) ?>"

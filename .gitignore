@@ -279,3 +279,10 @@ tests/.tmp_*.sqlite-shm
 docs/catalog_expansion_summary.md
 docs/session_memory_log.md
 docs/QA_Report.md
+
+# ---------------------------------------------------------------
+# 15. Local dev-server scratch (tests/support/localserver_bootstrap.php)
+#     A machine-specific php.ini copy and its SQLite database -- never
+#     something to commit or share between machines.
+# ---------------------------------------------------------------
+tests/support/local_php.ini

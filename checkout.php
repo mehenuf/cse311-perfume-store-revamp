@@ -4,6 +4,7 @@ include('functions/functions.php');
 
 $pageTitle       = 'Checkout';
 $pageDescription = 'Confirm your delivery details and place your order.';
+$csrfToken       = csrfToken();
 include('includes/header.php');
 
 $cartItems = displayCart();
@@ -24,7 +25,7 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
     <div class="section-head">
         <div>
             <h1 style="font-size:var(--t-h1)">Checkout</h1>
-            <p>Cash on delivery. You pay the courier when the bottle reaches you.</p>
+            <p>Choose how you would like to pay, then confirm your delivery details.</p>
         </div>
     </div>
 
@@ -39,7 +40,8 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
 
     <?php } else { ?>
 
-        <form action="functions/placeorder.php" method="post">
+        <form action="functions/placeorder.php" method="post" data-checkout-form>
+            <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
             <div class="cart-layout">
 
                 <div class="panel">
@@ -83,6 +85,66 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
                     </div>
                 </div>
 
+                <div class="panel">
+                    <fieldset style="border:0;padding:0;margin:0">
+                        <legend style="display:block;width:100%;padding:0 0 var(--s-5);margin:0 0 var(--s-6);
+                                       border-bottom:1px solid var(--line);
+                                       font-size:var(--t-h3);font-family:'Cormorant Garamond', ui-serif, Georgia, serif;
+                                       font-weight:300;line-height:1.06">
+                            Payment method
+                        </legend>
+
+                        <div class="form-grid" style="gap:var(--s-3)">
+                            <label class="field payment-option">
+                                <input type="radio" name="payment_method" value="cod" checked
+                                       data-checkout-action="functions/placeorder.php"
+                                       data-checkout-summary="Cash on delivery">
+                                <span>
+                                    <strong style="display:block">Cash on delivery</strong>
+                                    <span class="field__hint">Pay the courier when the bottle reaches you.</span>
+                                </span>
+                            </label>
+
+                            <label class="field payment-option">
+                                <input type="radio" name="payment_method" value="stripe"
+                                       data-checkout-action="functions/pay-stripe.php"
+                                       data-checkout-summary="Card, Google Pay or Apple Pay">
+                                <span>
+                                    <strong style="display:block">Card, Google Pay or Apple Pay</strong>
+                                    <span class="field__hint">Pay securely on Stripe's checkout page.</span>
+                                </span>
+                            </label>
+
+                            <label class="field payment-option">
+                                <input type="radio" name="payment_method" value="sslcommerz"
+                                       data-checkout-action="functions/pay-sslcommerz.php"
+                                       data-checkout-summary="bKash, Rocket, Nagad or Bangla QR">
+                                <span>
+                                    <strong style="display:block">bKash, Rocket, Nagad or Bangla QR</strong>
+                                    <span class="field__hint">Pay securely on SSLCommerz's checkout page.</span>
+                                </span>
+                            </label>
+
+                            <label class="field payment-option">
+                                <input type="radio" name="payment_method" value="coinbase"
+                                       data-checkout-action="functions/pay-coinbase.php"
+                                       data-checkout-summary="Crypto">
+                                <span>
+                                    <strong style="display:block">Crypto</strong>
+                                    <span class="field__hint">Pay with Bitcoin and other coins via Coinbase Commerce.</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <noscript>
+                            <p class="field__hint" style="margin-top:var(--s-3)">
+                                JavaScript is needed to check out with an online payment method. Without it,
+                                orders are placed as Cash on delivery.
+                            </p>
+                        </noscript>
+                    </fieldset>
+                </div>
+
                 <aside class="panel summary">
                     <div class="panel__head">
                         <h2 style="font-size:var(--t-h3)">Your order</h2>
@@ -110,7 +172,7 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
 
                     <div class="summary__row" style="margin-top:var(--s-4)">
                         <span>Payment</span>
-                        <span>Cash on delivery</span>
+                        <span data-checkout-summary-label>Cash on delivery</span>
                     </div>
 
                     <div class="summary__total">
@@ -119,7 +181,7 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
                     </div>
 
                     <button class="btn btn--primary btn--lg btn--block" type="submit" name="placeorder"
-                            style="margin-top:var(--s-5)">
+                            data-checkout-submit style="margin-top:var(--s-5)">
                         Place order
                     </button>
                     <a class="btn btn--quiet btn--block" href="shoppingcart.php" style="margin-top:var(--s-2)">

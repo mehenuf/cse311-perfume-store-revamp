@@ -798,6 +798,11 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
    -------------------------------------------------------------------------- */
 .field { display: grid; gap: var(--s-2); }
 .field > label { font-size: var(--t-micro); letter-spacing: .12em; text-transform: uppercase; color: var(--fg-muted); }
+
+/* A single payment-method row (checkout.php): the radio sits beside its
+   label text, not stacked above it -- .field alone is display:grid, so
+   this needs an explicit flex layout of its own. */
+.payment-option { display: flex; flex-direction: row; align-items: flex-start; gap: var(--s-3); cursor: pointer; }
 .field__hint { font-size: var(--t-xs); color: var(--fg-faint); }
 .field__error { font-size: var(--t-xs); color: var(--danger); }
 
@@ -885,6 +890,11 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .badge[data-status='2'] { color: var(--gold);   border-color: var(--line-gold); }
 .badge[data-status='3'] { color: var(--ok);     border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
 .badge[data-status='4'] { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+
+.badge[data-payment-status='paid']     { color: var(--ok);     border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+.badge[data-payment-status='pending']  { color: var(--warn);   border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+.badge[data-payment-status='failed']   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+.badge[data-payment-status='refunded'] { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
 
 /* --------------------------------------------------------------------------
    14. Breadcrumb, empty, skeleton

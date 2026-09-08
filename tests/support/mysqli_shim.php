@@ -82,6 +82,8 @@ function mysqli_stmt_bind_param($stmt, $types, &...$params)
 
 function mysqli_stmt_execute($stmt) { return $stmt->pdoStmt->execute(); }
 
+function mysqli_stmt_affected_rows($stmt) { return $stmt->pdoStmt->rowCount(); }
+
 function mysqli_stmt_get_result($stmt)
 {
     return new ShimResult($stmt->pdoStmt->fetchAll(PDO::FETCH_ASSOC));

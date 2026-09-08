@@ -130,7 +130,13 @@ echo $isAuthed
                 </div>
                 <div>
                     <div style="color:var(--fg-faint);font-size:var(--t-xs)">Payment</div>
-                    <div><?= e($order['payment_mode']) ?></div>
+                    <div>
+                        <?= e($order['payment_mode']) ?>
+                        <span class="badge" data-payment-status="<?= e($order['payment_status'] ?? 'cod') ?>"
+                              style="margin-left:var(--s-2)">
+                            <?= e(ucfirst($order['payment_status'] ?? 'cod')) ?>
+                        </span>
+                    </div>
                 </div>
             </div>
 

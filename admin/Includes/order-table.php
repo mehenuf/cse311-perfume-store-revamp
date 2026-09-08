@@ -30,6 +30,7 @@
                             <th scope="col">Customer</th>
                             <th scope="col">Placed</th>
                             <th scope="col">Status</th>
+                            <th scope="col">Payment</th>
                             <th scope="col" class="num">Total</th>
                             <th scope="col"><span class="visually-hidden">Actions</span></th>
                         </tr>
@@ -47,6 +48,12 @@
                                     <span class="badge" data-status="<?= (int) $o['status'] ?>">
                                         <?= e(orderStatus($o['status'])) ?>
                                     </span>
+                                </td>
+                                <td>
+                                    <span class="badge" data-payment-status="<?= e($o['payment_status'] ?? 'cod') ?>">
+                                        <?= e(ucfirst($o['payment_status'] ?? 'cod')) ?>
+                                    </span>
+                                    <span class="table__sub"><?= e($o['payment_mode']) ?></span>
                                 </td>
                                 <td class="num"><?= taka($o['total_price']) ?></td>
                                 <td class="table__actions">

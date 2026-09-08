@@ -50,10 +50,16 @@ function getActiveOrders() {
 function validateTrackID($tracking_no){
     global $con;
 
+    // LEFT JOIN, not an inner join: a guest checkout's order has
+    // user_id IS NULL, which an inner join can never match against
+    // customer.id, so admin/order-history.php's "Open" link -- reachable
+    // for any guest order, COD or online-gateway -- would otherwise always
+    // report "Order not found" for one. username/id_email/id_name are
+    // simply NULL for a guest order, same as $order['user_id'] itself.
     $stmt = mysqli_prepare($con,
         "SELECT o.*, c.username as username, c.email as id_email, c.name as id_name
-         FROM orders o, customer c
-         WHERE o.user_id = c.id AND o.tracking_no = ?
+         FROM orders o LEFT JOIN customer c ON o.user_id = c.id
+         WHERE o.tracking_no = ?
          ORDER BY o.created_at ASC");
     mysqli_stmt_bind_param($stmt, 's', $tracking_no);
     mysqli_stmt_execute($stmt);

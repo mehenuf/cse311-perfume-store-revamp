@@ -121,7 +121,16 @@ $statuses = [0 => 'Processing', 1 => 'Completed', 2 => 'Shipped', 3 => 'Delivere
                     </div>
                     <div>
                         <dt>Payment</dt>
-                        <dd><?= e($order['payment_mode']) ?></dd>
+                        <dd>
+                            <?= e($order['payment_mode']) ?>
+                            <span class="badge" data-payment-status="<?= e($order['payment_status'] ?? 'cod') ?>"
+                                  style="margin-left:var(--s-2)">
+                                <?= e(ucfirst($order['payment_status'] ?? 'cod')) ?>
+                            </span>
+                            <?php if (!empty($order['gateway_ref'])) { ?>
+                                <span class="table__sub">Ref: <?= e($order['gateway_ref']) ?></span>
+                            <?php } ?>
+                        </dd>
                     </div>
                 </dl>
             </div>

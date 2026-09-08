@@ -48,7 +48,11 @@ CREATE TABLE orders (
     zipcode      VARCHAR(15),
     total_price  DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     payment_mode VARCHAR(30) NOT NULL DEFAULT 'COD',
-    payment_id   VARCHAR(50),
+    payment_id   VARCHAR(191),
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'cod',
+    gateway_ref    VARCHAR(120),
+    currency       VARCHAR(10) NOT NULL DEFAULT 'BDT',
+    paid_at        TIMESTAMP,
     status       INTEGER NOT NULL DEFAULT 0,
     created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -59,4 +63,16 @@ CREATE TABLE order_item (
     perfume_id  INTEGER NOT NULL REFERENCES perfumes(id),
     perfume_qty INTEGER NOT NULL DEFAULT 1,
     price       DECIMAL(10,2) NOT NULL DEFAULT 0.00
+);
+
+CREATE TABLE payment_events (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id     INTEGER NOT NULL REFERENCES orders(id),
+    gateway      VARCHAR(20) NOT NULL,
+    event_id     VARCHAR(150) NOT NULL,
+    event_type   VARCHAR(60) NOT NULL,
+    payload      TEXT,
+    received_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP,
+    UNIQUE (gateway, event_id)
 );

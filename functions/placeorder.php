@@ -8,6 +8,12 @@ if (!isset($_POST['placeorder'])) {
     exit;
 }
 
+if (!csrfVerify($_POST['csrf_token'] ?? null)) {
+    $_SESSION['message'] = 'Your session expired. Please try again.';
+    header('Location: ../checkout.php');
+    exit;
+}
+
 $name = $_POST['name'];
 $email = $_POST['email'];
 $contact = $_POST['contact'];

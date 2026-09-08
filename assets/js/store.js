@@ -821,6 +821,40 @@
     }
 
     /* ---------------------------------------------------------------------
+       Checkout — payment method chooser routes the one form to whichever
+       handler the selected method needs (functions/pay-stripe.php etc.),
+       and keeps the order-summary "Payment" line in sync. Without this
+       script the form still submits, just always as Cash on delivery —
+       see the <noscript> note in checkout.php.
+       --------------------------------------------------------------------- */
+    function initCheckoutPayment() {
+        var form = document.querySelector('[data-checkout-form]');
+        if (!form) return;
+
+        var radios = form.querySelectorAll('input[name="payment_method"]');
+        var summaryLabel = form.querySelector('[data-checkout-summary-label]');
+        var submitBtn = form.querySelector('[data-checkout-submit]');
+
+        function apply(radio) {
+            if (!radio) return;
+            form.setAttribute('action', radio.getAttribute('data-checkout-action'));
+            if (summaryLabel) {
+                summaryLabel.textContent = radio.getAttribute('data-checkout-summary');
+            }
+            if (submitBtn) {
+                submitBtn.textContent = radio.value === 'cod' ? 'Place order' : 'Continue to payment';
+            }
+        }
+
+        radios.forEach(function (radio) {
+            radio.addEventListener('change', function () { apply(radio); });
+        });
+
+        var checked = form.querySelector('input[name="payment_method"]:checked');
+        apply(checked);
+    }
+
+    /* ---------------------------------------------------------------------
        Boot
        --------------------------------------------------------------------- */
     function boot() {
@@ -833,6 +867,7 @@
         initSharedMedia();
         initRailDrift();
         initCollectionFilters();
+        initCheckoutPayment();
     }
 
     if (document.readyState === 'loading') {

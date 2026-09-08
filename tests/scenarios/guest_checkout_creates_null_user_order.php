@@ -19,6 +19,7 @@ $con = new stdClass();
 // which is exactly the bug this ordering avoids.
 session_start();
 $_SESSION['guest_cart'] = [1 => 2];
+$_SESSION['csrf_token'] = 'test-csrf-token';
 $_POST = [
     'placeorder' => '1',
     'name' => 'Guest Buyer',
@@ -26,6 +27,7 @@ $_POST = [
     'contact' => '+8801700000000',
     'zipcode' => '1205',
     'address' => 'House 1, Road 1, Dhaka',
+    'csrf_token' => 'test-csrf-token',
 ];
 
 shim_report(function () use ($pdo) {

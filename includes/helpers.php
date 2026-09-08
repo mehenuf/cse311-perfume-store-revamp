@@ -12,6 +12,32 @@ if (!function_exists('e')) {
     }
 }
 
+if (!function_exists('csrfToken')) {
+    /**
+     * One CSRF token per session, reused across requests (not per-form) so
+     * a customer with two tabs open doesn't get logged out of one by
+     * submitting the other. Needs session_start() already called by the
+     * including page, same as every other $_SESSION use in this app.
+     */
+    function csrfToken()
+    {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+}
+
+if (!function_exists('csrfVerify')) {
+    /** Timing-safe check of a submitted token against the session's own. */
+    function csrfVerify($submittedToken)
+    {
+        return isset($_SESSION['csrf_token'])
+            && is_string($submittedToken)
+            && hash_equals($_SESSION['csrf_token'], $submittedToken);
+    }
+}
+
 if (!function_exists('taka')) {
     /** Format a price in Bangladeshi Taka the way the storefront prints it. */
     function taka($amount)

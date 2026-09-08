@@ -37,6 +37,29 @@ return [
     // which can leak the hostname and username, so turn it off again after.
     'APP_DEBUG' => '0',
 
+    // The site's own public base URL, with no trailing slash. Needed to
+    // build the absolute success/cancel/webhook URLs handed to SSLCommerz,
+    // Stripe and Coinbase Commerce -- they redirect the customer back to a
+    // real, internet-reachable URL, not a relative path.
+    // 'APP_BASE_URL' => 'https://yourdomain.com',
+
+    // --- SSLCommerz (bKash, Rocket, Nagad, Bangla QR and local cards, all
+    //     through SSLCommerz's own hosted checkout page) --------------------
+    // Get sandbox credentials free at https://developer.sslcommerz.com/registration/
+    // 'SSLCOMMERZ_STORE_ID'       => 'your_store_id',
+    // 'SSLCOMMERZ_STORE_PASSWORD' => 'your_store_password',
+    // 'SSLCOMMERZ_SANDBOX'        => '1',   // '0' only once you have a live store id
+
+    // --- Stripe (cards, Google Pay, Apple Pay via Stripe Checkout) --------
+    // Test-mode keys from https://dashboard.stripe.com/test/apikeys
+    // 'STRIPE_SECRET_KEY'     => 'sk_test_...',
+    // 'STRIPE_WEBHOOK_SECRET' => 'whsec_...',   // from the webhook endpoint's settings page
+
+    // --- Coinbase Commerce (crypto) ----------------------------------------
+    // API key from https://beta.commerce.coinbase.com/settings/security
+    // 'COINBASE_COMMERCE_API_KEY'         => 'your_api_key',
+    // 'COINBASE_COMMERCE_WEBHOOK_SECRET'  => 'your_webhook_shared_secret',
+
     // --- Outgoing email, for "Forgot your password?" ----------------------
     // Leave all of these unset to use PHP's built-in mail() instead. That
     // works on a properly configured VPS, Render/Koyeb, or XAMPP with a

@@ -2,9 +2,10 @@
 
 # Perfume Store
 
-**An online fragrance shop.** Browse designer and niche perfumes, add them to a cart,
-and check out with cash on delivery. Shop owners get a private admin panel to manage
-the catalogue and fulfil orders.
+**An online fragrance shop.** Browse designer and niche perfumes, filter by brand,
+gender, and price, add them to a cart, and check out with cash on delivery or an
+online gateway (card, mobile wallet, or crypto). Shop owners get a private admin
+panel to manage the catalogue and fulfil orders.
 
 **Live Demo:** [https://perfumestore.kesug.com/](https://perfumestore.kesug.com/)
 
@@ -55,12 +56,18 @@ to *Delivered*.
 
 ### For Shoppers
 
-- Browse 71 fragrances across 20 houses
+- Browse 128 fragrances across 20 houses
+- **For Him / For Her** navigation shortcuts, plus a full filter sidebar on the
+  collection page -- price range, brand, gender, and availability, all combinable
 - View top, heart, and base notes for every fragrance
+- **On Sale** rail on the homepage and its own page, showing whatever time-boxed
+  discounts are currently running
 - Persistent cart that remembers you between visits
-- **Checkout as a guest** -- no account required; add to cart and pay on delivery
-- Cash-on-delivery checkout system
+- **Checkout as a guest** -- no account required; add to cart and check out
+- **Four ways to pay**: Cash on Delivery, card/Google Pay/Apple Pay (Stripe),
+  bKash/Rocket/Nagad/Bangla QR (SSLCommerz), or crypto (Coinbase Commerce)
 - Order tracking with a unique tracking number
+- Signed-in customers can edit their own name/email/contact/address from their account
 - **Password reset by email** if you forget it
 - Fully responsive design for mobile and desktop
 - Light and dark themes supported and remembered
@@ -77,9 +84,11 @@ to *Delivered*.
   storefront shows the struck-through price automatically while it's running
 - Publish or unpublish items without deletion
 - Flag selected bottles as trending for the homepage
-- View all orders with complete delivery details
+- View all orders with complete delivery details, including payment status
+  (Cash on Delivery, or Pending / Paid / Failed for an online gateway)
 - Update order statuses as items are shipped
-- Stock levels decrease automatically upon each sale
+- Stock levels decrease automatically upon each sale -- for an online payment,
+  only once the gateway's webhook actually confirms the money arrived
 
 </td>
 </tr>
@@ -139,9 +148,17 @@ Go to <http://localhost/phpmyadmin>, then:
 2. Name it `perfumestore`, set collation to `utf8mb4_unicode_ci`, click **Create**
 3. With `perfumestore` selected, open the **Import** tab
 4. Upload `database/mysql/01_schema.sql` and click **Import** — this builds the tables
-5. Import `database/mysql/02_seed.sql` the same way — this fills them with products
+5. Import `database/mysql/02_seed.sql` the same way — this fills them with the first
+   batch of products
+6. Import `database/mysql/03_seed_expansion.sql` too — adds a second batch of
+   products
+7. Import every `database/mysql/NN_migration_*.sql` file, in numeric order — see
+   `database/README.md`'s migration table for what each one adds (guest checkout,
+   password reset, discounts, catalogue expansion to the full 128 products, the
+   gender filter, online payment gateways, ...)
 
-> Note: Order matters. The schema file has to run before the seed file.
+> Note: Order matters throughout — schema, then both seed files, then the
+> migrations in numeric order.
 
 ### 4. Open the shop
 
@@ -165,6 +182,17 @@ The admin panel is at `/admin` once you're logged in as the shop owner.
 > the email won't arrive locally unless you configure one of the `SMTP_*` settings in
 > `config/env.example.php`. Everything else works without it. See `DEPLOYMENT.md`,
 > Part 4a, for setting up a free SMTP relay on a live deployment.
+
+> **Online payments also need setup before they work for real.** Checkout offers
+> Card/Google Pay/Apple Pay (Stripe), bKash/Rocket/Nagad/Bangla QR (SSLCommerz) and
+> crypto (Coinbase Commerce) alongside Cash on Delivery, but each needs its own
+> sandbox credentials in `config/env.php` and a host that allows outbound HTTPS
+> (**InfinityFree blocks this** — see `docs/payments.md`). Until you set that up,
+> set `PAYMENT_DEMO_MODE = '1'` in `config/env.php` to try the full flow anyway:
+> choosing any of the three redirects to a clearly-labelled local stand-in checkout
+> page with "Simulate successful/failed payment" buttons that drive the exact same
+> order-confirmation code a real webhook would, with no merchant account and no
+> outbound network call needed. **Never leave this on in production.**
 
 ---
 
@@ -214,23 +242,30 @@ A few deliberate choices worth knowing about:
 perfumestore/
 │
 ├── index.php               the homepage
-├── perfumes.php            the full collection
+├── perfumes.php            the full collection, with the filter sidebar
+├── discounts.php           the "On Sale" page
 ├── brands/                 one page per house, 20 of them
 ├── display-perfume.php     a single product
 ├── shoppingcart.php        the cart
-├── checkout.php            place an order
+├── checkout.php            place an order -- COD or an online gateway
+├── payment-return.php      lands here after an online gateway redirect
+├── demo-gateway.php        stand-in checkout page for PAYMENT_DEMO_MODE
 ├── orders.php              a customer's past orders
+├── account.php             a signed-in customer editing their own details
 ├── login.php  register.php sign in and sign up
 │
+├── webhooks/               server-to-server payment confirmation endpoints
 ├── admin/                  the shop owner's panel
-├── config/                 database connection settings
+├── config/                 database connection settings, env.php
 ├── functions/              database queries and form handling
+│   └── payments/           the SSLCommerz/Stripe/Coinbase Commerce integrations
 ├── includes/               shared header, nav, footer, product card
 ├── assets/                 the stylesheet, the JavaScript, banner images
 ├── images/                 product photos
+├── docs/                   payments.md -- online payment setup, webhook URLs
 │
 └── database/
-    ├── mysql/              schema + starting data for MySQL
+    ├── mysql/              schema, seed data and migrations for MySQL
     └── postgres/           the same, for PostgreSQL
 ```
 
@@ -244,7 +279,7 @@ Two scripts come with the project. Both need Python, and neither touches your li
 python database/verify.py
 ```
 
-Loads the database schema into a temporary in-memory copy and runs **31 checks** —
+Loads the database schema into a temporary in-memory copy and runs **32 checks** —
 that every table has a proper key, that nothing points at a missing row, that order
 totals match their line items, and that every product photo actually exists.
 
@@ -265,10 +300,12 @@ and script must carry a cache-busting version stamp.
 php tests/run.php
 ```
 
-A regression suite for the request handlers, covering login/registration, the admin
-access-control guard, and the catalogue/cart write endpoints. Needs a PHP CLI with
-`pdo_sqlite` (no MySQL, no XAMPP) — see `tests/README.md` for what it does and doesn't
-cover.
+A regression suite for the request handlers — **62 scenarios**, covering
+login/registration, the admin access-control guard, the catalogue/cart write
+endpoints, and the online-payment paths (pending-order creation, webhook signature
+and amount verification, idempotency, CSRF, and the `PAYMENT_DEMO_MODE` stand-in
+checkout page). Needs a PHP CLI with `pdo_sqlite` (no MySQL, no XAMPP) — see
+`tests/README.md` for what it does and doesn't cover.
 
 All three currently pass.
 
@@ -285,20 +322,32 @@ for a demo but **not safe for a real shop taking real orders**. Both have since 
 | **SQL injection was possible** | A crafted web address or form field could read or damage the database | Every query built from request input (`functions/`, `admin/Includes/code.php`, and the `?id=`/`?name=`/`?trackid=` pages) now uses parameterized `mysqli_prepare`/`bind_param` queries instead of string concatenation. |
 | **The admin catalogue/order endpoint had no auth check** | Anyone could POST to `admin/Includes/code.php` directly — no login required — to add, edit or delete products, or change any order's status | It now starts with the same admin-only guard every other admin page uses (`middleware/adminmiddleware.php`), which was also fixed to actually stop the page (`exit`) when it redirects, instead of rendering the page anyway. |
 
-Still worth doing before a real launch: CSRF tokens on the state-changing forms (login,
-register, checkout, cart actions, admin actions) and login rate-limiting. Neither was in
-place before either change, so it isn't a regression, but both are standard practice for
-a shop handling real accounts and orders.
+**Online payments are never trusted from the browser.** The `?result=success` a
+gateway redirects the customer back with is cosmetic only -- the only thing that
+ever marks an order paid is that gateway's own server-to-server webhook, verified
+independently: SSLCommerz's IPN is re-checked against its Order Validation API,
+Stripe's `Stripe-Signature` header is HMAC-verified, and Coinbase Commerce's
+`X-CC-Webhook-Signature` likewise, each also re-checked against the order's own
+stored amount/currency before anything is marked paid. See `docs/payments.md`.
+
+CSRF tokens now cover checkout (Cash on Delivery and all three online gateways).
+Still worth doing before a real launch: CSRF tokens on the *other* state-changing
+forms (login, register, cart actions, admin actions) and login rate-limiting.
+Neither was in place before, so it isn't a regression, but both are standard
+practice for a shop handling real accounts and orders.
 
 ---
 
 ## Ideas for Later
 
-- [ ] CSRF tokens on state-changing forms, and login rate-limiting
-- [ ] Search box and price/brand filters
+- [ ] CSRF tokens on the remaining forms (login, register, cart, admin actions),
+      and login rate-limiting
+- [ ] Search box
 - [ ] Wishlist (the button exists, it doesn't do anything yet)
 - [ ] Customer reviews and ratings
-- [ ] Online payment as well as cash on delivery
+- [ ] Real merchant credentials for the online gateways, and a host that allows
+      outbound HTTPS (see `docs/payments.md`) -- the integrations, storefront UI
+      and demo mode all work today; only live credentials are missing
 - [ ] Email confirmation when an order is placed
 - [ ] Sales dashboard for the admin (the current one shows sample figures)
 

@@ -9,6 +9,17 @@
 $ROOT = dirname(__DIR__, 2);
 require __DIR__ . '/../support/mysqli_shim.php';
 
+// Forces this scenario's SMTP_* reads to come from putenv() alone,
+// regardless of the developer machine's own config/env.php (which, for
+// local SMTP relay setup, commonly holds real or placeholder SMTP_HOST
+// values that would otherwise win over the putenv() overrides below --
+// see appEnv()'s precedence in config/dbcon.php).
+function appEnv($key, $default = '')
+{
+    $value = getenv($key);
+    return $value !== false && $value !== '' ? $value : $default;
+}
+
 $con = new stdClass();
 putenv('SMTP_HOST=smtp.example.test');
 putenv('SMTP_PORT=587');

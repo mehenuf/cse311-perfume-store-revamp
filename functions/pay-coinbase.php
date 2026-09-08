@@ -16,6 +16,12 @@ if (!$order) {
     exit;
 }
 
+if (paymentDemoModeEnabled()) {
+    attachGatewayReference($order['id'], 'DEMO-' . bin2hex(random_bytes(8)));
+    header('Location: ../demo-gateway.php?trackid=' . urlencode($order['tracking_no']));
+    exit;
+}
+
 $charge = coinbaseCreateCharge($order);
 if (!$charge['ok']) {
     // The gateway's raw error text stays server-side only -- never in the

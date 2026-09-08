@@ -1,33 +1,26 @@
 <?php
 /**
- * Same contract as payment_stripe_checkout_creates_pending_order.php, for
- * the Coinbase Commerce charge-creation path (crypto).
+ * Same contract as demo_mode_stripe_skips_real_gateway_call.php, for
+ * functions/pay-sslcommerz.php.
  */
 $ROOT = dirname(__DIR__, 2);
 require __DIR__ . '/../support/mysqli_shim.php';
 
-// Forces demo mode off regardless of the developer machine's own
-// config/env.php -- see payment_gateway_error_message_sanitized.php.
 function appEnv($key, $default = '')
 {
     if ($key === 'PAYMENT_DEMO_MODE') {
-        return '0';
+        return '1';
     }
     $value = getenv($key);
     return $value !== false && $value !== '' ? $value : $default;
 }
 
-function paymentHttpRequest($method, $url, array $headers = [], $body = null, $timeoutSeconds = 20)
+function sslcommerzCreateSession(array $order)
 {
-    return [
-        'status' => 201,
-        'body'   => json_encode(['data' => ['id' => 'charge_xyz789',
-            'hosted_url' => 'https://commerce.coinbase.com/charges/charge_xyz789']]),
-        'error'  => null,
-    ];
+    throw new Exception('real SSLCommerz gateway call must never happen while PAYMENT_DEMO_MODE=1');
 }
 
-$pdo = shim_boot(__DIR__ . '/../.tmp_payment_coinbase_pending.sqlite', file_get_contents(__DIR__ . '/../support/schema.sql'));
+$pdo = shim_boot(__DIR__ . '/../.tmp_demo_mode_sslcommerz_skips_gateway.sqlite', file_get_contents(__DIR__ . '/../support/schema.sql'));
 $pdo->exec("INSERT INTO perfumes (name, qty, price, status) VALUES ('Dior Sauvage', 10, 1000, 1)");
 
 $con = new stdClass();
@@ -35,7 +28,6 @@ session_start();
 $_SESSION['guest_cart'] = [1 => 2];
 $_SESSION['csrf_token'] = 'test-csrf-token';
 $_SERVER['REQUEST_METHOD'] = 'POST';
-putenv('COINBASE_COMMERCE_API_KEY=test_api_key');
 $_POST = [
     'csrf_token' => 'test-csrf-token',
     'name' => 'Guest Buyer',
@@ -50,12 +42,12 @@ shim_report(function () use ($pdo) {
     $perfume = $pdo->query("SELECT qty FROM perfumes WHERE id = 1")->fetch(PDO::FETCH_ASSOC);
     return [
         'order_created' => $order !== false,
-        'payment_mode_coinbase' => $order && $order['payment_mode'] === 'COINBASE',
+        'payment_mode_sslcommerz' => $order && $order['payment_mode'] === 'SSLCOMMERZ',
         'payment_status_pending' => $order && $order['payment_status'] === 'pending',
-        'gateway_charge_id_attached' => $order && $order['payment_id'] === 'charge_xyz789',
+        'demo_reference_attached' => $order && strpos((string) $order['payment_id'], 'DEMO-') === 0,
         'stock_not_yet_decremented' => $perfume && (int) $perfume['qty'] === 10,
     ];
 });
 
 chdir($ROOT . '/functions');
-include($ROOT . '/functions/pay-coinbase.php');
+include($ROOT . '/functions/pay-sslcommerz.php');

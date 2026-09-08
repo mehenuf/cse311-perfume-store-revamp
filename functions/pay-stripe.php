@@ -17,6 +17,12 @@ if (!$order) {
     exit;
 }
 
+if (paymentDemoModeEnabled()) {
+    attachGatewayReference($order['id'], 'DEMO-' . bin2hex(random_bytes(8)));
+    header('Location: ../demo-gateway.php?trackid=' . urlencode($order['tracking_no']));
+    exit;
+}
+
 $session = stripeCreateCheckoutSession($order);
 if (!$session['ok']) {
     // The gateway's raw error text (which can echo back a fragment of a

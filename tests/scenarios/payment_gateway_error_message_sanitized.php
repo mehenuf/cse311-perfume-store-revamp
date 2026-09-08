@@ -11,6 +11,20 @@
 $ROOT = dirname(__DIR__, 2);
 require __DIR__ . '/../support/mysqli_shim.php';
 
+// Forces demo mode off regardless of the developer machine's own
+// config/env.php (PAYMENT_DEMO_MODE is a machine-local setting, not
+// something this suite should be sensitive to) while still honouring
+// putenv() overrides the same way the real appEnv() does -- see
+// config/dbcon.php's appEnv() for the precedence this mirrors.
+function appEnv($key, $default = '')
+{
+    if ($key === 'PAYMENT_DEMO_MODE') {
+        return '0';
+    }
+    $value = getenv($key);
+    return $value !== false && $value !== '' ? $value : $default;
+}
+
 function paymentHttpRequest($method, $url, array $headers = [], $body = null, $timeoutSeconds = 20)
 {
     return [

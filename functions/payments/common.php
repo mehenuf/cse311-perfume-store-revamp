@@ -33,6 +33,21 @@ if (!function_exists('appBaseUrl')) {
     }
 }
 
+if (!function_exists('paymentDemoModeEnabled')) {
+    /**
+     * PAYMENT_DEMO_MODE lets checkout.php's Stripe/SSLCommerz/Coinbase
+     * options be demoed end to end with no real merchant credentials and
+     * no outbound HTTP call -- each functions/pay-*.php entry point skips
+     * the real gateway API call and sends the browser to demo-gateway.php
+     * instead, which drives the same markOrderPaid()/markOrderFailed()
+     * path a real webhook would. See config/env.example.php.
+     */
+    function paymentDemoModeEnabled()
+    {
+        return appEnv('PAYMENT_DEMO_MODE', '0') === '1';
+    }
+}
+
 if (!function_exists('validateCheckoutFields')) {
     /** Same required-fields contract functions/placeorder.php uses. */
     function validateCheckoutFields(array $fields)

@@ -43,6 +43,16 @@ return [
     // real, internet-reachable URL, not a relative path.
     // 'APP_BASE_URL' => 'https://yourdomain.com',
 
+    // Set to '1' to demo the online-payment flow end to end with no real
+    // merchant credentials and no outbound network call at all: choosing
+    // Stripe/SSLCommerz/Coinbase at checkout redirects to a local
+    // demo-gateway.php page (clearly marked as a demo) instead of the real
+    // provider, where "Simulate successful/failed payment" drives the exact
+    // same markOrderPaid()/markOrderFailed() + webhook-equivalent path a
+    // real webhook would. Never set this to '1' in production -- turn it
+    // off again once real credentials are configured below.
+    // 'PAYMENT_DEMO_MODE' => '1',
+
     // --- SSLCommerz (bKash, Rocket, Nagad, Bangla QR and local cards, all
     //     through SSLCommerz's own hosted checkout page) --------------------
     // Get sandbox credentials free at https://developer.sslcommerz.com/registration/

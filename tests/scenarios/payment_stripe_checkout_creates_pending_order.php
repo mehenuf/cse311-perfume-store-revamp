@@ -10,6 +10,17 @@
 $ROOT = dirname(__DIR__, 2);
 require __DIR__ . '/../support/mysqli_shim.php';
 
+// Forces demo mode off regardless of the developer machine's own
+// config/env.php -- see payment_gateway_error_message_sanitized.php.
+function appEnv($key, $default = '')
+{
+    if ($key === 'PAYMENT_DEMO_MODE') {
+        return '0';
+    }
+    $value = getenv($key);
+    return $value !== false && $value !== '' ? $value : $default;
+}
+
 function paymentHttpRequest($method, $url, array $headers = [], $body = null, $timeoutSeconds = 20)
 {
     return [

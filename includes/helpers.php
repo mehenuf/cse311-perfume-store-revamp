@@ -234,7 +234,7 @@ if (!function_exists('brandList')) {
             'shot' => 'rasasi_hawas.jpg',
             'lede' => 'Dubai since 1979. Hawas made its name in the West; the back catalogue is deeper than most realise.'],
         'rayhaan' => ['label' => 'Rayhaan', 'pattern' => '%rayhaan%',
-            'shot' => 'rayhaan_bariq.jpg',
+            'shot' => 'rayhaan_roberto_rayhaan_noir.jpg',
             'lede' => 'The sister label to Rasasi. Gulf opulence at a price that does not ask you to think about it.'],
         'afnan' => ['label' => 'Afnan', 'pattern' => '%afnan%',
             'shot' => 'afnan_9pm.jpg',

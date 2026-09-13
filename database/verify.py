@@ -73,6 +73,10 @@ def main():
                 db.executescript(io.open(os.path.join(HERE, "mysql", "08_migration_fix_mismatched_images.sql"), encoding="utf-8").read())
             if os.path.isfile(os.path.join(HERE, "mysql", "09_migration_restore_images.sql")):
                 db.executescript(io.open(os.path.join(HERE, "mysql", "09_migration_restore_images.sql"), encoding="utf-8").read())
+            if os.path.isfile(os.path.join(HERE, "mysql", "13_migration_fix_remaining_mismatched_images.sql")):
+                db.executescript(io.open(os.path.join(HERE, "mysql", "13_migration_fix_remaining_mismatched_images.sql"), encoding="utf-8").read())
+            if os.path.isfile(os.path.join(HERE, "mysql", "14_migration_replace_placeholder_images.sql")):
+                db.executescript(io.open(os.path.join(HERE, "mysql", "14_migration_replace_placeholder_images.sql"), encoding="utf-8").read())
             total = db.execute("SELECT COUNT(*) FROM perfumes").fetchone()[0]
             check("expansion seed applies on top of the base seed (%d products)" % total, True)
         except Exception as e:
@@ -139,6 +143,10 @@ def main():
         r"'([a-z]+)' => \['label' => '([^']+)', 'pattern' => '([^']+)'", reg)
     check("brand registry parsed from includes/helpers.php", len(brands) > 0,
           "%d houses" % len(brands))
+    # Each house also carries a 'shot' image for its directory/homepage tile,
+    # independent of any single product's image_path -- these are legitimate
+    # uses too, so the photography checks below must not treat them as dead.
+    brand_shots = set(re.findall(r"'shot' => '([^']+)'", reg))
 
     empty = []
     for slug, label, pattern in brands:
@@ -177,7 +185,6 @@ def main():
         "st_turquoise_flacon.jpg": "versace",
         "st_black_monolith.jpg":   "prada",
         "st_noir_sparkle.jpg":     "saint laurent",
-        "st_minimal_white.jpg":    "armani",
     }
     wrong = []
     for img, house in BRANDED.items():
@@ -194,7 +201,7 @@ def main():
     # deliberately shared as generic editorial stock photography (the
     # five st_*.jpg placeholders used for products with no real photo yet).
     import hashlib
-    INTENTIONALLY_SHARED = set(BRANDED) | {"st_amber_bottles_bokeh.jpg"}
+    INTENTIONALLY_SHARED = set(BRANDED)
     by_hash = {}
     for p in named:
         full = os.path.join(IMAGES, p)
@@ -208,7 +215,7 @@ def main():
     check("no two differently-named images are byte-identical", not dup_groups,
           "duplicate content: %s" % dup_groups)
 
-    unused = sorted(set(os.listdir(IMAGES)) - {r[0] for r in db.execute("SELECT image_path FROM perfumes")})
+    unused = sorted(set(os.listdir(IMAGES)) - {r[0] for r in db.execute("SELECT image_path FROM perfumes")} - brand_shots)
     check("no image file is left without a catalogue row", not unused, "unused: %s" % unused)
 
     print("\n[7] Delete rules behave as designed")

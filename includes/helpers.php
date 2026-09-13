@@ -237,19 +237,19 @@ if (!function_exists('brandList')) {
             'shot' => 'rayhaan_bariq.jpg',
             'lede' => 'The sister label to Rasasi. Gulf opulence at a price that does not ask you to think about it.'],
         'afnan' => ['label' => 'Afnan', 'pattern' => '%afnan%',
-            'shot' => 'afnan_9pm.png',
+            'shot' => 'afnan_9pm.jpg',
             'lede' => 'The house behind 9PM. Sweet, loud and impossible to ignore on a night out.'],
         'armaf' => ['label' => 'Armaf', 'pattern' => '%armaf%',
             'shot' => 'armaf_cdnim.jpg',
             'lede' => 'Club de Nuit built this house. Enormous performance for a fraction of its inspiration.'],
         'versace' => ['label' => 'Versace', 'pattern' => '%versace%',
-            'shot' => 'versace_dylan_blue.jpeg',
+            'shot' => 'versace_dylan_blue.jpg',
             'lede' => 'Eros and the Dylan line. Mediterranean, bright and built to be noticed.'],
         'ysl' => ['label' => 'Yves Saint Laurent', 'pattern' => '%saint laurent%',
-            'shot' => 'yves_saint_laurent_y_eau_de_parfum.png',
+            'shot' => 'yves_saint_laurent_y_eau_de_parfum.jpg',
             'lede' => 'Y, La Nuit and Black Opium. Parisian, sharp, and never quite polite.'],
         'armani' => ['label' => 'Giorgio Armani', 'pattern' => '%armani%',
-            'shot' => 'giorgio_armani_code_parfum.png',
+            'shot' => 'giorgio_armani_code_parfum.jpg',
             'lede' => 'Acqua di Gio defined the modern aquatic. Code took the same tailoring somewhere warmer.'],
         'pacorabanne' => ['label' => 'Paco Rabanne', 'pattern' => '%paco rabanne%',
             'shot' => 'paco_rabanne_1_million.jpg',
@@ -348,6 +348,54 @@ if (!function_exists('genderLabel')) {
     {
         $map = ['men' => 'Men', 'women' => 'Women', 'unisex' => 'Unisex'];
         return isset($map[$gender]) ? $map[$gender] : 'Unisex';
+    }
+}
+
+if (!function_exists('paymentBrandMark')) {
+    /** A small inline wordmark/glyph for the demo checkout page's header. */
+    function paymentBrandMark($gateway)
+    {
+        $marks = [
+            'STRIPE' => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">'
+                . '<rect x="2" y="5" width="20" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6"/>'
+                . '<path d="M2 9.5h20" stroke="currentColor" stroke-width="1.6"/>'
+                . '<path d="M6 14.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+            'SSLCOMMERZ' => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">'
+                . '<rect x="6" y="2" width="12" height="20" rx="2.5" stroke="currentColor" stroke-width="1.6"/>'
+                . '<path d="M10 18h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+            'COINBASE' => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">'
+                . '<circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/>'
+                . '<rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.6"/></svg>',
+        ];
+        return $marks[$gateway] ?? '';
+    }
+}
+
+if (!function_exists('paymentFakeQr')) {
+    /**
+     * A deterministic-looking but meaningless QR-style grid for the demo
+     * checkout page -- decorative only, encodes nothing, never scanned.
+     */
+    function paymentFakeQr()
+    {
+        $size = 11;
+        $seed = 1;
+        $cellsMarkup = '';
+        for ($row = 0; $row < $size; $row++) {
+            for ($col = 0; $col < $size; $col++) {
+                $isFinder = ($row < 3 && $col < 3) || ($row < 3 && $col >= $size - 3) || ($row >= $size - 3 && $col < 3);
+                $seed = ($seed * 1103515245 + 12345) & 0x7fffffff;
+                $on = $isFinder || ($seed % 5) < 2;
+                if ($on) {
+                    $x = $col * 12;
+                    $y = $row * 12;
+                    $cellsMarkup .= '<rect x="' . $x . '" y="' . $y . '" width="12" height="12" fill="#0a0a0c"/>';
+                }
+            }
+        }
+        $px = $size * 12;
+        return '<svg width="148" height="148" viewBox="0 0 ' . $px . ' ' . $px . '" role="img" aria-label="Demo payment QR code">'
+             . '<rect width="' . $px . '" height="' . $px . '" fill="#fff"/>' . $cellsMarkup . '</svg>';
     }
 }
 

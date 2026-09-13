@@ -19,13 +19,21 @@
 --  Run this AFTER uploading the corresponding image files to images/.
 --  Idempotent: safe to run more than once, and safe to run whether or
 --  not migration 08 ever ran on this database.
+--
+--  UPDATE (see 13_migration_fix_remaining_mismatched_images.sql): a later
+--  audit found 5 of the ids restored below still had the wrong photo even
+--  after this migration -- the "verification" pass missed that the actual
+--  file content, not just the filename, was wrong (ids 47, 87, 108, 111,
+--  113). Their WHEN clauses have been removed here so re-running this
+--  migration on a fresh database no longer reintroduces that bug; run
+--  migration 13 on any database that already applied the version of this
+--  file that still set them.
 -- ============================================================
 
 BEGIN;
 
 UPDATE perfumes SET image_path = CASE id
     WHEN 40  THEN 'creed_aventus.jpg'
-    WHEN 47  THEN 'rayhaan_bariq.jpg'
     WHEN 48  THEN 'rayhaan_roberto_rayhaan_noir.jpg'
     WHEN 72  THEN 'givenchy_gentleman_reserve_privee.jpg'
     WHEN 73  THEN 'givenchy_linterdit.jpg'
@@ -42,7 +50,6 @@ UPDATE perfumes SET image_path = CASE id
     WHEN 84  THEN 'afnan_supremacy_in_heaven.jpg'
     WHEN 85  THEN 'afnan_modest_une.jpg'
     WHEN 86  THEN 'afnan_9am_dive.jpg'
-    WHEN 87  THEN 'afnan_historic_olmeda.jpg'
     WHEN 88  THEN 'jean_paul_gaultier_le_male.jpg'
     WHEN 89  THEN 'jean_paul_gaultier_scandal_pour_homme_le_parfum.jpg'
     WHEN 90  THEN 'jean_paul_gaultier_le_beau.jpg'
@@ -63,12 +70,9 @@ UPDATE perfumes SET image_path = CASE id
     WHEN 105 THEN 'mancera_holidays.jpg'
     WHEN 106 THEN 'mancera_coco_vanille.jpg'
     WHEN 107 THEN 'mancera_black_gold.jpg'
-    WHEN 108 THEN 'creed_millesime_imperial.jpg'
     WHEN 109 THEN 'creed_virgin_island_water.jpg'
     WHEN 110 THEN 'creed_royal_oud.jpg'
-    WHEN 111 THEN 'creed_himalaya.jpg'
     WHEN 112 THEN 'creed_love_in_white.jpg'
-    WHEN 113 THEN 'rasasi_fattan.jpg'
     WHEN 114 THEN 'rasasi_shuhrah_pour_homme.jpg'
     WHEN 115 THEN 'rasasi_la_yuqawam_jasmine_wisp.jpg'
     WHEN 116 THEN 'rasasi_al_wisam_day.jpg'

@@ -324,7 +324,10 @@
     /* ---------------------------------------------------------------------
        Cart — same endpoint contract as before, fetch instead of jQuery
        --------------------------------------------------------------------- */
-    var ENDPOINT = 'functions/cart-function.php';
+    // Pages one level down (brands/*.php) set window.STORE_BASE_PATH to '../'
+    // so this still resolves correctly; a relative path here would instead
+    // resolve against the *page's* URL and 404 under /brands/.
+    var ENDPOINT = (window.STORE_BASE_PATH || '') + 'functions/cart-function.php';
 
     function post(payload) {
         return fetch(ENDPOINT, {

@@ -15,6 +15,11 @@
 config/env*.php
 !config/env.example.php
 
+# Same env-file mistake, one level up: a stray copy has ended up at the
+# repo root before (live DB/SMTP credentials, never meant to be committed).
+# config/env.php is the only place the app actually reads one from.
+/env*.php
+
 .env
 .env.*
 *.env

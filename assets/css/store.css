@@ -362,6 +362,12 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     border-radius: var(--r-pill);
     font-size: .62rem; font-weight: 600; line-height: 1;
 }
+/* This class's own `display: grid` otherwise beats the browser's [hidden]
+   default (an author rule always wins over the user-agent stylesheet,
+   regardless of source order), so a signed-in visitor whose cart is at
+   zero saw a gold "0" badge instead of no badge at all. Same pitfall as
+   .product[hidden] above, same fix. */
+.nav__cart-count[hidden] { display: none; }
 
 .nav__toggle {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
@@ -503,6 +509,17 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 
 .filters-toggle { margin-bottom: var(--s-5); }
 @media (min-width: 900px) { .filters-toggle { display: none; } }
+/* The toggle otherwise looks identical whether the panel it drives is open
+   or closed -- the same pressed language as a chip makes that state visible
+   on the control itself, not only in the panel appearing below it. */
+.filters-toggle[aria-expanded='true'] {
+    border-color: var(--gold); color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+.filters-toggle svg, .filters-toggle i {
+    transition: transform var(--d-2) var(--ease);
+}
+.filters-toggle[aria-expanded='true'] i { transform: rotate(90deg); }
 
 .filters-panel {
     display: grid; gap: 0;
@@ -517,6 +534,19 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 @media (min-width: 900px) {
     .filters-panel { position: sticky; top: calc(var(--nav-h) + var(--s-6)); padding: 0; background: transparent; border: none; }
     .filters-panel[hidden] { display: grid; }
+}
+/* The mobile "Filters" toggle used to pop the panel from display:none to
+   display:grid with nothing in between -- a hard cut, feedback for the tap
+   that opened it. @starting-style animates the very first frame after an
+   element starts rendering, so this needs no JS state and cannot get stuck:
+   unsupported browsers just keep the instant appearance they always had. */
+@media (max-width: 899px) and (prefers-reduced-motion: no-preference) {
+    .filters-panel:not([hidden]) {
+        transition: opacity var(--d-2) var(--ease), transform var(--d-2) var(--ease);
+    }
+    @starting-style {
+        .filters-panel:not([hidden]) { opacity: 0; transform: translateY(-8px); }
+    }
 }
 
 .filters-panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding-bottom: var(--s-5); }
@@ -606,12 +636,30 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
    7. Product card — a hairline grid, not floating cards
    -------------------------------------------------------------------------- */
 .card-grid {
-    display: grid; grid-template-columns: 1fr;
+    /* minmax(0, 1fr), not a bare 1fr: a grid track's automatic minimum is
+       its widest child's min-content, so one oversized card (the
+       "Photography pending" tile below, at some viewports) would otherwise
+       force its whole track past its fair share and push the grid wider
+       than its container instead of letting the card's own content wrap
+       or clip. minmax(0, ...) removes that floor for every card size. */
+    display: grid; grid-template-columns: minmax(0, 1fr);
     gap: 1px; background: var(--line); border: 1px solid var(--line);
 }
-@media (min-width: 560px)  { .card-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .card-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1280px) { .card-grid--4 { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 560px)  { .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+    .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    /* --4 skips the 3-column step here rather than inheriting it until
+       1280px, but only where it is not also the filtered collection grid:
+       a card-grid--4 with a fixed item count (LIMIT 4 related-products row,
+       8 on the homepage shelf) always divides evenly into 4 and never into
+       3, so the 3-column step leaves one card alone on a half-empty row.
+       [data-collection-grid] holds a variable, often much larger count next
+       to a 15.5rem filter sidebar -- at 1024px that sidebar leaves too
+       little room for 4 real columns (~150px cards), so it keeps the
+       3-column step and only gains a 4th at 1280px below. */
+    .card-grid--4:not([data-collection-grid]) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) { .card-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 .product {
     position: relative; display: flex; flex-direction: column;
@@ -736,7 +784,10 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
    -------------------------------------------------------------------------- */
 .editorial { display: grid; gap: var(--s-6); align-items: center; }
 @media (min-width: 900px) { .editorial { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: var(--s-8); } }
-.editorial__media { overflow: hidden; aspect-ratio: 5 / 4; background: var(--ink-sunken); border: 1px solid var(--line); }
+/* --surface, not --ink-sunken: this sits inside .section--sunken, which
+   already uses --ink-sunken as its own background. A loading or failed
+   image needs a frame that reads as a frame, not as more empty ground. */
+.editorial__media { overflow: hidden; aspect-ratio: 5 / 4; background: var(--surface); border: 1px solid var(--line); }
 .editorial__media img { width: 100%; height: 100%; object-fit: cover; }
 .editorial__body p { color: var(--fg-muted); max-width: 60ch; }
 .editorial__body p + p { margin-top: var(--s-4); }
@@ -776,6 +827,10 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 
 .spec { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
 .spec > div { padding: var(--s-5); background: var(--ink); }
+/* An odd number of spec rows would otherwise leave a dangling empty cell in
+   the last row, exposing the grid's own hairline background as a blank box.
+   The final row spans full width instead whenever the count is odd. */
+.spec > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .spec dt { font-size: var(--t-micro); letter-spacing: .14em; text-transform: uppercase; color: var(--fg-faint); }
 .spec dd { margin: var(--s-2) 0 0; font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; }
 
@@ -783,9 +838,10 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .qty button {
     width: 46px; height: 46px; display: grid; place-items: center;
     background: none; border: 0; cursor: pointer; color: var(--fg-muted);
-    transition: color var(--d-1) var(--ease), background var(--d-1) var(--ease);
+    transition: color var(--d-1) var(--ease), background var(--d-1) var(--ease), transform var(--d-1) var(--ease);
 }
 .qty button:hover:not(:disabled) { color: var(--gold); background: var(--gold-wash); }
+.qty button:active:not(:disabled) { transform: scale(.88); }
 .qty button:disabled { opacity: .3; cursor: default; }
 .qty input {
     width: 46px; height: 46px; text-align: center; background: none; border: 0;
@@ -855,6 +911,31 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .cart-line__controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4); grid-column: 2 / -1; }
 @media (min-width: 720px) { .cart-line__controls { grid-column: auto; } }
 .cart-line__total { text-align: right; font-size: 1.05rem; color: var(--gold); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Order history: a stacked row, not a <table>. A table's columns only fit a
+   viewport wider than their combined min-content, so "Your orders" on a
+   phone was hiding Total, Status and the View button off-screen with no
+   scrollbar, no edge fade and no hint they existed. Stacking id/date above
+   status/total/view instead means every field is always on screen, at any
+   width -- the same reasoning that already shaped order-details.php's card
+   layout, applied to the list above it. */
+.order-row {
+    display: grid; grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-4);
+    padding: var(--s-5) 0; border-bottom: 1px solid var(--line);
+}
+.order-row:last-of-type { border-bottom: 0; }
+@media (min-width: 640px) {
+    .order-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+}
+.order-row__id { font-family: 'Jost', sans-serif; font-weight: 600; }
+.order-row__date { margin-top: var(--s-1); font-size: var(--t-sm); color: var(--fg-muted); }
+.order-row__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4); }
+@media (min-width: 640px) { .order-row__meta { justify-content: flex-end; } }
+.order-row__total {
+    min-width: 7ch; font-family: 'Jost', sans-serif; font-weight: 600;
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+}
 
 .summary { position: sticky; top: calc(var(--nav-h) + var(--s-5)); }
 @media (max-width: 1023px) { .summary { position: static; } }
@@ -953,6 +1034,32 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .toast[data-leaving='true'] { animation: toast-out var(--d-2) var(--ease-in) forwards; }
 @keyframes toast-in  { from { opacity: 0; transform: translateX(20px); } }
 @keyframes toast-out { to   { opacity: 0; transform: translateX(20px); } }
+
+/* --------------------------------------------------------------------------
+   15a. Back to top
+   The full collection can run to over a hundred cards in one mobile column,
+   with the filter panel it would take to jump back to living at the very
+   top of that same scroll. A quiet, corner-anchored way back rather than a
+   dedicated page or pagination change.
+   -------------------------------------------------------------------------- */
+.back-to-top {
+    position: fixed; right: var(--s-5); bottom: var(--s-5); z-index: 90;
+    width: 48px; height: 48px; display: grid; place-items: center;
+    background: var(--ink-raised); border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill); color: var(--fg-muted);
+    box-shadow: var(--shadow-2); cursor: pointer;
+    opacity: 0; visibility: hidden; transform: translateY(12px) scale(.92);
+    transition: opacity var(--d-2) var(--ease), transform var(--d-2) var(--ease),
+                visibility var(--d-2), color var(--d-1) var(--ease), border-color var(--d-1) var(--ease);
+}
+.back-to-top:hover { color: var(--gold); border-color: var(--gold); }
+.back-to-top:active { transform: translateY(1px); }
+.back-to-top[data-visible='true'] { opacity: 1; visibility: visible; transform: none; }
+@media (pointer: coarse) { .back-to-top { width: 44px; height: 44px; right: var(--s-4); bottom: var(--s-4); } }
+@media (prefers-reduced-motion: reduce) {
+    .back-to-top { transition: opacity var(--d-1) linear, visibility var(--d-1); }
+    .back-to-top[data-visible='true'] { transform: none; }
+}
 
 /* --------------------------------------------------------------------------
    16. Footer
@@ -1101,6 +1208,14 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
    fill one column's width -- span both so it reads as a full divider
    between the For him/For her shortcuts and the alphabetical house list. */
 .nav__menu--cols .nav__menu-sep { grid-column: 1 / -1; }
+/* Without this, "For him" and "For her" land as row one of column one and
+   column two respectively (CSS Grid's default row-major auto-placement),
+   which reads as if each column of the alphabetical house list underneath
+   were gendered -- Chanel and Versace filed under "For him", Tom Ford and
+   Hugo Boss under "For her". Spanning both columns keeps them as a plain
+   shortcut row above the (ungendered, A-Z) brand grid. */
+.nav__menu--cols > li:nth-child(1),
+.nav__menu--cols > li:nth-child(2) { grid-column: 1 / -1; }
 
 .nav__menu a i { width: 15px; margin-inline-end: .35rem; opacity: .7; }
 
@@ -1147,11 +1262,20 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .media-pending__mark {
     font-family: 'Cormorant Garamond', ui-serif, Georgia, serif;
     font-weight: 300;
-    font-size: clamp(2.4rem, 1.5rem + 4vw, 3.6rem);
-    line-height: 1;
-    letter-spacing: .06em;
+    /* Sized off the viewport, not the card, because the card grid can put
+       this same tile in a 1-column phone row or a 6-column ultra-wide row.
+       Kept modest enough (unlike the old 3.6rem ceiling) that even a long
+       single-word house name (Ferragamo, Givenchy) fits the narrowest real
+       card column without leaning on overflow-wrap to save it. */
+    font-size: clamp(1.5rem, 0.95rem + 1.8vw, 2.25rem);
+    line-height: 1.15;
+    letter-spacing: .04em;
     color: var(--gold);
     opacity: .55;
+    max-width: 100%;
+    padding-inline: var(--s-3);
+    text-align: center;
+    overflow-wrap: break-word;
 }
 .media-pending__note {
     position: absolute;
@@ -1268,10 +1392,19 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 /* --------------------------------------------------------------------------
    20.5 Numbers that change
    The cart count is the one figure that updates without a page load, so it
-   earns a beat of its own. Without it the number silently swaps.
+   earns a beat of its own. Without it the number silently swaps. A quantity
+   step in the cart changes two more figures the same way -- that line's own
+   total, and the order summary beneath it -- so they get the same beat.
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: no-preference) {
-    .nav__cart-count[data-bumped='true'] { animation: bump 420ms var(--ease); }
+    .nav__cart-count[data-bumped='true'],
+    [data-line-total][data-bumped='true'],
+    [data-cart-total][data-bumped='true'],
+    [data-cart-subtotal][data-bumped='true'],
+    [data-checkout-summary-label][data-bumped='true'] { animation: bump 420ms var(--ease); }
+    /* The add-to-cart button's own "Added" moment gets the same beat, right
+       where the visitor is already looking rather than only in the toast. */
+    [data-add-to-cart][data-added='true'] { animation: bump 420ms var(--ease); }
 }
 @keyframes bump {
     35% { transform: scale(1.35); }
@@ -1472,12 +1605,12 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 }
 @media (min-width: 2200px) {
     :root { --shell: 1880px; --t-body: 1.06rem; }
-    .card-grid { grid-template-columns: repeat(4, 1fr); }
-    .card-grid--4 { grid-template-columns: repeat(5, 1fr); }
+    .card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card-grid--4 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 @media (min-width: 3000px) {
     :root { --shell: 2280px; }
-    .card-grid--4 { grid-template-columns: repeat(6, 1fr); }
+    .card-grid--4 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 
 /* Ultra-wide is short as well as wide. A full-height hero would leave the

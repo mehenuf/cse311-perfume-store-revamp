@@ -58,8 +58,8 @@ if ($order['payment_status'] === 'paid' && $order['user_id'] === null && !empty(
 }
 
 $statusCopy = [
-    'paid'    => ['Payment received', 'Thank you -- your payment has been confirmed and the order is now being processed.'],
-    'pending' => ['Confirming your payment', "We're still waiting for your payment provider to confirm this. This can take a minute or two -- refresh this page to check again."],
+    'paid'    => ['Payment received', 'Thank you. Your payment has been confirmed and the order is now being processed.'],
+    'pending' => ['Confirming your payment', "We're still waiting for your payment provider to confirm this. This can take a minute or two. Refresh this page to check again."],
     'failed'  => ['Payment did not go through', 'Your payment was not completed, so this order has not been charged. You can try again or choose a different payment method.'],
     'cod'     => ['Cash on delivery', 'Pay the courier when your order arrives.'],
     'refunded' => ['Refunded', 'This order has been refunded.'],

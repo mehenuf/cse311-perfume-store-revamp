@@ -168,20 +168,69 @@
         }
     }
 
-    /* ---- sticky actions column: show the seam only once there is
-       something actually scrolled under it, not all the time ---- */
+    /* ---- sticky actions column ---- */
     function initStickyActionsSeam() {
         var wraps = document.querySelectorAll('.table-wrap');
         wraps.forEach(function (wrap) {
-            function update() { wrap.dataset.scrolled = String(wrap.scrollLeft > 1); }
+            function update() {
+                wrap.dataset.scrolled = String(wrap.scrollLeft > 1);
+                var max = wrap.scrollWidth - wrap.clientWidth;
+                // Whether there is anything TO scroll to at all, independent
+                // of scroll position -- the seam this drives was previously
+                // gated on data-scrolled alone, so a table that could scroll
+                // but had not been touched yet looked identical to one that
+                // fit fully: Status/Total sat cropped with nothing marking a
+                // boundary there until after the visitor had already found
+                // it by accident.
+                wrap.dataset.scrollable = String(max > 2);
+
+                // Below the actions column's own 599px breakpoint it falls
+                // back to scrolling with the row instead of staying pinned
+                // (see admin.css) -- there is no sticky seam to reuse as a
+                // hint there, so this table gets its own edge fade instead,
+                // same contract as the storefront rail's data-edge: named
+                // for which side still has content past it, not which side
+                // the scroll position is at.
+                if (max <= 2) { wrap.removeAttribute('data-fade'); return; }
+                var atStart = wrap.scrollLeft <= 2;
+                var atEnd = wrap.scrollLeft >= max - 2;
+                wrap.dataset.fade = atStart ? 'right' : (atEnd ? 'left' : 'both');
+            }
             wrap.addEventListener('scroll', update, { passive: true });
             update();
+            if ('ResizeObserver' in window) new ResizeObserver(update).observe(wrap);
+        });
+    }
+
+    /* ---- back to top: same sentinel + IntersectionObserver technique as
+       the rail/table logic above, so this costs no scroll listener either ---- */
+    function initBackToTop() {
+        var btn = document.querySelector('[data-back-to-top]');
+        if (!btn) return;
+
+        var sentinel = document.createElement('div');
+        sentinel.setAttribute('aria-hidden', 'true');
+        sentinel.style.cssText = 'position:absolute;top:100vh;left:0;height:1px;width:1px;';
+        document.body.prepend(sentinel);
+
+        new IntersectionObserver(function (entries) {
+            btn.dataset.visible = String(!entries[0].isIntersecting);
+        }).observe(sentinel);
+
+        btn.addEventListener('click', function () {
+            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+            var content = document.getElementById('content');
+            if (content) {
+                if (!content.hasAttribute('tabindex')) content.setAttribute('tabindex', '-1');
+                content.focus({ preventScroll: true });
+            }
         });
     }
 
     function boot() {
         initRail(); initConfirm(); initImagePreview(); initImageArrival(); initInlineEdit();
-        initJustUpdated(); initStickyActionsSeam();
+        initJustUpdated(); initStickyActionsSeam(); initBackToTop();
     }
 
     if (document.readyState === 'loading') {

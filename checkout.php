@@ -44,6 +44,8 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
             <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
             <div class="cart-layout">
 
+                <div style="display:grid;gap:var(--s-6)">
+
                 <div class="panel">
                     <div class="panel__head">
                         <h2 style="font-size:var(--t-h3)">Delivery details</h2>
@@ -143,6 +145,8 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
                             </p>
                         </noscript>
                     </fieldset>
+                </div>
+
                 </div>
 
                 <aside class="panel summary">

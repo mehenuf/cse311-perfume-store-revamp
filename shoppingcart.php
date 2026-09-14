@@ -104,7 +104,7 @@ echo crumb(['Home' => 'index.php', 'Cart' => null]);
 
                 <div class="summary__row">
                     <span>Subtotal</span>
-                    <span data-cart-total><?= taka($total) ?></span>
+                    <span data-cart-subtotal><?= taka($total) ?></span>
                 </div>
                 <div class="summary__row">
                     <span>Delivery</span>

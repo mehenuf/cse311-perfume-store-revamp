@@ -1,5 +1,9 @@
     </main>
 
+    <button class="back-to-top" type="button" data-back-to-top data-visible="false" aria-label="Back to top">
+        <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+    </button>
+
     <?php $basePath = isset($basePath) ? $basePath : ''; ?>
     <script>
         // '' at the web root, '../' one level down (brands/) -- store.js needs

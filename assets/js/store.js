@@ -365,6 +365,11 @@
             btn.disabled = true;
             btn.textContent = 'Adding';
 
+            function restore() {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+
             post({
                 perfume_id: btn.dataset.addToCart,
                 perfume_qty: qty,
@@ -376,15 +381,25 @@
                     '500': ['We could not add that. Please try again.', 'error'],
                     '69':  ['That is already in your cart.', 'error']
                 });
-                if (ok) bumpCartCount(1);
                 if (code === '401') {
                     window.setTimeout(function () { window.location.href = 'login.php'; }, 1200);
                 }
+                if (!ok) { restore(); return; }
+
+                // The toast confirms it from the corner of the screen; this
+                // confirms it right where the visitor is already looking,
+                // for the beat before the button goes back to being an
+                // invitation to add another.
+                bumpCartCount(1);
+                btn.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> Added';
+                if (!reduceMotion) btn.dataset.added = 'true';
+                window.setTimeout(function () {
+                    delete btn.dataset.added;
+                    restore();
+                }, 1100);
             }).catch(function () {
                 toast('Network problem. Please try again.', 'error');
-            }).finally(function () {
-                btn.disabled = false;
-                btn.innerHTML = original;
+                restore();
             });
         });
 
@@ -443,6 +458,19 @@
         if (!document.querySelector('[data-cart-line]')) window.location.reload();
     }
 
+    /* A figure that actually changed value gets the same beat as the nav
+       cart count, so a quantity step is felt at every total it touches, not
+       only silently reflected. Re-rendering the same text every recalc would
+       make this fire on unrelated lines too, so it only bumps on a real
+       change. */
+    function setFigure(el, text) {
+        if (!el || el.textContent === text) return;
+        el.textContent = text;
+        if (reduceMotion) return;
+        el.dataset.bumped = 'true';
+        window.setTimeout(function () { delete el.dataset.bumped; }, 460);
+    }
+
     /* Recompute the order summary from the DOM so the page never lies about
        the total between a quantity change and the next full load. */
     function recalcTotals() {
@@ -458,11 +486,16 @@
             count += qty;
 
             var lineTotal = line.querySelector('[data-line-total]');
-            if (lineTotal) lineTotal.textContent = money(unit * qty);
+            if (lineTotal) setFigure(lineTotal, money(unit * qty));
         });
 
-        var totalEl = document.querySelector('[data-cart-total]');
-        if (totalEl) totalEl.textContent = money(total);
+        // Subtotal and Total read the same figure today (delivery is quoted at
+        // checkout, not added here) but are two separate elements, so both
+        // must be kept in sync -- a stale bold Total after a quantity change
+        // is far more visible than a stale Subtotal line above it.
+        document.querySelectorAll('[data-cart-total], [data-cart-subtotal]').forEach(function (el) {
+            setFigure(el, money(total));
+        });
         var countEl = document.querySelector('[data-cart-item-count]');
         if (countEl) countEl.textContent = count + (count === 1 ? ' item' : ' items');
     }
@@ -838,11 +871,18 @@
         var summaryLabel = form.querySelector('[data-checkout-summary-label]');
         var submitBtn = form.querySelector('[data-checkout-submit]');
 
-        function apply(radio) {
+        function apply(radio, animate) {
             if (!radio) return;
             form.setAttribute('action', radio.getAttribute('data-checkout-action'));
             if (summaryLabel) {
                 summaryLabel.textContent = radio.getAttribute('data-checkout-summary');
+                // Confirms the choice landed in the summary, not only beside
+                // the radio itself. Not on the initial page load -- only a
+                // change the visitor actually made earns the beat.
+                if (animate && !reduceMotion) {
+                    summaryLabel.dataset.bumped = 'true';
+                    window.setTimeout(function () { delete summaryLabel.dataset.bumped; }, 420);
+                }
             }
             if (submitBtn) {
                 submitBtn.textContent = radio.value === 'cod' ? 'Place order' : 'Continue to payment';
@@ -850,11 +890,41 @@
         }
 
         radios.forEach(function (radio) {
-            radio.addEventListener('change', function () { apply(radio); });
+            radio.addEventListener('change', function () { apply(radio, true); });
         });
 
         var checked = form.querySelector('input[name="payment_method"]:checked');
-        apply(checked);
+        apply(checked, false);
+    }
+
+    /* ---------------------------------------------------------------------
+       Back to top — appears once the page has scrolled past one viewport,
+       via the same sentinel + IntersectionObserver technique initNav uses
+       for the sticky-nav border, so this costs no scroll listener either.
+       --------------------------------------------------------------------- */
+    function initBackToTop() {
+        var btn = document.querySelector('[data-back-to-top]');
+        if (!btn) return;
+
+        var sentinel = document.createElement('div');
+        sentinel.setAttribute('aria-hidden', 'true');
+        sentinel.style.cssText = 'position:absolute;top:100vh;left:0;height:1px;width:1px;';
+        document.body.prepend(sentinel);
+
+        new IntersectionObserver(function (entries) {
+            btn.dataset.visible = String(!entries[0].isIntersecting);
+        }).observe(sentinel);
+
+        btn.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+            // Keyboard/AT users land back at the top of the content, not just
+            // a visual scroll with focus left stranded down in the page.
+            var main = document.getElementById('main');
+            if (main) {
+                if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+                main.focus({ preventScroll: true });
+            }
+        });
     }
 
     /* ---------------------------------------------------------------------
@@ -871,6 +941,7 @@
         initRailDrift();
         initCollectionFilters();
         initCheckoutPayment();
+        initBackToTop();
     }
 
     if (document.readyState === 'loading') {

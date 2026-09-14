@@ -7,7 +7,7 @@ $pageDescription = 'Every fragrance currently flagged as a favourite at Perfume 
 include('includes/header.php');
 
 $collectionTitle  = 'Featured';
-$collectionLede   = 'The bottles our customers keep coming back for -- hand-picked, not algorithmic.';
+$collectionLede   = 'The bottles our customers keep coming back for. Hand-picked, not algorithmic.';
 $collectionCrumbs = ['Home' => 'index.php', 'Featured' => null];
 $collectionRows   = getAllTrending('perfumes');
 $collectionShowFeaturedFilter = false; // every row here is already featured

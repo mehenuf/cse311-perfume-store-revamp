@@ -21,6 +21,7 @@ include('includes/header.php');
         </div>
 
         <form action="functions/authcode.php" method="post" class="form-grid">
+            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
             <div class="field">
                 <label for="li-username">Username</label>
                 <input class="input" id="li-username" name="var_username" type="text" required
@@ -32,7 +33,7 @@ include('includes/header.php');
                 <input class="input" id="li-password" name="var_password" type="password" required
                        autocomplete="current-password" placeholder="Your password">
                 <span class="field__hint">
-                    <a href="forgot-password.php" style="color:var(--gold)">Forgot your password?</a>
+                    <a class="auth-link" href="forgot-password.php" style="color:var(--gold)">Forgot your password?</a>
                 </span>
             </div>
 
@@ -40,7 +41,7 @@ include('includes/header.php');
         </form>
 
         <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--fg-muted);font-size:var(--t-sm)">
-            No account yet? <a href="register.php" style="color:var(--gold);font-weight:600">Create one</a>
+            No account yet? <a class="auth-link" href="register.php" style="color:var(--gold);font-weight:600">Create one</a>
         </p>
     </div>
 </div>

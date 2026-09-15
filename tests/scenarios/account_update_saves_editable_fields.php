@@ -14,8 +14,10 @@ $con = new stdClass();
 session_start();
 $_SESSION['auth'] = true;
 $_SESSION['auth_user'] = ['user_id' => 1, 'username' => 'arif', 'email' => 'arif@example.com'];
+$_SESSION['csrf_token'] = 'test-csrf-token';
 $_POST = [
     'update_account_btn' => '1',
+    'csrf_token' => 'test-csrf-token',
     'name' => 'Arif Islam Rahman',
     'email' => 'arif.new@example.com',
     'contacts' => '01799999999',

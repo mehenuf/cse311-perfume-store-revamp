@@ -14,7 +14,8 @@ session_start();
 $_SESSION['auth'] = true;
 $_SESSION['admin_check'] = 1;
 $_SESSION['auth_user'] = ['user_id' => 1, 'username' => 'mehenuf', 'email' => 'mehenuf@gmail.com'];
-$_POST = ['perfume_id' => '1', 'price' => '14500', 'qty' => '25'];
+$_SESSION['csrf_token'] = 'test-csrf-token';
+$_POST = ['perfume_id' => '1', 'price' => '14500', 'qty' => '25', 'csrf_token' => 'test-csrf-token'];
 
 shim_report(function () use ($pdo) {
     $row = $pdo->query("SELECT price, qty FROM perfumes WHERE id = 1")->fetch(PDO::FETCH_ASSOC);

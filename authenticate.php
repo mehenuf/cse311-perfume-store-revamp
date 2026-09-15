@@ -8,6 +8,7 @@
  */
 if (!isset($_SESSION['auth'])) {
     $_SESSION['message'] = 'Please log in to continue.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: login.php');
     exit;
 }

@@ -210,6 +210,8 @@ tools/preview/_cand/
 tools/preview/
 _cand/
 *.contact-sheet.html
+/temp_images_safe/
+/test_bing/
 
 # ---------------------------------------------------------------
 #  Generated SQL and local database dumps

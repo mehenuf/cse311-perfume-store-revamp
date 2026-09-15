@@ -42,6 +42,7 @@ if (!$data) {
 </div>
 
 <form action="Includes/code.php" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
     <input type="hidden" name="get_id" value="<?= (int) $data['id'] ?>">
     <input type="hidden" name="old_image" value="<?= e($data['image_path']) ?>">
 
@@ -204,6 +205,7 @@ if (!$data) {
         </p>
         <form action="Includes/code.php" method="post"
               data-confirm="Delete this product permanently? This cannot be undone.">
+            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="delete_id" value="<?= (int) $data['id'] ?>">
             <button class="btn btn--danger" type="submit" name="dlt_perfume_btn">
                 <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Delete product

@@ -29,6 +29,7 @@ if (!$charge['ok']) {
     error_log('Coinbase charge creation failed for order ' . $order['id'] . ': ' . $charge['error']);
     markOrderFailed($order['id'], 'COINBASE', 'create-failed-' . $order['id'], 'charge_create_failed', $charge['error']);
     $_SESSION['message'] = 'Crypto payment is not available right now. Please try again or choose another payment method.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ../checkout.php');
     exit;
 }

@@ -59,7 +59,7 @@ $footBrands = array_slice(brandListAlphabetical(), 0, 4, true);
 
         <div class="footer__note">
             <span>Copyright <?= date('Y') ?> Mehenuf Hossain Bhuiyan. All rights reserved.</span>
-            <span>Cash on delivery across Bangladesh</span>
+            <span>Cash on delivery, card, crypto and mobile payments accepted</span>
         </div>
     </div>
 </footer>

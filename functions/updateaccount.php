@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+require_once('../includes/helpers.php');
 
 if (!isset($_SESSION['auth_user']['user_id'])) {
     header('Location: ../login.php');
@@ -8,6 +9,13 @@ if (!isset($_SESSION['auth_user']['user_id'])) {
 }
 
 if (!isset($_POST['update_account_btn'])) {
+    header('Location: ../account.php');
+    exit;
+}
+
+if (!csrfVerify($_POST['csrf_token'] ?? null)) {
+    $_SESSION['message'] = 'Your session expired. Please try again.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ../account.php');
     exit;
 }
@@ -20,12 +28,14 @@ $address  = trim((string) $_POST['address']);
 
 if ($name === '' || $email === '' || $contacts === '' || $address === '') {
     $_SESSION['message'] = 'Every field needs a value.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ../account.php');
     exit;
 }
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $_SESSION['message'] = 'Enter a valid email address.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ../account.php');
     exit;
 }
@@ -37,6 +47,7 @@ mysqli_stmt_bind_param($check_stmt, 'si', $email, $userId);
 mysqli_stmt_execute($check_stmt);
 if (mysqli_num_rows(mysqli_stmt_get_result($check_stmt)) > 0) {
     $_SESSION['message'] = 'Another account already uses that email.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ../account.php');
     exit;
 }
@@ -53,10 +64,12 @@ mysqli_stmt_bind_param($update_stmt, 'ssssi', $name, $email, $contacts, $address
 
 if (mysqli_stmt_execute($update_stmt)) {
     $_SESSION['auth_user']['email'] = $email;
-    $_SESSION['message'] = 'Your account details have been updated.';
+    // account-saved.php is itself the confirmation (heading, checkmark and
+    // all) -- no need for a toast to repeat the same news on top of it.
     header('Location: ../account-saved.php');
     exit;
 }
 
 $_SESSION['message'] = 'Something went wrong. Please try again.';
+$_SESSION['message_kind'] = 'error';
 header('Location: ../account.php');

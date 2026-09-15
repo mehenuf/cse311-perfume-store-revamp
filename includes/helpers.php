@@ -133,9 +133,9 @@ if (!function_exists('priceMarkup')) {
         }
 
         return '<span class="' . e($class) . '" data-discount>'
-             . '<span class="price-block__was">' . e(taka($pricing['original'])) . '</span>'
+             . '<del class="price-block__was"><span class="visually-hidden">Original price </span>' . e(taka($pricing['original'])) . '</del>'
              . '<span class="price-block__row">'
-             . '<span class="price-block__final">' . e(taka($pricing['final'])) . '</span>'
+             . '<span class="price-block__final"><span class="visually-hidden">Now </span>' . e(taka($pricing['final'])) . '</span>'
              . '<span class="price-block__badge">-' . $pricing['percent'] . '%</span>'
              . '</span>'
              . '</span>';
@@ -153,20 +153,34 @@ if (!function_exists('stockLabel')) {
     }
 }
 
-if (!function_exists('orderStatus')) {
+if (!function_exists('orderStatusMap')) {
     /**
-     * Order status code to label.
-     * Codes come from order-details.php and admin/order-history.php.
+     * The one place an order status code is defined, code => label.
+     * Used by orderStatus() below and by admin/order-history.php's status
+     * dropdown, so the two can never drift the way they once had (order
+     * code 1 was labelled "Completed" here while getActiveOrders() treated
+     * it as still in progress -- 1 and 2 both read as "in progress" there,
+     * "Confirmed or already on the way to the customer", so 1 is
+     * "Confirmed": nothing in this app treats an order as finished before
+     * it has actually been Delivered).
      */
-    function orderStatus($code)
+    function orderStatusMap()
     {
-        $map = [
+        return [
             0 => 'Processing',
-            1 => 'Completed',
+            1 => 'Confirmed',
             2 => 'Shipped',
             3 => 'Delivered',
             4 => 'Cancelled',
         ];
+    }
+}
+
+if (!function_exists('orderStatus')) {
+    /** Order status code to label. */
+    function orderStatus($code)
+    {
+        $map = orderStatusMap();
         return isset($map[(int) $code]) ? $map[(int) $code] : 'Unknown';
     }
 }
@@ -339,6 +353,20 @@ if (!function_exists('brandSlugOf')) {
             }
         }
         return null;
+    }
+}
+
+if (!function_exists('paymentModeLabel')) {
+    /** A customer/admin-facing label for the internal payment_mode code. */
+    function paymentModeLabel($mode)
+    {
+        $map = [
+            'COD'        => 'Cash on delivery',
+            'STRIPE'     => 'Card, Google Pay or Apple Pay',
+            'SSLCOMMERZ' => 'bKash, Rocket, Nagad or Bangla QR',
+            'COINBASE'   => 'Crypto',
+        ];
+        return isset($map[$mode]) ? $map[$mode] : $mode;
     }
 }
 

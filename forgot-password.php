@@ -31,7 +31,7 @@ include('includes/header.php');
         </form>
 
         <p style="margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line);color:var(--fg-muted);font-size:var(--t-sm)">
-            Remembered it? <a href="login.php" style="color:var(--gold);font-weight:600">Log in</a>
+            Remembered it? <a class="auth-link" href="login.php" style="color:var(--gold);font-weight:600">Log in</a>
         </p>
     </div>
 </div>

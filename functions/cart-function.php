@@ -17,6 +17,23 @@ if (isset($_SESSION['auth'])) {
             $perfume_id = (int) $_POST['perfume_id'];
             $perfume_qty = (int) $_POST['perfume_qty'];
 
+            // The stepper on display-perfume.php caps at min(10, stock), but
+            // that is a client-side convenience, not a guarantee -- a direct
+            // POST could otherwise put an arbitrary quantity in the cart,
+            // which would then overcharge the order total for units that
+            // were never actually reserved (placeorder.php's stock decrement
+            // is separately guarded against going negative, but the price
+            // charged is read straight from the cart row).
+            $stock_stmt = mysqli_prepare($con, "SELECT qty FROM perfumes WHERE id = ? AND status = 1");
+            mysqli_stmt_bind_param($stock_stmt, 'i', $perfume_id);
+            mysqli_stmt_execute($stock_stmt);
+            $stock_row = mysqli_fetch_assoc(mysqli_stmt_get_result($stock_stmt));
+            if (!$stock_row) {
+                echo 500;
+                break;
+            }
+            $perfume_qty = max(1, min(10, $perfume_qty, (int) $stock_row['qty']));
+
             $check_stmt = mysqli_prepare($con, "SELECT id FROM cart WHERE user_id = ? AND perfume_id = ?");
             mysqli_stmt_bind_param($check_stmt, 'ii', $user_id, $perfume_id);
             mysqli_stmt_execute($check_stmt);
@@ -39,6 +56,16 @@ if (isset($_SESSION['auth'])) {
         case 'update':
             $perfume_id = (int) $_POST['perfume_id'];
             $perfume_qty = (int) $_POST['perfume_qty'];
+
+            $stock_stmt = mysqli_prepare($con, "SELECT qty FROM perfumes WHERE id = ? AND status = 1");
+            mysqli_stmt_bind_param($stock_stmt, 'i', $perfume_id);
+            mysqli_stmt_execute($stock_stmt);
+            $stock_row = mysqli_fetch_assoc(mysqli_stmt_get_result($stock_stmt));
+            if (!$stock_row) {
+                echo 500;
+                break;
+            }
+            $perfume_qty = max(1, min(10, $perfume_qty, (int) $stock_row['qty']));
 
             $check_stmt = mysqli_prepare($con, "SELECT id FROM cart WHERE user_id = ? AND perfume_id = ?");
             mysqli_stmt_bind_param($check_stmt, 'ii', $user_id, $perfume_id);
@@ -100,13 +127,15 @@ switch ($scope) {
         $perfume_id = (int) $_POST['perfume_id'];
         $perfume_qty = (int) $_POST['perfume_qty'];
 
-        $stmt = mysqli_prepare($con, "SELECT id FROM perfumes WHERE id = ? AND status = 1");
+        $stmt = mysqli_prepare($con, "SELECT qty FROM perfumes WHERE id = ? AND status = 1");
         mysqli_stmt_bind_param($stmt, 'i', $perfume_id);
         mysqli_stmt_execute($stmt);
-        if (mysqli_num_rows(mysqli_stmt_get_result($stmt)) === 0) {
+        $stock_row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        if (!$stock_row) {
             echo 500;
             break;
         }
+        $perfume_qty = max(1, min(10, $perfume_qty, (int) $stock_row['qty']));
 
         if (isset($_SESSION['guest_cart'][$perfume_id])) {
             echo 69;
@@ -120,6 +149,12 @@ switch ($scope) {
         $perfume_qty = (int) $_POST['perfume_qty'];
 
         if (isset($_SESSION['guest_cart'][$perfume_id])) {
+            $stmt = mysqli_prepare($con, "SELECT qty FROM perfumes WHERE id = ? AND status = 1");
+            mysqli_stmt_bind_param($stmt, 'i', $perfume_id);
+            mysqli_stmt_execute($stmt);
+            $stock_row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+            $perfume_qty = max(1, min(10, $perfume_qty, $stock_row ? (int) $stock_row['qty'] : $perfume_qty));
+
             $_SESSION['guest_cart'][$perfume_id] = $perfume_qty;
             echo 200;
         } else {

@@ -60,31 +60,37 @@ echo crumb([
 
     <div class="detail__body stack" data-qty data-min="1" data-max="<?= $maxQty ?>">
 
-        <p style="color:var(--fg-faint);font-size:var(--t-sm);margin:0"><?= e($stockText) ?></p>
+        <p class="detail__eyebrow"><?= e($stockText) ?></p>
         <h1 class="detail__title" style="margin-top:var(--s-2)"><?= e($product['name']) ?></h1>
         <?= priceMarkup($product, 'detail__price') ?>
 
-        <p style="color:var(--fg-muted)"><?= e($product['description']) ?></p>
+        <?php if (trim((string) $product['description']) !== '') { ?>
+            <p style="color:var(--fg-muted)"><?= e($product['description']) ?></p>
+        <?php } ?>
 
-        <dl class="notes">
-            <div>
-                <dt>Composition</dt>
-                <dd><?= e($product['perfume_notes']) ?></dd>
-            </div>
-        </dl>
+        <?php if (trim((string) $product['perfume_notes']) !== '') { ?>
+            <dl class="notes">
+                <div>
+                    <dt>Composition</dt>
+                    <dd><?= e($product['perfume_notes']) ?></dd>
+                </div>
+            </dl>
+        <?php } ?>
 
         <dl class="spec">
+            <?php if (trim((string) $product['volume']) !== '') { ?>
             <div>
                 <dt>Bottle</dt>
                 <dd><?= e($product['volume']) ?></dd>
             </div>
+            <?php } ?>
             <div>
                 <dt>For</dt>
                 <dd><?= e(genderLabel($product['gender'] ?? 'unisex')) ?></dd>
             </div>
             <div>
                 <dt>Availability</dt>
-                <dd><?= $inStock ? (int) $product['qty'] . ' in stock' : 'Sold out' ?></dd>
+                <dd><?= e($stockText) ?></dd>
             </div>
         </dl>
 
@@ -95,7 +101,7 @@ echo crumb([
             <a class="btn btn--ghost btn--lg" href="perfumes.php">Browse the collection</a>
 
         <?php } else { ?>
-            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-4)">
+            <div class="detail__actions">
                 <div class="qty">
                     <button type="button" data-qty-step="-1" aria-label="Decrease quantity" disabled>
                         <i class="fa-solid fa-minus" aria-hidden="true"></i>
@@ -106,6 +112,7 @@ echo crumb([
                             <?= $maxQty <= 1 ? 'disabled' : '' ?>>
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                     </button>
+                    <span class="visually-hidden" data-qty-announce aria-live="polite"></span>
                 </div>
 
                 <button class="btn btn--primary btn--lg" type="button"
@@ -113,15 +120,22 @@ echo crumb([
                     <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Add to cart
                 </button>
             </div>
+            <?php if ($maxQty < (int) $product['qty']) { ?>
+                <p class="field__hint">Limit <?= $maxQty ?> per order</p>
+            <?php } ?>
+            <noscript><p class="field__hint">Adding to cart needs JavaScript. Please enable it to buy this item.</p></noscript>
         <?php } ?>
     </div>
 </section>
 
 <?php
-// More from the same house, matched on the first word of the product name.
-$firstWord   = strtok($product['name'], ' ');
+// More from the same house, matched via the brand registry (falls back to
+// the first word for names that don't match any registered house).
+$houseLabel  = houseOf($product['name']);
+$houseSlug   = brandSlugOf($product['name']);
+$brand       = $houseSlug ? brandBySlug($houseSlug) : null;
+$likePattern = $brand ? $brand['pattern'] : (strtok($product['name'], ' ') . '%');
 $productId   = (int) $product['id'];
-$likePattern = $firstWord . '%';
 $related_stmt = mysqli_prepare($con,
     "SELECT * FROM perfumes
      WHERE status = 1 AND name LIKE ? AND id <> ?
@@ -129,15 +143,18 @@ $related_stmt = mysqli_prepare($con,
 mysqli_stmt_bind_param($related_stmt, 'si', $likePattern, $productId);
 mysqli_stmt_execute($related_stmt);
 $related = mysqli_stmt_get_result($related_stmt);
+$relatedRows = $related ? mysqli_fetch_all($related, MYSQLI_ASSOC) : [];
 
-if ($related && mysqli_num_rows($related) > 0) { ?>
+if (count($relatedRows) > 0) {
+    $relatedCount = count($relatedRows);
+    $gridClass = $relatedCount < 4 ? 'card-grid--narrow' : ''; ?>
     <section class="section section--sunken">
         <div class="shell">
             <div class="section-head">
-                <div><h2>More from <?= e($firstWord) ?></h2></div>
+                <div><h2>More from <?= e($houseLabel) ?></h2></div>
             </div>
-            <div class="card-grid card-grid--4">
-                <?php foreach ($related as $p) { include('includes/product-card.php'); } ?>
+            <div class="card-grid card-grid--4 <?= e($gridClass) ?>">
+                <?php foreach ($relatedRows as $p) { include('includes/product-card.php'); } ?>
             </div>
         </div>
     </section>

@@ -169,6 +169,7 @@ if (!function_exists('beginGatewayCheckout')) {
         $cartItems = displayCart();
         if (!validateCheckoutFields($fields) || !$cartItems) {
             $_SESSION['message'] = 'Please fill in every delivery field before checking out.';
+            $_SESSION['message_kind'] = 'error';
             return null;
         }
 
@@ -176,6 +177,7 @@ if (!function_exists('beginGatewayCheckout')) {
         $order = createPendingOrder($fields, $cartItems, $gateway, $currency);
         if (!$order) {
             $_SESSION['message'] = 'We could not start your order. Please try again.';
+            $_SESSION['message_kind'] = 'error';
             return null;
         }
 

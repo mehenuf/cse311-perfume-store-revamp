@@ -112,7 +112,7 @@ echo crumb($collectionCrumbs);
                         <input class="input price-inputs__field" id="cf-price-min-<?= $uid ?>" type="number"
                                inputmode="numeric" min="<?= $minPrice ?>" max="<?= $maxPrice ?>" step="100"
                                value="<?= $minPrice ?>" data-price-min-number>
-                        <span class="price-inputs__sep" aria-hidden="true">&ndash;</span>
+                        <span class="price-inputs__sep" aria-hidden="true">-</span>
                         <label class="visually-hidden" for="cf-price-max-<?= $uid ?>">Maximum price, Taka</label>
                         <input class="input price-inputs__field" id="cf-price-max-<?= $uid ?>" type="number"
                                inputmode="numeric" min="<?= $minPrice ?>" max="<?= $maxPrice ?>" step="100"
@@ -193,8 +193,8 @@ echo crumb($collectionCrumbs);
                         <label for="cf-sort-<?= $uid ?>" class="visually-hidden">Sort</label>
                         <select class="select" id="cf-sort-<?= $uid ?>" data-filter-sort>
                             <option value="default">Sort: Featured</option>
-                            <option value="name-asc">Name: A&ndash;Z</option>
-                            <option value="name-desc">Name: Z&ndash;A</option>
+                            <option value="name-asc">Name: A-Z</option>
+                            <option value="name-desc">Name: Z-A</option>
                             <option value="price-asc">Price: Low to high</option>
                             <option value="price-desc">Price: High to low</option>
                         </select>

@@ -17,11 +17,11 @@
         <script>
             window.addEventListener('load', function () {
                 if (window.storeToast) {
-                    window.storeToast(<?= json_encode($_SESSION['message'], JSON_UNESCAPED_UNICODE) ?>, 'success');
+                    window.storeToast(<?= json_encode($_SESSION['message'], JSON_UNESCAPED_UNICODE) ?>, <?= json_encode($_SESSION['message_kind'] ?? 'success') ?>);
                 }
             });
         </script>
-        <?php unset($_SESSION['message']); ?>
+        <?php unset($_SESSION['message'], $_SESSION['message_kind']); ?>
     <?php } ?>
 
 </body>

@@ -9,8 +9,15 @@
 $basePath = '../../';
 include(__DIR__ . '/../../middleware/adminmiddleware.php');
 include(__DIR__ . '/../../config/dbcon.php');
+require_once(__DIR__ . '/../../includes/helpers.php');
 
 header('Content-Type: application/json');
+
+if (!csrfVerify($_POST['csrf_token'] ?? null)) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'message' => 'Your session expired. Refresh the page and try again.']);
+    exit;
+}
 
 $perfumeId = isset($_POST['perfume_id']) ? (int) $_POST['perfume_id'] : 0;
 $price     = isset($_POST['price']) && is_numeric($_POST['price']) ? (float) $_POST['price'] : null;

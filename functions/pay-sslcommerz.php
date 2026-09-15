@@ -29,6 +29,7 @@ if (!$session['ok']) {
     error_log('SSLCommerz session creation failed for order ' . $order['id'] . ': ' . $session['error']);
     markOrderFailed($order['id'], 'SSLCOMMERZ', 'create-failed-' . $order['id'], 'session_create_failed', $session['error']);
     $_SESSION['message'] = 'bKash/Rocket/card payment is not available right now. Please try again or choose another payment method.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ../checkout.php');
     exit;
 }

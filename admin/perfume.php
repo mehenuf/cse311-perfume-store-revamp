@@ -87,7 +87,7 @@ $justUpdatedId = isset($_GET['updated']) ? (int) $_GET['updated'] : 0;
                                     <?php } elseif ((int) $item['discount_percent'] > 0) { ?>
                                         <span class="badge" title="Scheduled, not active yet or already ended">Scheduled</span>
                                     <?php } else { ?>
-                                        <span style="color:var(--fg-faint)">&mdash;</span>
+                                        <span style="color:var(--fg-faint)">Not discounted</span>
                                     <?php } ?>
                                 </td>
                                 <td>

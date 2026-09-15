@@ -10,6 +10,7 @@ if (!isset($_POST['placeorder'])) {
 
 if (!csrfVerify($_POST['csrf_token'] ?? null)) {
     $_SESSION['message'] = 'Your session expired. Please try again.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ../checkout.php');
     exit;
 }
@@ -21,7 +22,8 @@ $zipcode = $_POST['zipcode'];
 $address = $_POST['address'];
 
 if (($name == null) || $email == null || $contact == null || $zipcode == null || $address == null) {
-    $_SESSION['message'] = "You need to fill every fields.";
+    $_SESSION['message'] = "Please fill in every field.";
+    $_SESSION['message_kind'] = 'error';
     header('Location: ../checkout.php');
     exit(0);
 }
@@ -62,8 +64,16 @@ if ($orderinsert_query_run) {
 
     $insertitem_stmt = mysqli_prepare($con,
         "INSERT INTO order_item (order_id, perfume_id, perfume_qty, price) VALUES (?, ?, ?, ?)");
-    $fetch_stmt = mysqli_prepare($con, "SELECT qty FROM perfumes WHERE id = ?");
-    $updateqty_stmt = mysqli_prepare($con, "UPDATE perfumes SET qty = ? WHERE id = ?");
+    // Atomic, conditional decrement -- qty is UNSIGNED, so a plain
+    // "SELECT current, then UPDATE SET qty = current - n" can drive it
+    // negative (a fatal DB error under strict mode) whenever the cart's
+    // remembered quantity has since exceeded real stock, whether from a
+    // concurrent order or stock the admin lowered after the item was added
+    // to the cart. "AND qty >= ?" makes the same guarantee the online
+    // gateway path already has in functions/payments/common.php: the row
+    // either decrements cleanly or is left untouched, never negative.
+    $updateqty_stmt = mysqli_prepare($con,
+        "UPDATE perfumes SET qty = qty - ? WHERE id = ? AND qty >= ?");
 
     foreach ($cart_items as $key) {
 
@@ -74,13 +84,7 @@ if ($orderinsert_query_run) {
         mysqli_stmt_bind_param($insertitem_stmt, 'iiid', $order_id, $perfume_id, $perfume_qty, $price);
         mysqli_stmt_execute($insertitem_stmt);
 
-        mysqli_stmt_bind_param($fetch_stmt, 'i', $perfume_id);
-        mysqli_stmt_execute($fetch_stmt);
-        $perfume_data = mysqli_fetch_assoc(mysqli_stmt_get_result($fetch_stmt));
-        $current_qty = $perfume_data ? (int) $perfume_data['qty'] : 0;
-
-        $new_qty = $current_qty - $perfume_qty;
-        mysqli_stmt_bind_param($updateqty_stmt, 'ii', $new_qty, $perfume_id);
+        mysqli_stmt_bind_param($updateqty_stmt, 'iii', $perfume_qty, $perfume_id, $perfume_qty);
         mysqli_stmt_execute($updateqty_stmt);
     }
 

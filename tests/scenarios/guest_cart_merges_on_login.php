@@ -19,7 +19,8 @@ $con = new stdClass();
 // loading an empty on-disk session over it.
 session_start();
 $_SESSION['guest_cart'] = [1 => 2, 2 => 3]; // +2 more Sauvage (should merge to 3), 3x Chanel (new row)
-$_POST = ['login_btn' => '1', 'var_username' => 'arif', 'var_password' => 'arif1234'];
+$_SESSION['csrf_token'] = 'test-csrf-token';
+$_POST = ['login_btn' => '1', 'csrf_token' => 'test-csrf-token', 'var_username' => 'arif', 'var_password' => 'arif1234'];
 
 shim_report(function () use ($pdo) {
     $rows = $pdo->query("SELECT perfume_id, perfume_qty FROM cart WHERE user_id = 1 ORDER BY perfume_id")->fetchAll(PDO::FETCH_ASSOC);

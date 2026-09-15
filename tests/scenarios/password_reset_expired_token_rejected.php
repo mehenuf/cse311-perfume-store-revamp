@@ -15,9 +15,13 @@ $stmt = $pdo->prepare("INSERT INTO customer (username, password, name, email, ad
 $stmt->execute([$tokenHash, $expiredAt]);
 
 $con = new stdClass();
-$_SESSION = [];
+// Started here so the csrf_token set below survives resetpassword.php's own
+// session_start() call (a no-op once a session is already active).
+session_start();
+$_SESSION = ['csrf_token' => 'test-csrf-token'];
 $_POST = [
     'reset_password_btn' => '1',
+    'csrf_token' => 'test-csrf-token',
     'token' => $rawToken,
     'password' => 'ShouldNotApply1',
     'repassword' => 'ShouldNotApply1',

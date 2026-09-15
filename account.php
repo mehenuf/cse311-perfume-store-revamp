@@ -26,6 +26,7 @@ echo crumb(['Home' => 'index.php', 'Account settings' => null]);
 
     <div class="panel auth-card" style="max-width:620px">
         <form action="functions/updateaccount.php" method="post" class="form-grid form-grid--2">
+            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
 
             <div class="field">
                 <label for="ac-name">Full name</label>
@@ -35,8 +36,9 @@ echo crumb(['Home' => 'index.php', 'Account settings' => null]);
 
             <div class="field">
                 <label for="ac-username">Username</label>
-                <input class="input" id="ac-username" type="text" value="<?= e($me['username']) ?>" disabled>
-                <span class="field__hint">Usernames can't be changed.</span>
+                <input class="input" id="ac-username" type="text" value="<?= e($me['username']) ?>" disabled
+                       aria-describedby="ac-username-hint">
+                <span class="field__hint" id="ac-username-hint">Usernames can't be changed.</span>
             </div>
 
             <div class="field span-2">
@@ -54,8 +56,9 @@ echo crumb(['Home' => 'index.php', 'Account settings' => null]);
             <div class="field">
                 <label for="ac-dob">Date of birth</label>
                 <input class="input" id="ac-dob" type="text"
-                       value="<?= $me['dob'] ? e(date('j F Y', strtotime($me['dob']))) : 'Not set' ?>" disabled>
-                <span class="field__hint">Date of birth can't be changed.</span>
+                       value="<?= $me['dob'] ? e(date('j F Y', strtotime($me['dob']))) : 'Not set' ?>" disabled
+                       aria-describedby="ac-dob-hint">
+                <span class="field__hint" id="ac-dob-hint">Date of birth can't be changed.</span>
             </div>
 
             <div class="field span-2">

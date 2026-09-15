@@ -14,9 +14,11 @@ session_start();
 $_SESSION['auth'] = true;
 $_SESSION['admin_check'] = 1;
 $_SESSION['auth_user'] = ['user_id' => 1, 'username' => 'mehenuf', 'email' => 'mehenuf@gmail.com'];
+$_SESSION['csrf_token'] = 'test-csrf-token';
 
 $_POST = [
     'addperfume_btn' => '1',
+    'csrf_token' => 'test-csrf-token',
     'name' => "Kilian L'Homme a la Rose",
     'perfume_notes' => 'Rose, Oud', 'description' => "It's smooth.", 'volume' => '50 ml',
     'qty' => '12', 'price' => '15600',

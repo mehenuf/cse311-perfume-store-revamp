@@ -291,7 +291,9 @@ include('includes/header.php');
     .pay-panel__brand svg { color: var(--pay-color, var(--gold)); flex-shrink: 0; }
     .pay-panel__brand h1 { font-size: var(--t-h3); margin: 0; }
     .pay-panel__demo-badge {
-        background: #fff3cd; color: #7a5b00; border-color: #e9d385; white-space: nowrap;
+        background: color-mix(in srgb, var(--warn) 16%, transparent);
+        color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+        white-space: nowrap;
     }
 
     .pay-summary {

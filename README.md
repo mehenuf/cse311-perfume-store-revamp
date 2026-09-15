@@ -349,7 +349,9 @@ practice for a shop handling real accounts and orders.
       outbound HTTPS (see `docs/payments.md`) -- the integrations, storefront UI
       and demo mode all work today; only live credentials are missing
 - [ ] Email confirmation when an order is placed
-- [ ] Sales dashboard for the admin (the current one shows sample figures)
+- [ ] A revenue trend chart over time on the admin dashboard (it already shows
+      live totals, pending count, customer count and low-stock items -- a
+      chart is the next step, not a replacement for sample data)
 
 ---
 

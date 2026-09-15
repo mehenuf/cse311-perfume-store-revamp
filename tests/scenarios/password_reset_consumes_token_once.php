@@ -29,9 +29,13 @@ shim_report(function () use ($pdo) {
     ];
 });
 
-$_SESSION = [];
+// Started here so the csrf_token set below survives resetpassword.php's own
+// session_start() call (a no-op once a session is already active).
+session_start();
+$_SESSION = ['csrf_token' => 'test-csrf-token'];
 $_POST = [
     'reset_password_btn' => '1',
+    'csrf_token' => 'test-csrf-token',
     'token' => $rawToken,
     'password' => 'NewPassw0rd!',
     'repassword' => 'NewPassw0rd!',
@@ -41,9 +45,11 @@ chdir($ROOT . '/functions');
 include($ROOT . '/functions/resetpassword.php');
 
 // A second, separate request replaying the same (now-consumed) token.
-$_SESSION = [];
+session_start();
+$_SESSION = ['csrf_token' => 'test-csrf-token'];
 $_POST = [
     'reset_password_btn' => '1',
+    'csrf_token' => 'test-csrf-token',
     'token' => $rawToken,
     'password' => 'SecondAttempt1',
     'repassword' => 'SecondAttempt1',

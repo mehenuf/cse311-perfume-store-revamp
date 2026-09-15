@@ -74,7 +74,7 @@ echo crumb(['Home' => 'index.php', 'Cart' => 'shoppingcart.php', 'Checkout' => n
                         <div class="field">
                             <label for="co-zip">Zip code</label>
                             <input class="input" id="co-zip" name="zipcode" type="text" required
-                                   autocomplete="postal-code" placeholder="1205">
+                                   inputmode="numeric" autocomplete="postal-code" placeholder="1205">
                         </div>
 
                         <div class="field span-2">

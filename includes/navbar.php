@@ -55,9 +55,10 @@ function navCurrent($page, $currentPage)
             <li><a class="nav__link" href="<?= $basePath ?>discounts.php"<?= navCurrent('discounts.php', $currentPage) ?>>On Sale</a></li>
 
             <li class="nav__group" data-nav-group data-open="false">
-                <a class="nav__link" href="<?= $basePath ?>perfumes.php" data-nav-trigger
-                   aria-expanded="false" aria-haspopup="true">Shop</a>
+                <button class="nav__link" type="button" data-nav-trigger
+                        aria-expanded="false" aria-haspopup="true">Shop</button>
                 <ul class="nav__menu nav__menu--cols">
+                    <li><a href="<?= $basePath ?>perfumes.php"><i class="fa-solid fa-grip" aria-hidden="true"></i> View full collection</a></li>
                     <li><a href="<?= $basePath ?>for-him.php"><i class="fa-solid fa-mars" aria-hidden="true"></i> For him</a></li>
                     <li><a href="<?= $basePath ?>for-her.php"><i class="fa-solid fa-venus" aria-hidden="true"></i> For her</a></li>
                     <li class="nav__menu-sep"></li>

@@ -14,6 +14,12 @@ include(__DIR__ . '/../../config/dbcon.php');
 include(__DIR__ . '/../../functions/myfunctions.php');
 require_once(__DIR__ . '/../../includes/helpers.php');
 
+// Every write this file can make (add, edit, delete, order-status) is
+// gated on the same token, checked once here rather than once per branch.
+if (!csrfVerify($_POST['csrf_token'] ?? null)) {
+    redirect('../index.php', 'Your session expired. Please try again.', 'error');
+}
+
 /**
  * Reduce an uploaded filename to something safe to place on disk:
  * strip any directory part, keep only sane characters, and force a
@@ -113,9 +119,9 @@ if (isset($_POST['addperfume_btn'])) {
         if ($img_path !== '') {
             move_uploaded_file($_FILES['image_path']['tmp_name'], $path . '/' . $img_path);
         }
-        redirect("../add.php", "The perfume was successfully added!!");
+        redirect("../add.php", "Perfume added.");
     } else {
-        redirect("../add.php", "There was an error adding the perfume  :( ");
+        redirect("../add.php", "Something went wrong while adding the perfume. Please try again.", 'error');
     }
 } else if (isset($_POST['save_edit_btn'])) {
     $get_id        = (int) $_POST['get_id'];
@@ -155,9 +161,9 @@ if (isset($_POST['addperfume_btn'])) {
                 unlink($path . '/' . $old_image);
             }
         }
-        redirect("../perfume.php?updated=$get_id#perfume-$get_id", "The edit was saved successfully");
+        redirect("../perfume.php?updated=$get_id#perfume-$get_id", "Changes saved.");
     } else {
-        redirect("../edit-perfume.php?id=$get_id", "An error was occured!");
+        redirect("../edit-perfume.php?id=$get_id", "Something went wrong while saving. Please try again.", 'error');
     }
 } else if (isset($_POST['dlt_perfume_btn'])) {
     $delete_id = (int) $_POST['delete_id'];
@@ -179,11 +185,11 @@ if (isset($_POST['addperfume_btn'])) {
         if ($image !== '' && file_exists($imageFile)) {
             unlink($imageFile);
         }
-        redirect("../perfume.php", "Perfume was successfully deleted!");
+        redirect("../perfume.php", "Perfume deleted.");
     } else {
         // A perfume that has already been ordered cannot be deleted, because
         // order_item.perfume_id is ON DELETE RESTRICT. Unpublish it instead.
-        redirect("../perfume.php", "This perfume appears in past orders, so it cannot be deleted. Untick Status to unpublish it instead.");
+        redirect("../perfume.php", "This perfume appears in past orders, so it cannot be deleted. Untick Status to unpublish it instead.", 'error');
     }
 } elseif (isset($_POST['updateOrder_btn'])) {
     $tracking_no  = $_POST['tracking_no'];
@@ -193,5 +199,5 @@ if (isset($_POST['addperfume_btn'])) {
     mysqli_stmt_bind_param($stmt, 'is', $order_status, $tracking_no);
     mysqli_stmt_execute($stmt);
 
-    redirect("../order-history.php?trackid=" . urlencode($tracking_no), "Order Status has been updated");
+    redirect("../order-history.php?trackid=" . urlencode($tracking_no), "Order status updated.");
 }

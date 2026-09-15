@@ -92,7 +92,7 @@ echo crumb(['Home' => 'index.php', $order['tracking_no'] => null]);
             </div>
             <div>
                 <div style="color:var(--fg-faint);font-size:var(--t-xs)">Payment method</div>
-                <div><?= e($order['payment_mode']) ?></div>
+                <div><?= e(paymentModeLabel($order['payment_mode'])) ?></div>
             </div>
         </div>
 

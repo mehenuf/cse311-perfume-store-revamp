@@ -128,7 +128,8 @@
                 body: new URLSearchParams({
                     perfume_id: row.dataset.perfumeId,
                     price: price,
-                    qty: qty
+                    qty: qty,
+                    csrf_token: window.ADMIN_CSRF_TOKEN || ''
                 }).toString(),
                 credentials: 'same-origin'
             })
@@ -136,6 +137,11 @@
                 .then(function (data) {
                     if (data && data.ok) {
                         toast('Saved.', 'success');
+                        // The stock input's colour is a low/out-of-stock cue
+                        // computed server-side at page render -- without this
+                        // it goes stale the moment a save actually changes
+                        // which band the new quantity falls into.
+                        qtyInput.style.color = qty === 0 ? 'var(--danger)' : (qty <= 12 ? 'var(--warn)' : '');
                     } else {
                         toast((data && data.message) || 'Could not save changes.', 'error');
                     }

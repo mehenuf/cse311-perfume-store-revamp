@@ -6,6 +6,11 @@
         <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
     </button>
 
+    <script>
+        // Read by the inline price/stock editor's fetch() call in admin.js --
+        // that AJAX request has no <form> to carry a hidden csrf_token field.
+        window.ADMIN_CSRF_TOKEN = <?= json_encode(csrfToken(), JSON_UNESCAPED_SLASHES) ?>;
+    </script>
     <script src="../assets/js/theme.js?v=<?= @filemtime(__DIR__ . '/../../assets/js/theme.js') ?>" defer></script>
     <script src="assets/js/admin.js?v=<?= @filemtime(__DIR__ . '/../assets/js/admin.js') ?>" defer></script>
 
@@ -13,11 +18,11 @@
         <script>
             window.addEventListener('load', function () {
                 if (window.adminToast) {
-                    window.adminToast(<?= json_encode($_SESSION['message'], JSON_UNESCAPED_UNICODE) ?>, 'success');
+                    window.adminToast(<?= json_encode($_SESSION['message'], JSON_UNESCAPED_UNICODE) ?>, <?= json_encode($_SESSION['message_kind'] ?? 'success') ?>);
                 }
             });
         </script>
-        <?php unset($_SESSION['message']); ?>
+        <?php unset($_SESSION['message'], $_SESSION['message_kind']); ?>
     <?php } ?>
 
 </body>

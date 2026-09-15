@@ -120,7 +120,11 @@ $lowStock = mysqli_query($con,
             <?php if ($lowStock && mysqli_num_rows($lowStock) > 0) { ?>
                 <?php foreach ($lowStock as $p) { ?>
                     <div class="line-item">
-                        <img src="../images/<?= e($p['image_path']) ?>" alt="" loading="lazy">
+                        <?php if (trim((string) $p['image_path']) !== '') { ?>
+                            <img src="../images/<?= e($p['image_path']) ?>" alt="" loading="lazy">
+                        <?php } else { ?>
+                            <span class="line-item__noimg" aria-hidden="true"><i class="fa-solid fa-flask"></i></span>
+                        <?php } ?>
                         <div>
                             <p class="line-item__name"><?= e($p['name']) ?></p>
                             <p class="line-item__meta"><?= (int) $p['qty'] ?> left in stock</p>

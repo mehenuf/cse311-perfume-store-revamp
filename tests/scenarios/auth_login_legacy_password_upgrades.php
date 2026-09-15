@@ -12,8 +12,11 @@ $pdo->exec("INSERT INTO customer (username, password, name, email, admin_check)
             VALUES ('arif', 'arif1234', 'Arif Rahman', 'arif@example.com', 0)");
 
 $con = new stdClass(); // dbcon.php only runs its body when $con is unset
-$_SESSION = [];
-$_POST = ['login_btn' => '1', 'var_username' => 'arif', 'var_password' => 'arif1234'];
+// Started here so the csrf_token set below survives authcode.php's own
+// session_start() call (a no-op once a session is already active).
+session_start();
+$_SESSION = ['csrf_token' => 'test-csrf-token'];
+$_POST = ['login_btn' => '1', 'csrf_token' => 'test-csrf-token', 'var_username' => 'arif', 'var_password' => 'arif1234'];
 
 shim_report(function () use ($pdo) {
     $row = $pdo->query("SELECT password FROM customer WHERE username = 'arif'")->fetch(PDO::FETCH_ASSOC);

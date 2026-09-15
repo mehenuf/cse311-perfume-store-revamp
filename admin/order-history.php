@@ -1,7 +1,5 @@
 <?php
 include('../middleware/adminmiddleware.php');
-$pageTitle = 'Order';
-include('Includes/header.php');
 include('../functions/myfunctions.php');
 
 $order = null;
@@ -12,6 +10,9 @@ if (isset($_GET['trackid'])) {
         $order = mysqli_fetch_assoc($validation);
     }
 }
+
+$pageTitle = $order ? 'Order ' . $order['tracking_no'] : 'Order not found';
+include('Includes/header.php');
 
 if (!$order) {
     ?>
@@ -35,7 +36,7 @@ $items  = mysqli_query($con,
      JOIN perfumes p ON p.id = oi.perfume_id
      WHERE oi.order_id = " . (int) $order['id']);
 
-$statuses = [0 => 'Processing', 1 => 'Completed', 2 => 'Shipped', 3 => 'Delivered', 4 => 'Cancelled'];
+$statuses = orderStatusMap();
 ?>
 
 <div class="page-head">
@@ -82,6 +83,7 @@ $statuses = [0 => 'Processing', 1 => 'Completed', 2 => 'Shipped', 3 => 'Delivere
             <div class="card__head"><h2>Update status</h2></div>
             <div class="card__body">
                 <form action="Includes/code.php" method="post" class="form">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                     <input type="hidden" name="tracking_no" value="<?= e($order['tracking_no']) ?>">
                     <div class="field">
                         <label for="o-status">Status</label>
@@ -122,7 +124,7 @@ $statuses = [0 => 'Processing', 1 => 'Completed', 2 => 'Shipped', 3 => 'Delivere
                     <div>
                         <dt>Payment</dt>
                         <dd>
-                            <?= e($order['payment_mode']) ?>
+                            <?= e(paymentModeLabel($order['payment_mode'])) ?>
                             <span class="badge" data-payment-status="<?= e($order['payment_status'] ?? 'cod') ?>"
                                   style="margin-left:var(--s-2)">
                                 <?= e(ucfirst($order['payment_status'] ?? 'cod')) ?>

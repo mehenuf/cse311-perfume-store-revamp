@@ -305,12 +305,23 @@
             var scope = btn.closest('[data-qty]');
             if (!scope) return;
             var input = scope.querySelector('[data-qty-input]');
+            var announce = scope.querySelector('[data-qty-announce]');
             var min = parseInt(scope.dataset.min || '1', 10);
             var max = parseInt(scope.dataset.max || '10', 10);
             var next = readQty(scope) + parseInt(btn.dataset.qtyStep, 10);
 
             next = Math.max(min, Math.min(max, next));
             input.value = next;
+            if (announce) announce.textContent = 'Quantity ' + next;
+
+            // Disabling the button the user just activated blurs it straight
+            // to <body>, losing keyboard focus position -- move focus to the
+            // input first so Tab continues naturally from here.
+            var willDisable = (btn.dataset.qtyStep === '-1' && next <= min) ||
+                               (btn.dataset.qtyStep === '1' && next >= max);
+            if (willDisable && document.activeElement === btn && input) {
+                input.focus();
+            }
 
             scope.querySelectorAll('[data-qty-step]').forEach(function (b) {
                 b.disabled = (b.dataset.qtyStep === '-1' && next <= min) ||
@@ -928,6 +939,48 @@
     }
 
     /* ---------------------------------------------------------------------
+       Password confirmation -- live match check on register/reset forms
+       --------------------------------------------------------------------- */
+    function initPasswordConfirm() {
+        document.querySelectorAll('[data-confirm-password]').forEach(function (confirmField) {
+            var original = document.getElementById(confirmField.getAttribute('data-confirm-password'));
+            if (!original) return;
+
+            function check() {
+                if (confirmField.value && confirmField.value !== original.value) {
+                    confirmField.setCustomValidity("Passwords don't match.");
+                } else {
+                    confirmField.setCustomValidity('');
+                }
+            }
+            confirmField.addEventListener('input', check);
+            original.addEventListener('input', check);
+        });
+    }
+
+    /* ---------------------------------------------------------------------
+       Form submit guard -- disables the submit button so a slow connection
+       cannot produce a double POST from a double click, with no visible
+       feedback either way in between.
+       --------------------------------------------------------------------- */
+    function initFormSubmitGuard() {
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            var btn = form.querySelector('button[type="submit"]');
+            if (!btn || btn.disabled) return;
+            // Let native validation block the submit first; if the browser
+            // is still going to submit, only then lock the button.
+            requestAnimationFrame(function () {
+                if (!form.checkValidity || form.checkValidity()) {
+                    btn.disabled = true;
+                    btn.dataset.wasDisabledBySubmit = 'true';
+                }
+            });
+        });
+    }
+
+    /* ---------------------------------------------------------------------
        Boot
        --------------------------------------------------------------------- */
     function boot() {
@@ -942,6 +995,8 @@
         initCollectionFilters();
         initCheckoutPayment();
         initBackToTop();
+        initPasswordConfirm();
+        initFormSubmitGuard();
     }
 
     if (document.readyState === 'loading') {

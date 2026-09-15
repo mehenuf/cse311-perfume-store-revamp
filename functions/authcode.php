@@ -1,10 +1,18 @@
 <?php
 session_start();
 include('../config/dbcon.php');
+require_once('../includes/helpers.php');
 
 //for registration form
 //if registration button is pressed then this portion will execute
 if (isset($_POST['signup_btn'])) {
+    if (!csrfVerify($_POST['csrf_token'] ?? null)) {
+        $_SESSION['message'] = 'Your session expired. Please try again.';
+        $_SESSION['message_kind'] = 'error';
+        header('Location: ../register.php');
+        exit;
+    }
+
     //taking info provided in the form into a variable
     $name = $_POST['name'];
     $username = $_POST['username'];
@@ -14,6 +22,13 @@ if (isset($_POST['signup_btn'])) {
     $address = $_POST['address'];
     $contacts = $_POST['contacts'];
     $dob = $_POST['dob'];
+
+    // Everything except the two password fields, so a rejected form can be
+    // redisplayed with what the visitor already typed instead of blank.
+    $oldInput = [
+        'name' => $name, 'username' => $username, 'email' => $email,
+        'address' => $address, 'contacts' => $contacts, 'dob' => $dob,
+    ];
 
     //sql query to check whether given email exists in database
     $mailcheck_stmt = mysqli_prepare($con, "SELECT email FROM customer WHERE email = ?");
@@ -28,14 +43,32 @@ if (isset($_POST['signup_btn'])) {
     $usernamecheck_query_run = mysqli_stmt_get_result($usernamecheck_stmt);
 
     //if email already exists in the database then warning will be shown and then will take us to registration form again
-    if (mysqli_num_rows($mailcheck_query_run) > 0) {
-        $_SESSION['message'] = "An account with this e-mail already exists. Try another mail.";
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['message'] = "Enter a valid email address.";
+        $_SESSION['message_kind'] = 'error';
+        $_SESSION['old_input'] = $oldInput;
         header('Location: ../register.php');
+        exit;
+    } elseif (strlen($password) < 8) {
+        $_SESSION['message'] = "Your password needs to be at least 8 characters.";
+        $_SESSION['message_kind'] = 'error';
+        $_SESSION['old_input'] = $oldInput;
+        header('Location: ../register.php');
+        exit;
+    } elseif (mysqli_num_rows($mailcheck_query_run) > 0) {
+        $_SESSION['message'] = "An account with this e-mail already exists. Try another mail.";
+        $_SESSION['message_kind'] = 'error';
+        $_SESSION['old_input'] = $oldInput;
+        header('Location: ../register.php');
+        exit;
     } else {
         //if the username already exists in the database then this warning will be displayed
         if (mysqli_num_rows($usernamecheck_query_run) > 0) {
             $_SESSION['message'] = "An account with this username already exists. Try another username.";
+            $_SESSION['message_kind'] = 'error';
+            $_SESSION['old_input'] = $oldInput;
             header('Location: ../register.php');
+            exit;
         } else {
             //if the confirmation password doesn't match with the password then warning will show
             //if the password matches with confirm passwords and every other conditions are met then the info will be inserted into database
@@ -55,19 +88,33 @@ if (isset($_POST['signup_btn'])) {
                 if ($insert_query_run) {
                     $_SESSION['message'] = "Congrats! You've successfully registered in our store.";
                     header('Location: ../login.php');
+                    exit;
                 } else {
                     //if insertion to database fails
-                    $_SESSION['message'] = "Something went wrong";
+                    $_SESSION['message'] = "Something went wrong. Please try again.";
+                    $_SESSION['message_kind'] = 'error';
+                    $_SESSION['old_input'] = $oldInput;
                     header('Location: ../register.php');
+                    exit;
                 }
             } else {
                 //if confirm password doesn't match with password
-                $_SESSION['message'] = "Passwords do not match. Please use same password in the both field.";
+                $_SESSION['message'] = "Passwords don't match. Please make sure both fields are the same.";
+                $_SESSION['message_kind'] = 'error';
+                $_SESSION['old_input'] = $oldInput;
                 header('Location: ../register.php');
+                exit;
             }
         }
     }
 } elseif (isset($_POST['login_btn'])) {
+    if (!csrfVerify($_POST['csrf_token'] ?? null)) {
+        $_SESSION['message'] = 'Your session expired. Please try again.';
+        $_SESSION['message_kind'] = 'error';
+        header('Location: ../login.php');
+        exit;
+    }
+
     //for login
     //will check whether the login button was pressed. If, then this part will execute
     $query_username = $_POST['var_username'];
@@ -146,13 +193,17 @@ if (isset($_POST['signup_btn'])) {
         if ($_SESSION['admin_check'] == 1) {
             $_SESSION['message'] = 'Welcome Admin!';
             header('Location: ../admin/index.php');
+            exit;
         } else {
             $_SESSION['message'] = $_SESSION['auth_user']['username'] . ", you have successfully logged in!";
             header('Location: ../index.php');
+            exit;
         }
     } else {
 
-        $_SESSION['message'] = "Credentials doesn't match or inexistent.";
+        $_SESSION['message'] = "That username or password isn't right. Please try again.";
+        $_SESSION['message_kind'] = 'error';
         header('Location: ../login.php');
+        exit;
     }
 }

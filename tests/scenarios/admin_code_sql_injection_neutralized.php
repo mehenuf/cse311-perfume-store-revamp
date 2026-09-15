@@ -17,10 +17,12 @@ session_start();
 $_SESSION['auth'] = true;
 $_SESSION['admin_check'] = 1;
 $_SESSION['auth_user'] = ['user_id' => 1, 'username' => 'mehenuf', 'email' => 'mehenuf@gmail.com'];
+$_SESSION['csrf_token'] = 'test-csrf-token';
 
 $payload = "Evil', (SELECT password FROM customer LIMIT 1), 'x', 'x', 1, 'x', 1, 1, 1); DROP TABLE perfumes; --";
 $_POST = [
     'addperfume_btn' => '1',
+    'csrf_token' => 'test-csrf-token',
     'name' => $payload,
     'perfume_notes' => 'n/a', 'description' => 'n/a', 'volume' => '100 ml',
     'qty' => '1', 'price' => '1',

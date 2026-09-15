@@ -310,6 +310,9 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     font-size: var(--t-micro); letter-spacing: .14em; text-transform: uppercase;
     color: var(--fg-muted); white-space: nowrap;
     transition: color var(--d-1) var(--ease);
+    /* Reset for the <button> variant (the "Shop" trigger, which cannot be a
+       real link -- see store.js's initNav) so it matches its sibling <a>s. */
+    background: none; border: 0; font-family: inherit; cursor: pointer;
 }
 .nav__link::after {
     content: ''; position: absolute; left: var(--s-3); right: var(--s-3); bottom: 0;
@@ -660,6 +663,13 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     .card-grid--4:not([data-collection-grid]) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (min-width: 1280px) { .card-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Fewer results than the grid has columns for (e.g. a related-products row
+   for a house with only 2-3 published perfumes) would otherwise leave bare
+   empty track(s) at the end of the row on wide screens, reading as an
+   unfinished load rather than a complete short row. Centering it removes
+   the dangling gap without needing to know the exact count in CSS. */
+.card-grid--narrow { justify-content: center; }
+@media (min-width: 1024px) { .card-grid--narrow { grid-template-columns: repeat(auto-fit, minmax(0, 15.5rem)); } }
 
 .product {
     position: relative; display: flex; flex-direction: column;
@@ -817,6 +827,8 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 
 .detail__title { font-size: var(--t-h1); }
 .detail__price { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.7rem, 1.4rem + 1.2vw, 2.3rem); font-weight: 400; color: var(--gold); }
+.detail__eyebrow { color: var(--fg-faint); font-size: var(--t-sm); margin: 0; }
+.detail__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4); }
 
 .notes {
     display: grid; gap: var(--s-3); padding: var(--s-5);
@@ -843,6 +855,12 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
 .qty button:hover:not(:disabled) { color: var(--gold); background: var(--gold-wash); }
 .qty button:active:not(:disabled) { transform: scale(.88); }
 .qty button:disabled { opacity: .3; cursor: default; }
+/* .qty clips overflow at its own pill border to keep the three children's
+   corners flush with it, but that also clips the global :focus-visible
+   outline (which draws 3px outside the box) on all three children. Drawing
+   the ring inward instead keeps it inside the clip region so it stays
+   visible on keyboard focus. */
+.qty button:focus-visible, .qty input:focus-visible { outline-offset: -3px; }
 .qty input {
     width: 46px; height: 46px; text-align: center; background: none; border: 0;
     font-size: 1rem; font-variant-numeric: tabular-nums; -moz-appearance: textfield;
@@ -1543,6 +1561,7 @@ a:not([class]):hover { text-decoration-color: var(--gold); }
     .nav__icon, .nav__toggle, .rail-btn { min-height: 44px; min-width: 44px; }
     .nav__menu a { padding-block: var(--s-3); }
     .btn--sm { padding-block: .72rem; }
+    .auth-link { min-height: 44px; display: inline-flex; align-items: center; }
 }
 
 /* A phone held sideways.

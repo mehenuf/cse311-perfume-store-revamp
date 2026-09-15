@@ -17,9 +17,10 @@ function getViaID($table, $id)
     return mysqli_stmt_get_result($stmt);
 }
 
-function redirect($url, $message)
+function redirect($url, $message, $kind = 'success')
 {
     $_SESSION['message'] = $message;
+    $_SESSION['message_kind'] = $kind;
     header('Location:' . $url);
     exit();
 }

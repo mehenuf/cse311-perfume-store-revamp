@@ -535,6 +535,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .line-item:last-child { border-bottom: 0; }
 .line-item img { width: 44px; min-width: 44px; height: 55px; object-fit: cover; max-width: none; background: var(--bg-sunken); border: 1px solid var(--line); }
+.line-item__noimg {
+    width: 44px; min-width: 44px; height: 55px; display: grid; place-items: center;
+    background: var(--bg-sunken); border: 1px solid var(--line); color: var(--fg-faint); font-size: .9rem;
+}
 .line-item__name { font-size: var(--t-sm); font-weight: 500; }
 .line-item__meta { font-size: var(--t-xs); color: var(--fg-faint); }
 .line-item__amt { font-size: var(--t-sm); font-variant-numeric: tabular-nums; white-space: nowrap; }

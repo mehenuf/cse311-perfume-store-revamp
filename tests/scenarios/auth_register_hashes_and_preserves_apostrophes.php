@@ -10,9 +10,13 @@ require __DIR__ . '/../support/mysqli_shim.php';
 $pdo = shim_boot(__DIR__ . '/../.tmp_auth_register.sqlite', file_get_contents(__DIR__ . '/../support/schema.sql'));
 
 $con = new stdClass();
-$_SESSION = [];
+// Started here so the csrf_token set below survives authcode.php's own
+// session_start() call (a no-op once a session is already active).
+session_start();
+$_SESSION = ['csrf_token' => 'test-csrf-token'];
 $_POST = [
     'signup_btn' => '1',
+    'csrf_token' => 'test-csrf-token',
     'name' => "Tanvir O'Ahmed",
     'username' => 'tanvir',
     'password' => 'S3cret!!',

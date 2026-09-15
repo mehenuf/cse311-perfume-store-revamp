@@ -17,12 +17,14 @@ $basePath = isset($basePath) ? $basePath : '../';
 
 if (!isset($_SESSION['auth'])) {
     $_SESSION['message'] = 'Login to get access';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ' . $basePath . 'login.php');
     exit;
 }
 
 if (!isset($_SESSION['admin_check']) || $_SESSION['admin_check'] != 1) {
     $_SESSION['message'] = 'Unauthorized access. Only for admins.';
+    $_SESSION['message_kind'] = 'error';
     header('Location: ' . $basePath . 'index.php');
     exit;
 }

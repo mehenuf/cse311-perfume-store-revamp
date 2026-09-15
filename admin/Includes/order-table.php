@@ -53,7 +53,7 @@
                                     <span class="badge" data-payment-status="<?= e($o['payment_status'] ?? 'cod') ?>">
                                         <?= e(ucfirst($o['payment_status'] ?? 'cod')) ?>
                                     </span>
-                                    <span class="table__sub"><?= e($o['payment_mode']) ?></span>
+                                    <span class="table__sub"><?= e(paymentModeLabel($o['payment_mode'])) ?></span>
                                 </td>
                                 <td class="num"><?= taka($o['total_price']) ?></td>
                                 <td class="table__actions">

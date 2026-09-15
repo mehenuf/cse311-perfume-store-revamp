@@ -13,14 +13,19 @@ $stmt = $pdo->prepare("INSERT INTO customer (username, password, name, email, ad
 $stmt->execute([$hash]);
 
 $con = new stdClass();
-$_SESSION = [];
-$_POST = ['login_btn' => '1', 'var_username' => 'nusrat', 'var_password' => 'totally-wrong'];
+// Started here (not left to authcode.php's own session_start()) so the
+// csrf_token set below survives -- calling session_start() a second time
+// inside authcode.php is then a harmless no-op instead of loading an empty
+// on-disk session over what we just set.
+session_start();
+$_SESSION = ['csrf_token' => 'test-csrf-token'];
+$_POST = ['login_btn' => '1', 'csrf_token' => 'test-csrf-token', 'var_username' => 'nusrat', 'var_password' => 'totally-wrong'];
 
 shim_report(function () use ($pdo, $hash) {
     $row = $pdo->query("SELECT password FROM customer WHERE username = 'nusrat'")->fetch(PDO::FETCH_ASSOC);
     return [
         'session_not_authenticated' => !isset($_SESSION['auth']),
-        'rejection_message_shown'   => isset($_SESSION['message']) && str_contains($_SESSION['message'], "doesn't match"),
+        'rejection_message_shown'   => isset($_SESSION['message']) && str_contains($_SESSION['message'], "isn't right"),
         'hash_unchanged'            => $row['password'] === $hash,
     ];
 });

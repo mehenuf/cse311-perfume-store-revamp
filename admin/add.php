@@ -13,6 +13,7 @@ include('Includes/header.php');
 </div>
 
 <form action="Includes/code.php" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
     <div class="grid-2">
 
         <section class="card">

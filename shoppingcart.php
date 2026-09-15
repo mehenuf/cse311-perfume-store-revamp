@@ -112,7 +112,7 @@ echo crumb(['Home' => 'index.php', 'Cart' => null]);
                 </div>
                 <div class="summary__row">
                     <span>Payment</span>
-                    <span>Cash on delivery</span>
+                    <span>Selected at checkout</span>
                 </div>
 
                 <div class="summary__total">
